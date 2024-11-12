@@ -1,67 +1,86 @@
-import pygame 
+import pygame
+import random
 import math
 
 # Initialize Pygame
 pygame.init()
 
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Moving Pathogen with Image")
+# Set up screen dimensions
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Multiple Pathogen Images Moving Towards Central Cell")
 
-# Colors
+# Define colors
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
 
-# Target settings (central cell area)
-target_radius = 30
-target_position = (WIDTH // 2, HEIGHT // 2)
+# Central cell properties
+center_x = SCREEN_WIDTH // 2
+center_y = SCREEN_HEIGHT // 2
 
+# Load pathogen images and scale them
+pathogen_images = [
+    pygame.transform.scale(pygame.image.load("bacteria_placeholder.png"), (30, 30)),
+    pygame.transform.scale(pygame.image.load("macrophage_placehoder.png"), (30, 30)),
+    pygame.transform.scale(pygame.image.load("virus_placeholder.png"), (30, 30))
+]
 
+# Load the central cell image and scale it
+central_cell_image = pygame.transform.scale(pygame.image.load("cell.png"), (100, 100))
+
+# Pathogen class
 class Pathogen:
-    def __init__(self, x, y, speed, image_path):
-        self.x = x
-        self.y = y
-        self.speed = speed
-        self.infected = False
-        self.image = pygame.image.load(image_path)  # Load the image
-        self.image = pygame.transform.scale(self.image, (20, 20))  # Scale image to desired size
+    def __init__(self):
+        # Start at a random position on the screen
+        self.x = random.randint(0, SCREEN_WIDTH)
+        self.y = random.randint(0, SCREEN_HEIGHT)
+        # Randomly select one of the three pathogen images
+        self.image = random.choice(pathogen_images)
+        self.speed = random.uniform(1, 3)
 
-    def move_towards_target(self, target_x, target_y):
-        if not self.infected:  # Only move if not yet infected
-            dx, dy = target_x - self.x, target_y - self.y
-            distance = math.hypot(dx, dy)
-            if distance > target_radius:  # Move pathogen if it hasn't reached the target
-                dx, dy = dx / distance, dy / distance  # Normalize vector
-                self.x += dx * self.speed
-                self.y += dy * self.speed
-            else:
-                self.infected = True  # Pathogen has infected the target
+    def move_towards_center(self):
+        # Calculate the direction vector towards the central cell
+        dx = center_x - self.x
+        dy = center_y - self.y
+        distance = math.hypot(dx, dy)
 
-    def draw(self, screen):
-        # Draw the pathogen image
-        screen.blit(self.image, (int(self.x), int(self.y)))
+        # Normalize the direction vector and update the position
+        if distance != 0:
+            self.x += (dx / distance) * self.speed
+            self.y += (dy / distance) * self.speed
 
-# Game loop setup
-pathogen = Pathogen(100, 100, 2, 'virus_placeholder.png')  # Replace 'pathogen.png' with your image path
+    def draw(self, surface):
+        # Draw the pathogen image on the screen
+        surface.blit(self.image, (int(self.x), int(self.y)))
+
+# Create a list of pathogens
+num_pathogens = 20
+pathogens = [Pathogen() for _ in range(num_pathogens)]
+
+# Main game loop flag
 running = True
+clock = pygame.time.Clock()
+
+# Main game loop
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Clear the screen
+    # Fill the screen with a white background
     screen.fill(WHITE)
 
-    # Move and draw the pathogen
-    pathogen.move_towards_target(*target_position)
-    pathogen.draw(screen)
+    # Draw the central cell image
+    screen.blit(central_cell_image, (center_x - 50, center_y - 50))
 
-    # Draw the target (central cell group)
-    pygame.draw.circle(screen, GREEN if not pathogen.infected else (255, 0, 0), target_position, target_radius)
+    # Move and draw each pathogen
+    for pathogen in pathogens:
+        pathogen.move_towards_center()
+        pathogen.draw(screen)
 
     # Update the display
     pygame.display.flip()
-    pygame.time.delay(30)
+    clock.tick(60)  # Cap the frame rate at 60 FPS
 
+# Quit Pygame
 pygame.quit()
