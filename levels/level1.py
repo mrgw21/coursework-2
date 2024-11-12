@@ -1,11 +1,13 @@
 import pygame
+from objects.cell import Cell
 
 class Level1:
     def __init__(self, screen):
         self.screen = screen
         self.clock = pygame.time.Clock()
         self.running = True
-        self.body_image = pygame.image.load('assets/images/body_placeholder.png')  
+        self.body_image = pygame.image.load('assets/images/body_placeholder.png')
+        self.cells = [Cell(i) for i in range(37)] 
 
     def run(self):
         while self.running:
@@ -26,7 +28,9 @@ class Level1:
         
         # Blit the image to the screen at the given position
         img = self.body_image
-        img = pygame.transform.scale(img, (img.get_width() * 0.3, img.get_height() * 0.3))
+        img = pygame.transform.scale(img, (img.get_width() * 0.32, img.get_height() * 0.32))
         body_rect = img.get_rect(center=(400, 300)) 
         self.screen.blit(img, body_rect)
+        for cell in self.cells:
+            cell.draw(self.screen)
         pygame.display.flip()  # Update the screen with the new drawing
