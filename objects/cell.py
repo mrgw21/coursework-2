@@ -8,7 +8,8 @@ class Cell:
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
 
         self.rect = self.image.get_rect()  # Simplified positioning for now
-        self.alive = True
+        # uninfected / infected
+        self.state = True
          
 
         # Diamond positioning
@@ -33,10 +34,11 @@ class Cell:
 
 
     def die(self):
-        self.alive = False
+        self.state = False
         self.image = pygame.image.load("assets/images/infected_cell.png")
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
 
 
     def draw(self, screen):
-        if self.alive:
-            screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect)
+        

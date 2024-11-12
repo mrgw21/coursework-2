@@ -4,10 +4,10 @@ class Macrophage:
     
     def __init__(self):
         self.image = pygame.image.load("assets/images/macrophage_placehoder.png")
-        self.rect = self.image.get_rect(center=(300, 350))
         img = self.image
         self.image = pygame.transform.scale(img, (img.get_width() * 0.3, img.get_height() * 0.3))
         self.speed = 5
+        self.rect = self.image.get_rect(center=(300, 350))
         # self.strength = 0
     
     def handle_input(self):
@@ -21,9 +21,13 @@ class Macrophage:
         if keys[pygame.K_d]:
             self.rect.x += self.speed
     
-    def eat(self, enemy):
+    def eat(self, pathogen):
         # Logic to "eat" an enemy, making the macrophage stronger
-        pass
+        if pathogen.alive == False:
+            pathogen.alive = True
+            return True
+        return False
+        
     
     def update(self):
         self.handle_input()
