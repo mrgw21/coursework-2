@@ -36,14 +36,13 @@ class Level1:
             self.spawn_enemy()
         
             self.macrophage.update()
-            self.draw()
 
+            self.check_collisions() 
             if self.counter < len(self.cells):
                 for enemy in self.enemies:
                     if enemy.move_towards_target(400, 300, self.cells[self.counter]):
                         self.counter += 1
-
-            self.check_collisions() 
+            self.draw()
 
     
     def generate_spawn_location(self):
@@ -69,7 +68,7 @@ class Level1:
     def spawn_enemy(self):
         if pygame.time.get_ticks() - self.spawn_timer > self.spawn_interval:
             spawn_location = self.generate_spawn_location()
-            if pygame.time.get_ticks() % 2 == 0:
+            if random.choice([True, False]):
                 # Bacteria
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "bacteria"))
             else:
@@ -85,7 +84,7 @@ class Level1:
 
             # Check if enemy reached the cells
             for cell in self.cells:
-                if enemy.rect.colliderect(cell.rect) and cell.alive:
+                if enemy.rect.colliderect(cell.rect) and cell.state:
                     cell.die()
                     self.enemies.remove(enemy)
                     break

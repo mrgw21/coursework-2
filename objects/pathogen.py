@@ -34,7 +34,8 @@ class Pathogen:
         else:
             self.image = pygame.image.load("assets/images/virus_placeholder.png")
         self.image = pygame.transform.scale(self.image, (20, 20))  # Scale image to desired size
-        self.rect = self.image.get_rect(center=(x, y))
+        self.rect = self.image.get_rect()  # Get the rect of the image
+        self.rect.center = (self.x, self.y)
 
     def move_towards_target(self, target_x, target_y, cell):
         if not self.alive: 
@@ -44,6 +45,8 @@ class Pathogen:
                 dx, dy = dx / distance, dy / distance  # Normalize vector
                 self.x += dx * self.speed
                 self.y += dy * self.speed
+                
+                self.rect.center = (self.x, self.y)
             else:
                 self.alive = True
                 cell.die()

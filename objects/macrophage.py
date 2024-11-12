@@ -7,7 +7,8 @@ class Macrophage:
         img = self.image
         self.image = pygame.transform.scale(img, (img.get_width() * 0.3, img.get_height() * 0.3))
         self.speed = 5
-        self.rect = self.image.get_rect(center=(300, 350))
+        self.rect = self.image.get_rect()  # Get the rect of the image
+        self.rect.center = (300, 350)  # Set the center to the desired position
         # self.strength = 0
     
     def handle_input(self):
@@ -25,8 +26,6 @@ class Macrophage:
         # Logic to "eat" an enemy, making the macrophage stronger
         if pathogen.alive == False:
             pathogen.alive = True
-            return True
-        return False
         
     
     def update(self):
