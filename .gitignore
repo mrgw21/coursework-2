@@ -106,4 +106,4 @@ dmypy.json
 .DS_Store
 
 # Pygame assets (if using a separate assets folder)
-assets/
+# assets/

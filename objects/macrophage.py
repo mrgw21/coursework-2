@@ -3,9 +3,9 @@ import pygame
 class Macrophage:
     
     def __init__(self):
-        self.image = pygame.image.load("assets/images/macrophage_placehoder.png")
+        self.image = pygame.image.load("assets/images/macrophage_placeholder.png")
         img = self.image
-        self.image = pygame.transform.scale(img, (img.get_width() * 0.3, img.get_height() * 0.3))
+        self.image = pygame.transform.scale(img, (img.get_width() * 0.4, img.get_height() * 0.4))
         self.speed = 5
         self.rect = self.image.get_rect()
         self.rect.center = (300, 300)  # Initial position for windowed mode
