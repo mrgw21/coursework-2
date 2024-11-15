@@ -24,7 +24,7 @@ class Level1:
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 500000  # 30 seconds in milliseconds
+        self.win_time = 30000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
@@ -294,6 +294,8 @@ class Level1:
     def draw(self):   
         center_x = self.screen.get_width() // 2
         center_y = self.screen.get_height() // 2
+
+        self.screen.fill((255, 255, 255))
 
         img = self.body_image
         img = pygame.transform.scale(img, (img.get_width() * 0.32, img.get_height() * 0.32))
