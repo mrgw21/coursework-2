@@ -135,7 +135,8 @@ class Cell:
             level.paused = False
 
     def handle_keydown(self, key, level):
-        """Close modal with ESC key."""
-        if key == pygame.K_ESCAPE:
+        if key == pygame.K_ESCAPE and self.show_modal:
             self.show_modal = False
-            level.paused = False  # Unpause the game when ESC is pressed
+            # Only unpause if the game was paused because of the modal
+            if level.paused:
+                level.paused = False

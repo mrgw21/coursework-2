@@ -24,7 +24,7 @@ class Level1:
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 30000  # 30 seconds in milliseconds
+        self.win_time = 5000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
@@ -53,23 +53,18 @@ class Level1:
                     pygame.display.flip()
                 """
 
-                # Toggle fullscreen with 'F' key
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
                         self.toggle_fullscreen()
 
-                    if event.key == pygame.K_SPACE and self.paused:
-                        self.reset_game()
-
-                if self.paused and event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
+                    if event.key == pygame.K_SPACE and self.game_over:
                         self.reset_game()
                 
                 if event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     self.recenter_elements()
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
                     mouse_pos = pygame.mouse.get_pos()
                     for cell in self.cells:
                         if cell.show_modal:
@@ -82,8 +77,9 @@ class Level1:
                         for cell in self.cells:
                             if cell.show_modal:
                                 cell.handle_keydown(event.key, self)
-
-            self.check_game_over()
+            
+            if not self.paused and self.game_over:
+                self.check_game_over()
 
             if self.paused:
                 if self.pause_start is None:
@@ -126,7 +122,7 @@ class Level1:
             self.draw()
 
             if self.game_over:
-                self.show_game_over_screen("lose")
+                self.show_game_over_screen()
             
             pygame.display.flip()  # Update the screen with the new drawing
     
@@ -221,7 +217,7 @@ class Level1:
         if self.game_over:
             self.paused = True
 
-    def show_game_over_screen(self, status):
+    def show_game_over_screen(self):
         modal_width = 700
         modal_height = 300
         modal_x = (self.screen.get_width() - modal_width) // 2
@@ -245,7 +241,6 @@ class Level1:
             line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
-
         else:
             line1_text = font_large.render("Game Over!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
@@ -277,7 +272,7 @@ class Level1:
         self.spawn_timer = 0
         self.counter = 0
         self.game_over = False
-        self.win = False
+        self.win = True
         self.paused = False
         self.remaining_time = self.win_time // 1000
 
@@ -326,7 +321,6 @@ class Level1:
                 self.game_over = True
                 self.paused = True
         else:
-            # If paused, just display the remaining time as is
             pass
 
         # Draw the timer
@@ -339,4 +333,3 @@ class Level1:
             paused_text = paused_font.render("Paused", True, (255, 0, 0))
             text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
             self.screen.blit(paused_text, text_rect)
-            
