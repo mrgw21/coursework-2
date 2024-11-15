@@ -21,11 +21,13 @@ class Level1:
         self.spawn_interval = 2000
         self.counter = 0
 
-        self.start_time = pygame.time.get_ticks()  # Track the start time
-        self.win_time = 30000  # 60 seconds in milliseconds
+        self.start_time = pygame.time.get_ticks()
+        self.pause_start = None  # To track when the game was paused
+        self.total_paused_time = 0  # Total time paused
+        self.win_time = 500000  # 30 seconds in milliseconds
 
         self.game_over = False
-        self.win = False
+        self.win = True
 
 
     def toggle_fullscreen(self):
@@ -45,10 +47,12 @@ class Level1:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+
                 """
                 if event.type == pygame.FULLSCREEN:
                     pygame.display.flip()
                 """
+
                 # Toggle fullscreen with 'F' key
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
@@ -65,7 +69,32 @@ class Level1:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     self.recenter_elements()
 
-            if not self.paused:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    for cell in self.cells:
+                        if cell.show_modal:
+                            cell.handle_modal_close(mouse_pos, self)
+                        else:
+                            cell.handle_click(mouse_pos, self.cells, self)
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        for cell in self.cells:
+                            if cell.show_modal:
+                                cell.handle_keydown(event.key, self)
+
+            self.check_game_over()
+
+            if self.paused:
+                if self.pause_start is None:
+                    self.pause_start = pygame.time.get_ticks()  # Start tracking pause time
+            else:
+                if self.pause_start is not None:
+                    # Calculate total paused duration and reset the pause_start
+                    self.total_paused_time += pygame.time.get_ticks() - self.pause_start
+                    self.pause_start = None
+
+            if not self.paused and not self.game_over:
                 # Dynamically calculate the center of the screen
                 center_x = self.screen.get_width() // 2
                 center_y = self.screen.get_height() // 2
@@ -85,20 +114,21 @@ class Level1:
                         # Pass center coordinates and the current cell as arguments
                         if enemy.move_towards_target(center_x, center_y, current_cell):
                             self.counter += 1
-
-                self.check_game_over()
+            
+            if self.paused:
+                if self.pause_start is None:
+                    self.pause_start = pygame.time.get_ticks()
+            else:
+                if self.pause_start is not None:
+                    self.total_paused_time += pygame.time.get_ticks() - self.pause_start
+                    self.pause_start = None
 
             self.draw()
 
-            if self.paused:
-                if self.game_over:
-                    self.show_game_over_screen("lose")
-                elif self.win:
-                    self.show_game_over_screen("win")
+            if self.game_over:
+                self.show_game_over_screen("lose")
             
             pygame.display.flip()  # Update the screen with the new drawing
-        
-
     
     def generate_spawn_location(self):
         screen_width = self.screen.get_width()
@@ -137,8 +167,6 @@ class Level1:
 
         return [x, y]
 
-
-
     def spawn_enemy(self):
         if pygame.time.get_ticks() - self.spawn_timer > self.spawn_interval:
             spawn_location = self.generate_spawn_location()
@@ -151,7 +179,6 @@ class Level1:
             self.spawn_timer = pygame.time.get_ticks()
     
     def check_collisions(self):
-
         for enemy in self.enemies[:]:
             if self.macrophage.rect.colliderect(enemy.rect):
                 self.enemies.remove(enemy)
@@ -163,15 +190,36 @@ class Level1:
                     self.enemies.remove(enemy)
                     break
     
-    def check_game_over(self):
-        if all(not cell.state for cell in self.cells):
-            self.paused = True
-            self.game_over = True
+    def check_for_open_modal(self):
+        for cell in self.cells:
+            if cell.show_modal:
+                return True
+        return False
 
-        elapsed_time = pygame.time.get_ticks() - self.start_time
-        if elapsed_time >= self.win_time:
-            self.paused = True
+    def check_game_over(self):
+        # Calculate elapsed time considering paused duration
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.start_time - self.total_paused_time
+
+        # Check if the game timer has run out
+        time_up = elapsed_time >= self.win_time
+
+        # Check if all cells are infected
+        all_infected = all(not cell.state for cell in self.cells)
+
+        # Determine win or lose based on the above conditions
+        if all_infected:
+            # Player loses if all cells are infected
+            self.game_over = True
+            self.win = False
+        elif time_up:
+            # Player wins if time is up and at least one cell is healthy
+            self.game_over = True
             self.win = True
+
+        # Pause the game if it's over
+        if self.game_over:
+            self.paused = True
 
     def show_game_over_screen(self, status):
         modal_width = 700
@@ -187,7 +235,7 @@ class Level1:
 
         current_y = modal_y + 50
 
-        if status == "win":
+        if self.win:
             line1_text = font_large.render("Congratulations!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line1_text, line1_rect)
@@ -198,7 +246,7 @@ class Level1:
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
 
-        elif status == "lose":
+        else:
             line1_text = font_large.render("Game Over!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line1_text, line1_rect)
@@ -207,11 +255,6 @@ class Level1:
             line2_text = font_large.render("You Lost!", True, (0, 0, 0))
             line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line2_text, line2_rect)
-            current_y += 60
-
-            line3_text = font_large.render("Try Again!", True, (0, 0, 0))
-            line3_rect = line3_text.get_rect(center=(modal_x + modal_width // 2, current_y))
-            self.screen.blit(line3_text, line3_rect)
             current_y += 80
 
         restart_text = font_small.render("Press SPACE to restart", True, (0, 0, 0))
@@ -226,14 +269,26 @@ class Level1:
         self.enemies = []
         
         self.macrophage = Macrophage()
-
         self.recenter_elements()
         
         self.start_time = pygame.time.get_ticks()
+        self.total_paused_time = 0
+        self.pause_start = None
         self.spawn_timer = 0
         self.counter = 0
         self.game_over = False
         self.win = False
+        self.paused = False
+        self.remaining_time = self.win_time // 1000
+
+    def countdown_before_resume(self):
+        font = pygame.font.SysFont('Arial', 48)
+        for i in range(3, 0, -1):
+            self.screen.fill((255, 255, 255))
+            text = font.render(str(i), True, (255, 0, 0))
+            self.screen.blit(text, (self.screen.get_width() // 2, 50))
+            pygame.display.flip()
+            pygame.time.delay(500)
         self.paused = False
         
     def draw(self):   
@@ -245,18 +300,41 @@ class Level1:
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
         
+        # Draw cells, macrophages, and enemies
         for cell in self.cells:
-            cell.reposition(center_pos=(center_x, center_y))  # Adjust cell positions
+            cell.reposition(center_pos=(center_x, center_y))
             cell.draw(self.screen)
 
         self.macrophage.draw(self.screen)
-
         for enemy in self.enemies:
             enemy.draw(self.screen)
 
-        elapsed_time = pygame.time.get_ticks() - self.start_time
-        remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
+        # Draw cell modal on top of everything else
+        for cell in self.cells:
+            if cell.show_modal:
+                cell.draw_modal(self.screen)
+
+        # Update timer only if game is running and not paused
+        if not self.paused and not self.game_over:
+            current_time = pygame.time.get_ticks()
+            elapsed_time = current_time - self.start_time - self.total_paused_time
+            self.remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
+
+            if self.remaining_time <= 0:
+                self.game_over = True
+                self.paused = True
+        else:
+            # If paused, just display the remaining time as is
+            pass
+
+        # Draw the timer
         font = pygame.font.SysFont('Arial', 24)
-        time_text = font.render(f"Time Left: {remaining_time}s", True, (0, 0, 0))
+        time_text = font.render(f"Time Left: {self.remaining_time}s", True, (0, 0, 0))
         self.screen.blit(time_text, (10, 10))
 
+        if self.paused and not self.game_over:
+            paused_font = pygame.font.SysFont('Arial', 24, bold=True)
+            paused_text = paused_font.render("Paused", True, (255, 0, 0))
+            text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
+            self.screen.blit(paused_text, text_rect)
+            
