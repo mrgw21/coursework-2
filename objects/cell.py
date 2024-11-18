@@ -41,9 +41,17 @@ class Cell:
 
     def draw_modal(self, screen):
         """Draw a modal with cell information."""
-        modal_width = 300
-        modal_height = 500
-        modal_x = 20
+        screen_width = screen.get_width()
+        screen_height = screen.get_height()
+
+        if screen_width > 1200:  # Fullscreen mode
+            modal_width = 500
+            modal_height = 700
+            modal_x = 200
+        else:
+            modal_width = 300
+            modal_height = 500
+            modal_x = 20
         modal_y = (screen.get_height() - modal_height) // 2
 
         # Draw modal background and border
