@@ -53,6 +53,7 @@ class Intro1:
                     self.running = False
                     self.next_screen = "control"
 
+
     def draw(self, surface):
         # Get the screen dimensions
         screen_width = surface.get_width()
