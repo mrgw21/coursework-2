@@ -40,7 +40,6 @@ class Pathogen:
         self.adjust_initial_position(screen_width, screen_height)
 
     def adjust_initial_position(self, screen_width, screen_height):
-        # Adjust pathogen initial position based on screen size
         if screen_width != 800 or screen_height != 600:
             self.rect.x = screen_width // 2 + (self.rect.x - 400)
             self.rect.y = screen_height // 2 + (self.rect.y - 300)

@@ -6,7 +6,6 @@ from objects.pathogen import Pathogen
 
 class Level1:
     def __init__(self, screen):
-        pygame.init()
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.running = True
@@ -28,7 +27,7 @@ class Level1:
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 3000000  # 30 seconds in milliseconds
+        self.win_time = 30000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
