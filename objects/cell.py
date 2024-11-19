@@ -42,7 +42,6 @@ class Cell:
     def draw_modal(self, screen):
         """Draw a modal with cell information."""
         screen_width = screen.get_width()
-        screen_height = screen.get_height()
 
         if screen_width > 1200:  # Fullscreen mode
             modal_width = 500
@@ -67,7 +66,6 @@ class Cell:
         close_button_x = modal_x + modal_width - close_button_width - 10
         close_button_y = modal_y + 10
 
-        # Draw the "X (ESC)" text centered within the button area
         close_button_text = font.render("X (ESC)", True, (255, 0, 0))
         text_rect = close_button_text.get_rect(center=(close_button_x + close_button_width // 2, close_button_y + close_button_height // 2))
         screen.blit(close_button_text, text_rect)
@@ -110,11 +108,9 @@ class Cell:
             screen.blit(font.render(' '.join(line), True, (0, 0, 0)), (x, y))
     
     def get_info_text(self):
-        """Return cell information for educational purposes."""
         return "Cells protect the body from pathogens."
 
     def handle_click(self, mouse_pos, cells, level):
-        """Check if the cell is clicked and toggle the modal."""
         if self.rect.collidepoint(mouse_pos):
             # Close all other cells' modals
             for cell in cells:
@@ -124,11 +120,16 @@ class Cell:
             self.show_modal = not self.show_modal
             level.paused = self.show_modal  # Pause the game if the modal is open
 
-    def handle_modal_close(self, mouse_pos, level):
-        """Close modal if the close button is clicked."""
-        modal_width = 300
-        modal_height = 500
-        modal_x = 20
+    def handle_modal_close(self, screen, mouse_pos, level):
+        screen_width = screen.get_width()
+        if screen_width > 1200:  # Fullscreen mode
+            modal_width = 500
+            modal_height = 700
+            modal_x = 200
+        else:
+            modal_width = 300
+            modal_height = 500
+            modal_x = 20
         modal_y = (pygame.display.get_surface().get_height() - modal_height) // 2
 
         close_button_width = 90

@@ -64,6 +64,10 @@ class Pathogen:
     def draw(self, screen):
         if not self.alive:
             screen.blit(self.image, self.rect)
+    
+    def reposition(self, width_ratio, height_ratio):
+        self.rect.centerx = int(self.rect.centerx * width_ratio)
+        self.rect.centery = int(self.rect.centery * height_ratio)
 
 
 """

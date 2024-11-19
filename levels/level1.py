@@ -6,41 +6,34 @@ from objects.pathogen import Pathogen
 
 class Level1:
     def __init__(self, screen):
-        self.screen = screen
+        pygame.init()
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
 
         self.body_image = pygame.image.load('assets/images/body_placeholder.png')
-        self.macrophage = Macrophage()
+        screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
+        self.macrophage = Macrophage(screen_width, screen_height)
         self.cells = [Cell(i) for i in range(37)] 
 
         self.enemies = []
 
         self.spawn_timer = 0
         self.spawn_interval = 2000
+        self.resize_pause_timer = 0
+        self.resize_pause_duration = 2000 
         self.counter = 0
 
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 5000  # 30 seconds in milliseconds
+        self.win_time = 30000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
 
-
-    def toggle_fullscreen(self):
-        if self.fullscreen:
-            self.screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
-        else:
-            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-
-    def recenter_elements(self):
-        screen_width = self.screen.get_width()
-        screen_height = self.screen.get_height()
-
-        self.macrophage.reposition(screen_width, screen_height)
+        self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
 
     def run(self):
         while self.running:
@@ -62,13 +55,15 @@ class Level1:
                 
                 if event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                    self.recenter_elements()
+                    self.reposition_macrophage()
+                    self.reposition_pathogens()
+                    self.resize_pause_timer = pygame.time.get_ticks()
 
                 if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
                     mouse_pos = pygame.mouse.get_pos()
                     for cell in self.cells:
                         if cell.show_modal:
-                            cell.handle_modal_close(mouse_pos, self)
+                            cell.handle_modal_close(self.screen, mouse_pos, self)
                         else:
                             cell.handle_click(mouse_pos, self.cells, self)
 
@@ -100,7 +95,7 @@ class Level1:
 
                 # Spawn enemies
                 self.spawn_enemy()
-                self.macrophage.update()
+                self.macrophage.update(self.screen.get_width(), self.screen.get_height())
                 self.check_collisions()
 
                 # Move enemies towards the dynamically calculated center and the current cell
@@ -125,6 +120,42 @@ class Level1:
                 self.show_game_over_screen()
             
             pygame.display.flip()  # Update the screen with the new drawing
+    
+    def toggle_fullscreen(self):
+        if self.fullscreen:
+            self.screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+        else:
+            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
+    def recenter_elements(self):
+        screen_width = self.screen.get_width()
+        screen_height = self.screen.get_height()
+
+        self.macrophage.reposition(screen_width, screen_height)
+    
+    def reposition_macrophage(self):
+        screen_info = pygame.display.Info()
+        screen_width, screen_height = screen_info.current_w, screen_info.current_h
+
+        width_ratio = screen_width / self.previous_width
+        height_ratio = screen_height / self.previous_height
+
+        self.macrophage.rect.centerx = int(self.macrophage.rect.centerx * width_ratio)
+        self.macrophage.rect.centery = int(self.macrophage.rect.centery * height_ratio)
+
+        self.previous_width, self.previous_height = screen_width, screen_height
+
+    def reposition_pathogens(self):
+        screen_info = pygame.display.Info()
+        screen_width, screen_height = screen_info.current_w, screen_info.current_h
+
+        width_ratio = screen_width / self.previous_width
+        height_ratio = screen_height / self.previous_height
+
+        for pathogen in self.enemies:
+            pathogen.reposition(width_ratio, height_ratio)
+
+        self.previous_width, self.previous_height = screen_width, screen_height
     
     def generate_spawn_location(self):
         screen_width = self.screen.get_width()
@@ -164,6 +195,9 @@ class Level1:
         return [x, y]
 
     def spawn_enemy(self):
+        if pygame.time.get_ticks() - self.resize_pause_timer < self.resize_pause_duration:
+            return
+        
         if pygame.time.get_ticks() - self.spawn_timer > self.spawn_interval:
             spawn_location = self.generate_spawn_location()
             if random.choice([True, False]):
@@ -263,7 +297,8 @@ class Level1:
         self.cells = [Cell(i) for i in range(37)]
         self.enemies = []
         
-        self.macrophage = Macrophage()
+        screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
+        self.macrophage = Macrophage(screen_width, screen_height)
         self.recenter_elements()
         
         self.start_time = pygame.time.get_ticks()
