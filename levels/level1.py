@@ -165,8 +165,8 @@ class Level1:
         edge_padding = 100
 
         # Dynamically calculate gray area dimensions based on screen size
-        modal_width = int(screen_width * 0.8)  # 60% of screen width
-        modal_height = int(screen_height * 0.8)  # 40% of screen height
+        modal_width = int(screen_width * 0.8)  # 80% of screen width
+        modal_height = int(screen_height * 0.8)  # 80% of screen height
         center_x = screen_width // 2
         center_y = screen_height // 2
 
