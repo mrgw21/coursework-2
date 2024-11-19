@@ -1,12 +1,13 @@
 import pygame
 import random
+import platform
 from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
 
 class Level1:
     def __init__(self, screen):
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.screen = screen
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
@@ -53,10 +54,11 @@ class Level1:
                         self.reset_game()
                 
                 if event.type == pygame.VIDEORESIZE:
-                    self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                    self.reposition_macrophage()
-                    self.reposition_pathogens()
-                    self.resize_pause_timer = pygame.time.get_ticks()
+                    if not self.fullscreen:
+                        self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                        self.reposition_macrophage()
+                        self.reposition_pathogens()
+                        self.resize_pause_timer = pygame.time.get_ticks()
 
                 if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
                     mouse_pos = pygame.mouse.get_pos()
@@ -122,10 +124,14 @@ class Level1:
             pygame.display.flip()  # Update the screen with the new drawing
     
     def toggle_fullscreen(self):
-        if self.fullscreen:
-            self.screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+        import platform
+        if platform.system() == "Darwin":
+            # For macOS, handle fullscreen with NOFRAME to avoid issues
+            flags = pygame.FULLSCREEN | pygame.NOFRAME if not self.fullscreen else pygame.RESIZABLE
         else:
-            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            flags = pygame.FULLSCREEN if not self.fullscreen else pygame.RESIZABLE
+        self.screen = pygame.display.set_mode((0, 0), flags)
+        self.fullscreen = not self.fullscreen
 
     def recenter_elements(self):
         screen_width = self.screen.get_width()

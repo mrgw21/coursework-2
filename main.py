@@ -5,9 +5,7 @@ import os
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode(
-        (pygame.display.Info().current_w, pygame.display.Info().current_h), pygame.RESIZABLE
-    )
+    screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
     pygame.display.set_caption("Immune System Game")
 
     pdf_images = load_pdf_images("assets/introduction-materials/")
