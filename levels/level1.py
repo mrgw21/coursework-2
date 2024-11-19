@@ -28,7 +28,7 @@ class Level1:
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 30000  # 30 seconds in milliseconds
+        self.win_time = 3000000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
@@ -86,6 +86,7 @@ class Level1:
                     self.pause_start = None
 
             if not self.paused and not self.game_over:
+                self.check_game_over()
                 # Dynamically calculate the center of the screen
                 center_x = self.screen.get_width() // 2
                 center_y = self.screen.get_height() // 2
