@@ -48,7 +48,7 @@ class Intro1:
                     # Go to the previous page
                     if self.current_page > 0:
                         self.current_page -= 1
-                elif event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_RETURN and self.current_page == len(self.pdf_images) - 1:
                     # Transition to the Control Screen
                     self.running = False
                     self.next_screen = "control"
@@ -65,9 +65,15 @@ class Intro1:
         # Centerize the scaled image (by blitting at the top-left corner of the screen)
         surface.blit(scaled_image, (0, 0))
 
-        # Draw navigation text at the bottom center of the screen
+        if self.current_page == len(self.pdf_images) - 1:
+            guidance_text = "Press [<-] to return to intro. Hit RETURN/ENTER to play game!"
+        elif self.current_page == 0:
+            guidance_text = "Press [->] to continue!"
+        else:
+            guidance_text = "Press [<-] [->] to navigate."
+
         self.draw_text(
-            "Use [<-] [->] to navigate. Press ENTER to continue",
+            guidance_text,
             self.TEXT_FONT,
             self.BLACK,
             surface,
@@ -103,7 +109,7 @@ class Intro1:
             # Draw control screen
             screen.fill((0, 0, 0))  # Black background
             Intro1.draw_text("Controls Screen", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2)
-            Intro1.draw_text("Press ENTER to start the game", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 150)
+            Intro1.draw_text("Press RETURN/ENTER to start the game", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 150)
 
             pygame.display.flip()
             clock.tick(60)
@@ -132,7 +138,7 @@ class Intro1:
             # Draw game screen
             screen.fill((0, 0, 0))  # Black background
             Intro1.draw_text("Game Screen", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2)
-            Intro1.draw_text("Press ENTER to start Level 1", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 50)
+            Intro1.draw_text("Press RETURN/ENTER to start Level 1", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 50)
 
             pygame.display.flip()
             clock.tick(60)

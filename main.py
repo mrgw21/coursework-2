@@ -6,7 +6,7 @@ import os
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
-    pygame.display.set_caption("Immune System Game")
+    pygame.display.set_caption("Inside Immune")
 
     pdf_images = load_pdf_images("assets/introduction-materials/")
     intro1 = Intro1(screen, pdf_images)
