@@ -161,38 +161,30 @@ class Level1:
         screen_width = self.screen.get_width()
         screen_height = self.screen.get_height()
 
-        # Dimensions and center coordinates of the gray rectangle (modal)
-        modal_width = 700
-        modal_height = 300
+        # Define padding for edges
+        edge_padding = 100
+
+        # Dynamically calculate gray area dimensions based on screen size
+        modal_width = int(screen_width * 0.8)  # 60% of screen width
+        modal_height = int(screen_height * 0.8)  # 40% of screen height
         center_x = screen_width // 2
         center_y = screen_height // 2
 
-        # Calculate the boundaries of the gray rectangle
-        gray_left = max(0, center_x - modal_width // 2)
-        gray_right = min(screen_width, center_x + modal_width // 2)
-        gray_top = max(0, center_y - modal_height // 2)
-        gray_bottom = min(screen_height, center_y + modal_height // 2)
+        # Gray area boundaries
+        gray_left = center_x - modal_width // 2
+        gray_right = center_x + modal_width // 2
+        gray_top = center_y - modal_height // 2
+        gray_bottom = center_y + modal_height // 2
 
-        # Define a minimum distance from the center to ensure spawning is far enough
-        min_distance_x = 100
-        min_distance_y = 100
+        # Ensure valid spawn location outside the gray center area
+        while True:
+            # Generate a random spawn location within the screen bounds
+            x = random.randint(edge_padding, screen_width - edge_padding)
+            y = random.randint(edge_padding, screen_height - edge_padding)
 
-        side_pick = random.randint(1, 4)
-
-        if side_pick == 1:  # Top
-            x = random.randint(0, screen_width)
-            y = random.randint(0, max(0, gray_top - min_distance_y))
-        elif side_pick == 2:  # Left
-            x = random.randint(0, max(0, gray_left - min_distance_x))
-            y = random.randint(0, screen_height)
-        elif side_pick == 3:  # Bottom
-            x = random.randint(0, screen_width)
-            y = random.randint(min(screen_height, gray_bottom + min_distance_y), screen_height)
-        elif side_pick == 4:  # Right
-            x = random.randint(min(screen_width, gray_right + min_distance_x), screen_width)
-            y = random.randint(0, screen_height)
-
-        return [x, y]
+            # Check if the location is outside the dynamically calculated gray area
+            if not (gray_left <= x <= gray_right and gray_top <= y <= gray_bottom):
+                return [x, y]
 
     def spawn_enemy(self):
         if pygame.time.get_ticks() - self.resize_pause_timer < self.resize_pause_duration:
