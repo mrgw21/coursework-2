@@ -65,8 +65,7 @@ class IntroScreen(Screen):
 
     def draw(self, surface):
         surface.blit(self.pdf_images[self.current_page], (0, 0))
-        draw_text("Use LEFT/RIGHT arrows to navigate", TEXT_FONT, BLACK, surface, WIDTH // 2, HEIGHT - 50)
-        draw_text("Press ENTER to continue", TEXT_FONT, BLACK, surface, WIDTH // 2, HEIGHT - 20)
+        draw_text("Use [<-] [->] to navigate. Press ENTER to continue", TEXT_FONT, BLACK, surface, WIDTH // 2, HEIGHT - 20)
 
 #Screen 2 - Controls Screen
 class ControlsScreen(Screen):
