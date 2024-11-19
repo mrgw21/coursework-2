@@ -1,25 +1,6 @@
 import pygame 
 import math
 
-"""
-# Initialize Pygame
-pygame.init()
-
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Moving Pathogen with Image")
-
-# Colors
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-
-# Target settings (central cell area)
-target_radius = 30
-target_position = (WIDTH // 2, HEIGHT // 2)
-"""
-
-# Target settings (central cell area)
 class Pathogen:
     def __init__(self, x, y, type, screen_width=800, screen_height=600):
         self.x = x
@@ -67,30 +48,3 @@ class Pathogen:
     def reposition(self, width_ratio, height_ratio):
         self.rect.centerx = int(self.rect.centerx * width_ratio)
         self.rect.centery = int(self.rect.centery * height_ratio)
-
-
-"""
-# Game loop setup
-pathogen = Pathogen(100, 100, 2, 'virus_placeholder.png')  # Replace 'pathogen.png' with your image path
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Clear the screen
-    screen.fill(WHITE)
-
-    # Move and draw the pathogen
-    pathogen.move_towards_target(*target_position)
-    pathogen.draw(screen)
-
-    # Draw the target (central cell group)
-    pygame.draw.circle(screen, GREEN if not pathogen.alive else (255, 0, 0), target_position, target_radius)
-
-    # Update the display
-    pygame.display.flip()
-    pygame.time.delay(30)
-
-pygame.quit()
-"""
