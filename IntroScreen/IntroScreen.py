@@ -98,8 +98,10 @@ class GameScreen(Screen):
 
     def draw(self, surface):
         surface.fill(BLACK)
-        draw_text("Game Screen", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2)
-        draw_text("Press ESC to quit", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2 + 50)
+        draw_text("Controls Screen", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2)
+        draw_text("Use [W] [A] [S] [D]", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2 + 50)
+        draw_text("Use POINTER to click on the INFECTED Cells ", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2 + 100)
+        draw_text("Press ENTER to start the game", TEXT_FONT, WHITE, surface, WIDTH // 2, HEIGHT // 2 + 150)
 
 # Helper function to draw text
 def draw_text(text, font, color, surface, x, y):
