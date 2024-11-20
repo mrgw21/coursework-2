@@ -1,4 +1,5 @@
 import pygame
+import random
 
 class Cell:
     def __init__(self, position, center_pos=(400, 300)):
@@ -10,6 +11,9 @@ class Cell:
         self.health = "uninfected"  # Health status of the cell
         self.show_modal = False
         self.cell_number = position + 1  # Numbering for cells
+
+        self.infection_timer = 0  # Timer for slowing infected cell attacks
+        self.neighbors = [] 
 
         # Set initial position of the cell
         self.reposition(center_pos)
@@ -33,6 +37,7 @@ class Cell:
         self.health = "infected"
         self.image = pygame.image.load("assets/images/infected_cell.png")
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+        self.infection_timer = pygame.time.get_ticks()
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -149,3 +154,16 @@ class Cell:
             # Only unpause if the game was paused because of the modal
             if level.paused:
                 level.paused = False
+
+    def infect_neighbors(self):
+        neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))  # Randomly select neighbors
+        for neighbor in neighbors_to_infect:
+            if neighbor.state:  # Only infect uninfected neighbors
+                neighbor.die()
+    
+    def update_infection(self):
+        if not self.state:  # If the cell is infected
+            current_time = pygame.time.get_ticks()
+            if current_time - self.infection_timer > 2000:  # Delay of 2 seconds
+                self.infect_neighbors()  # Spread infection
+                self.infection_timer = current_time  # Reset timer

@@ -16,6 +16,7 @@ class Level1:
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height)
         self.cells = [Cell(i) for i in range(37)] 
+        self.assign_neighbors()
 
         self.enemies = []
 
@@ -115,6 +116,9 @@ class Level1:
                 if self.pause_start is not None:
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
+            
+            for cell in self.cells:
+                cell.update_infection()
 
             self.draw()
 
@@ -123,8 +127,32 @@ class Level1:
             
             pygame.display.flip()  # Update the screen with the new drawing
     
+    def assign_neighbors(self):
+        # Diamond layout (row-based)
+        row_layout = [3, 5, 7, 7, 7, 5, 3]  # Rows of cells
+        grid = []  # Flattened grid of cells for indexing
+        index = 0
+
+        for row_count in row_layout:
+            grid.append(self.cells[index:index + row_count])
+            index += row_count
+
+        for row_idx, row in enumerate(grid):
+            for col_idx, cell in enumerate(row):
+                neighbors = []
+                # Define potential neighbor directions in diamond pattern
+                directions = [
+                    (-1, -1), (-1, 0), (0, -1), (0, 1), (1, 0), (1, 1)
+                ]
+
+                for dr, dc in directions:
+                    r, c = row_idx + dr, col_idx + dc
+                    if 0 <= r < len(grid) and 0 <= c < len(grid[r]):
+                        neighbors.append(grid[r][c])
+                
+                cell.neighbors = neighbors
+
     def toggle_fullscreen(self):
-        import platform
         if platform.system() == "Darwin":
             # For macOS, handle fullscreen with NOFRAME to avoid issues
             flags = pygame.FULLSCREEN | pygame.NOFRAME if not self.fullscreen else pygame.RESIZABLE
@@ -208,13 +236,18 @@ class Level1:
     
     def check_collisions(self):
         for enemy in self.enemies[:]:
+            # Check collision with macrophage
             if self.macrophage.rect.colliderect(enemy.rect):
-                self.enemies.remove(enemy)
+                if enemy.target_cell and not enemy.target_cell.state:  # Attacking an infected cell
+                    if enemy.attack_infected_cell():  # Delay attacks
+                        self.enemies.remove(enemy)  # Remove pathogen after attack
+                else:
+                    self.enemies.remove(enemy)  # Normal attack speed for healthy cells
 
-            # Check if enemy reached the cells
+            # Check collision with cells
             for cell in self.cells:
                 if enemy.rect.colliderect(cell.rect) and cell.state:
-                    cell.die()
+                    cell.die()  # Infect the cell
                     self.enemies.remove(enemy)
                     break
     
@@ -293,12 +326,18 @@ class Level1:
     
     def reset_game(self):
         self.cells = [Cell(i) for i in range(37)]
+        self.assign_neighbors()
+
+        # Clear existing enemies
         self.enemies = []
-        
-        screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
+
+        screen_width, screen_height = self.screen.get_width(), self.screen.get_height()
+
         self.macrophage = Macrophage(screen_width, screen_height)
+
         self.recenter_elements()
-        
+
+        # Reset game timers and state
         self.start_time = pygame.time.get_ticks()
         self.total_paused_time = 0
         self.pause_start = None

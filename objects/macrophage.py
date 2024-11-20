@@ -11,10 +11,7 @@ class Macrophage:
         self.rect.center = (screen_width // 2 - 100, screen_height // 2)
 
     def reposition(self, screen_width, screen_height):
-        if screen_width == 800 and screen_height == 600:
-            self.rect.center = (300, 300)
-        else:
-            self.rect.center = (screen_width // 2 - 100, screen_height // 2)
+        self.rect.center = (screen_width // 2 - 100, screen_height // 2)
     
     def handle_input(self, screen_width, screen_height):
         keys = pygame.key.get_pressed()
