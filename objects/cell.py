@@ -278,7 +278,7 @@ class Cell:
                 neighbor.die()
     
     def update_infection(self):
-        if self.health != "infected":  # Only allow infected cells to spread
+        if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
             return
         current_time = pygame.time.get_ticks()
         if current_time - self.infection_timer > 2000:  # Delay of 2 seconds
@@ -293,10 +293,8 @@ class Cell:
         self.infection_timer = None  # Disable infection spread
 
     def stop_infection_and_neighbors(self):
-        self.stop_infection()  # Stops this cell
+        self.stop_infection()  # Stop the infection of this cell
         for neighbor in self.neighbors:
             if neighbor.health == "infected":
-                neighbor.state = True  # Reset state
-                neighbor.health = "uninfected"  # Reset health
-                neighbor.image = pygame.image.load("assets/images/uninfected_cell.png")
-                neighbor.image = pygame.transform.scale(neighbor.image, (neighbor.image.get_width() // 2.5, neighbor.image.get_height() // 2.5))
+                # Only stop the spread but do not reset the health or state of infected neighbors
+                neighbor.infection_timer = None  # Stop infection spread from this neighbor
