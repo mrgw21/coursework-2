@@ -11,9 +11,12 @@ class Cell:
         self.health = "uninfected"  # Health status of the cell
         self.show_modal = False
         self.cell_number = position + 1  # Numbering for cells
+        self.quiz = None 
 
         self.infection_timer = 0  # Timer for slowing infected cell attacks
         self.neighbors = [] 
+
+        self.option_coords = []
 
         # Set initial position of the cell
         self.reposition(center_pos)
@@ -47,6 +50,7 @@ class Cell:
     def draw_modal(self, screen):
         screen_width = screen.get_width()
 
+        # Determine modal dimensions based on screen size
         if screen_width > 1200:  # Fullscreen mode
             modal_width = 500
             modal_height = 700
@@ -62,35 +66,126 @@ class Cell:
         pygame.draw.rect(screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
 
         # Font for text
-        font = pygame.font.SysFont('Arial', 20)
-        
-        # Adjust button size and spacing
+        font = pygame.font.SysFont("Arial", 20)
+
+        # Close button
         close_button_width = 90
         close_button_height = 25
         close_button_x = modal_x + modal_width - close_button_width - 10
         close_button_y = modal_y + 10
-
         close_button_text = font.render("X (ESC)", True, (255, 0, 0))
-        text_rect = close_button_text.get_rect(center=(close_button_x + close_button_width // 2, close_button_y + close_button_height // 2))
+        text_rect = close_button_text.get_rect(
+            center=(close_button_x + close_button_width // 2, close_button_y + close_button_height // 2)
+        )
         screen.blit(close_button_text, text_rect)
-
-        # Draw a red rectangle for visual feedback (optional)
         pygame.draw.rect(screen, (255, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
 
-        # Draw cell information below the close button with spacing
+        # Display cell information
         cell_number_text = f"Cell #{self.cell_number}"
         health_text = f"Health: {self.health}" if self.state else "infected"
         info_text = self.get_info_text()
 
-        # Adjust the starting y-position for content
         content_start_y = close_button_y + close_button_height + 20
-        
-        # Display cell number, health status, and information with proper spacing
+
+        # Display cell number and health
         screen.blit(font.render(cell_number_text, True, (0, 0, 0)), (modal_x + 10, content_start_y))
         screen.blit(font.render(health_text, True, (0, 0, 0)), (modal_x + 10, content_start_y + 30))
-        
-        # Use text wrapping function to fit info text within the modal
+
+        # Draw cell information with text wrapping
         self.draw_wrapped_text(screen, info_text, font, modal_x + 10, content_start_y + 60, modal_width - 20)
+
+        # Draw cell image
+        if self.health == "dead":
+            cell_image = pygame.image.load("assets/images/dead_cell_placeholder.png")
+            cell_image = pygame.transform.scale(cell_image, (100, 100))
+        else:
+            cell_image = pygame.image.load("assets/images/infected_cell.png")
+            cell_image = pygame.transform.scale(cell_image, (100, 100))
+        screen.blit(cell_image, (modal_x + (modal_width // 2) - 50, content_start_y + 115))
+
+        # Draw quiz if applicable
+        if self.quiz:
+            self.draw_quiz(screen, modal_x, modal_y, content_start_y + 250, modal_width)
+
+        # Draw feedback
+        if hasattr(self, "quiz_feedback") and self.quiz_feedback:
+            feedback_text = font.render(self.quiz_feedback["message"], True, self.quiz_feedback["color"])
+            feedback_rect = feedback_text.get_rect(
+                center=(modal_x + modal_width // 2, modal_y + modal_height - 70)
+            )
+            screen.blit(feedback_text, feedback_rect)
+    
+    def draw_quiz(self, screen, modal_x, modal_y, start_y, modal_width):
+        font = pygame.font.SysFont("Arial", 18)
+        quiz = self.quiz
+
+        # Question text
+        question_text = self.wrap_text(quiz["question"], font, modal_width - 20)
+        current_y = start_y
+
+        # Display the question text
+        for line in question_text:
+            rendered_text = font.render(line, True, (0, 0, 0))
+            screen.blit(rendered_text, (modal_x + 10, current_y))
+            current_y += 25  # Line spacing
+
+        # Options (radio buttons with text)
+        new_option_coords = []  # Temporary list to store new coordinates
+        for i, option in enumerate(quiz["options"]):
+            option_y = current_y + 20 + i * 40  # Adjust spacing between options
+
+            # Draw circle for radio button
+            circle_x = modal_x + 20  # Left margin for radio button
+            # Default circle and text color
+            circle_color = (0, 0, 0)
+            text_color = (0, 0, 0)
+
+            # Check if this option has a "selected_color"
+            for option_data in self.option_coords:
+                if option_data["option"] == option and "selected_color" in option_data:
+                    circle_color = option_data["selected_color"]
+                    text_color = option_data["selected_color"]
+
+            pygame.draw.circle(screen, circle_color, (circle_x, option_y), 10, 1)
+
+            # Render option text
+            rendered_text = font.render(option["text"], True, text_color)
+            screen.blit(rendered_text, (circle_x + 20, option_y - 10))  # Adjust text placement
+
+            # Add this option to the clickable areas list
+            new_option_coords.append({"circle": (circle_x, option_y), "radius": 10, "option": option})
+
+        # Update `self.option_coords` with the new values
+        self.option_coords = new_option_coords
+
+    def wrap_text(self, text, font, max_width):
+        words = text.split(' ')
+        lines = []
+        current_line = words[0]
+
+        for word in words[1:]:
+            if font.size(current_line + ' ' + word)[0] < max_width:
+                current_line += ' ' + word
+            else:
+                lines.append(current_line)
+                current_line = word
+        lines.append(current_line)
+        return lines
+
+    def handle_quiz_answer(self, selected_option, level):
+        for option in self.quiz["options"]:
+            if option == selected_option:
+                if option["is_correct"]:
+                    # Correct answer
+                    self.quiz_feedback = {"message": "Congratulations! You got the right answer!", "color": (0, 255, 0)}
+                    self.health = "dead"
+                    self.image = pygame.image.load("assets/images/dead_cell_placeholder.png")
+                    self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+                    self.feedback_timer = pygame.time.get_ticks()  # Start feedback timer
+                else:
+                    # Incorrect answer
+                    self.quiz_feedback = {"message": "Wrong answer! Try again!", "color": (255, 0, 0)}
+                    self.feedback_timer = None  # No closure for incorrect answers
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
         words = text.split(' ')
@@ -116,15 +211,32 @@ class Cell:
     def handle_click(self, mouse_pos, cells, level):
         if self.health == "uninfected":
             return
-        
+
+        # If the modal is already open
+        if self.show_modal:
+            # Close the modal when clicked outside the interactive elements
+            return  # Handle other modal interactions elsewhere
+
+        # If the modal is not open, check if the infected cell was clicked
         if self.rect.collidepoint(mouse_pos):
-            # Close all other cells' modals
             for cell in cells:
                 if cell != self:
                     cell.show_modal = False
+            self.show_modal = True
+            level.paused = True
+    
+    def handle_radio_button_click(self, screen, mouse_pos, cells, level):
+        if not self.show_modal or not hasattr(self, "option_coords"):
+            return
 
-            self.show_modal = not self.show_modal
-            level.paused = self.show_modal  # Pause the game if the modal is open
+        for option_data in self.option_coords:
+            circle_x, circle_y = option_data["circle"]
+            radius = option_data["radius"]
+            # Check if the mouse position is within the radius of the radio button
+            distance = ((mouse_pos[0] - circle_x) ** 2 + (mouse_pos[1] - circle_y) ** 2) ** 0.5
+            if distance <= radius:
+                self.handle_quiz_answer(option_data["option"], level)
+                return
 
     def handle_modal_close(self, screen, mouse_pos, level):
         screen_width = screen.get_width()

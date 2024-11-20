@@ -4,6 +4,7 @@ import platform
 from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
+from data.quizzes import quizzes
 
 class Level1:
     def __init__(self, screen):
@@ -11,11 +12,21 @@ class Level1:
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
+        self.fullscreen = False
 
         self.body_image = pygame.image.load('assets/images/body_placeholder.png')
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height)
         self.cells = [Cell(i) for i in range(37)] 
+
+        random.shuffle(quizzes)
+        quiz_index = 0
+        for cell in self.cells:
+            cell.quiz = quizzes[quiz_index]
+            quiz_index += 1
+            if quiz_index >= len(quizzes):
+                quiz_index = 0
+
         self.assign_neighbors()
 
         self.enemies = []
@@ -66,6 +77,7 @@ class Level1:
                     for cell in self.cells:
                         if cell.show_modal:
                             cell.handle_modal_close(self.screen, mouse_pos, self)
+                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
                         else:
                             cell.handle_click(mouse_pos, self.cells, self)
 
@@ -357,6 +369,15 @@ class Level1:
             pygame.display.flip()
             pygame.time.delay(500)
         self.paused = False
+
+    def handle_feedback_closure(self):
+        current_time = pygame.time.get_ticks()
+        for cell in self.cells:
+            if cell.show_modal and hasattr(cell, "feedback_timer") and cell.feedback_timer:
+                if current_time - cell.feedback_timer > 1000:  # 1 second
+                    cell.show_modal = False  # Close modal
+                    cell.feedback_timer = None  # Reset timer
+                    self.paused = False  # Unpause game
         
     def draw(self):   
         center_x = self.screen.get_width() // 2
@@ -405,3 +426,5 @@ class Level1:
             paused_text = paused_font.render("Paused", True, (255, 0, 0))
             text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
             self.screen.blit(paused_text, text_rect)
+
+        self.handle_feedback_closure()
