@@ -45,7 +45,6 @@ class Cell:
             self.draw_modal(screen)
 
     def draw_modal(self, screen):
-        """Draw a modal with cell information."""
         screen_width = screen.get_width()
 
         if screen_width > 1200:  # Fullscreen mode
@@ -94,7 +93,6 @@ class Cell:
         self.draw_wrapped_text(screen, info_text, font, modal_x + 10, content_start_y + 60, modal_width - 20)
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
-        """Render wrapped text within the specified width."""
         words = text.split(' ')
         space = font.size(' ')[0]
         line = []
@@ -116,6 +114,9 @@ class Cell:
         return "Cells protect the body from pathogens."
 
     def handle_click(self, mouse_pos, cells, level):
+        if self.health == "uninfected":
+            return
+        
         if self.rect.collidepoint(mouse_pos):
             # Close all other cells' modals
             for cell in cells:
