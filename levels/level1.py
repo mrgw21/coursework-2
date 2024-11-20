@@ -96,6 +96,9 @@ class Level1:
                 self.screen.fill((255, 255, 255))
                 self.clock.tick(60)
 
+                for cell in self.cells:
+                    cell.update_infection()
+
                 # Spawn enemies
                 self.spawn_enemy()
                 self.macrophage.update(self.screen.get_width(), self.screen.get_height())
@@ -116,9 +119,6 @@ class Level1:
                 if self.pause_start is not None:
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
-            
-            for cell in self.cells:
-                cell.update_infection()
 
             self.draw()
 
