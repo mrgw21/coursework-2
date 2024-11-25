@@ -5,6 +5,8 @@ from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
 from data.quizzes import quizzes
+from ui.sidebar import Sidebar
+from ui.timer import Timer
 
 class Level1:
     def __init__(self, screen):
@@ -14,9 +16,15 @@ class Level1:
         self.paused = False
         self.fullscreen = False
 
+        self.sidebar_width = 400
+        self.sidebar = Sidebar(options=["Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Statistics", "Settings", "Controls", "About"], font=pygame.font.SysFont("Arial", 24))
+
         self.body_image = pygame.image.load('assets/images/body_placeholder.png')
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
-        self.macrophage = Macrophage(screen_width, screen_height)
+        self.macrophage = Macrophage(screen_width, screen_height, sidebar_width=self.sidebar_width)
+
+        self.game_width = screen_width - self.sidebar_width
+        self.game_center_x = self.game_width // 2 + self.sidebar_width // 2
         self.cells = [Cell(i) for i in range(37)] 
 
         random.shuffle(quizzes)
@@ -45,6 +53,8 @@ class Level1:
         self.game_over = False
         self.win = True
 
+        self.timer = Timer(font=pygame.font.SysFont("Arial", 24))
+
         self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
 
     def run(self):
@@ -61,7 +71,10 @@ class Level1:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
                         self.toggle_fullscreen()
-
+                    elif event.key == pygame.K_m:  # Toggle sidebar
+                        self.sidebar.toggle()
+                        self.handle_sidebar_toggle()
+                    
                     if event.key == pygame.K_SPACE and self.game_over:
                         self.reset_game()
                 
@@ -72,14 +85,21 @@ class Level1:
                         self.reposition_pathogens()
                         self.resize_pause_timer = pygame.time.get_ticks()
 
-                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    for cell in self.cells:
-                        if cell.show_modal:
-                            cell.handle_modal_close(self.screen, mouse_pos, self)
-                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
-                        else:
-                            cell.handle_click(mouse_pos, self.cells, self)
+
+                    # Check if clicking the pause/play button
+                    pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
+                    if pause_button_rect.collidepoint(mouse_pos):
+                        self.paused = not self.paused
+
+                    if not self.sidebar.visible and not self.game_over:
+                        for cell in self.cells:
+                            if cell.show_modal:
+                                cell.handle_modal_close(self.screen, mouse_pos, self)
+                                cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+                            else:
+                                cell.handle_click(mouse_pos, self.cells, self)
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
@@ -102,8 +122,7 @@ class Level1:
             if not self.paused and not self.game_over:
                 self.check_game_over()
                 # Dynamically calculate the center of the screen
-                center_x = self.screen.get_width() // 2
-                center_y = self.screen.get_height() // 2
+                self.game_center_x = (self.game_width // 2) + (self.sidebar_width // 2)
 
                 self.screen.fill((255, 255, 255))
                 self.clock.tick(60)
@@ -113,7 +132,7 @@ class Level1:
 
                 # Spawn enemies
                 self.spawn_enemy()
-                self.macrophage.update(self.screen.get_width(), self.screen.get_height())
+                self.macrophage.update(self.screen.get_width(), self.screen.get_height(), self.sidebar.width if self.sidebar.visible else 25)
                 self.check_collisions()
 
                 # Move enemies towards the dynamically calculated center and the current cell
@@ -121,7 +140,7 @@ class Level1:
                     current_cell = self.cells[self.counter]
                     for enemy in self.enemies:
                         # Pass center coordinates and the current cell as arguments
-                        if enemy.move_towards_target(center_x, center_y, current_cell):
+                        if enemy.move_towards_target(self.game_center_x, self.screen.get_height() // 2, current_cell):
                             self.counter += 1
             
             if self.paused:
@@ -166,6 +185,14 @@ class Level1:
                 
                 cell.neighbors = neighbors
 
+    def handle_sidebar_toggle(self):
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+        self.game_width = self.screen.get_width() - sidebar_width
+        self.game_center_x = sidebar_width + self.game_width // 2
+        self.reposition_macrophage()
+        self.reposition_pathogens()
+        self.draw()  # Redraw elements with updated positions
+
     def toggle_fullscreen(self):
         if platform.system() == "Darwin":
             # For macOS, handle fullscreen with NOFRAME to avoid issues
@@ -182,28 +209,38 @@ class Level1:
         self.macrophage.reposition(screen_width, screen_height)
     
     def reposition_macrophage(self):
-        screen_info = pygame.display.Info()
-        screen_width, screen_height = screen_info.current_w, screen_info.current_h
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+        new_game_width = self.screen.get_width() - sidebar_width
+        new_screen_height = self.screen.get_height()
 
-        width_ratio = screen_width / self.previous_width
-        height_ratio = screen_height / self.previous_height
+        # Calculate relative position within the old dimensions
+        old_game_width = self.previous_width - self.sidebar_width
+        old_screen_height = self.previous_height
 
-        self.macrophage.rect.centerx = int(self.macrophage.rect.centerx * width_ratio)
-        self.macrophage.rect.centery = int(self.macrophage.rect.centery * height_ratio)
+        # Ensure the old dimensions are non-zero to prevent division errors
+        if old_game_width > 0 and old_screen_height > 0:
+            relative_x = (self.macrophage.rect.centerx - self.sidebar_width) / old_game_width
+            relative_y = self.macrophage.rect.centery / old_screen_height
 
-        self.previous_width, self.previous_height = screen_width, screen_height
+            # Adjust the new position relative to the resized game area
+            self.macrophage.rect.centerx = int(sidebar_width + relative_x * new_game_width)
+            self.macrophage.rect.centery = int(relative_y * new_screen_height)
+        else:
+            # Fallback to center the macrophage if old dimensions are zero (initialization case)
+            self.macrophage.rect.centerx = sidebar_width + new_game_width // 2
+            self.macrophage.rect.centery = new_screen_height // 2
+
+        # Update previous dimensions
+        self.previous_width = self.screen.get_width()
+        self.previous_height = self.screen.get_height()
+        self.sidebar_width = sidebar_width
 
     def reposition_pathogens(self):
-        screen_info = pygame.display.Info()
-        screen_width, screen_height = screen_info.current_w, screen_info.current_h
-
-        width_ratio = screen_width / self.previous_width
-        height_ratio = screen_height / self.previous_height
-
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
         for pathogen in self.enemies:
-            pathogen.reposition(width_ratio, height_ratio)
-
-        self.previous_width, self.previous_height = screen_width, screen_height
+            # Adjust the x-coordinate if pathogens are within the sidebar area
+            if pathogen.rect.left < sidebar_width:
+                pathogen.rect.left = sidebar_width
     
     def generate_spawn_location(self):
         screen_width = self.screen.get_width()
@@ -211,11 +248,12 @@ class Level1:
 
         # Define padding for edges
         edge_padding = 100
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
 
         # Dynamically calculate gray area dimensions based on screen size
-        modal_width = int(screen_width * 0.8)  # 80% of screen width
-        modal_height = int(screen_height * 0.8)  # 80% of screen height
-        center_x = screen_width // 2
+        modal_width = int(screen_width * 0.6)  # Adjusted to 60% of screen width
+        modal_height = int(screen_height * 0.6)  # Adjusted to 60% of screen height
+        center_x = sidebar_width + (screen_width - sidebar_width) // 2
         center_y = screen_height // 2
 
         # Gray area boundaries
@@ -224,13 +262,12 @@ class Level1:
         gray_top = center_y - modal_height // 2
         gray_bottom = center_y + modal_height // 2
 
-        # Ensure valid spawn location outside the gray center area
         while True:
-            # Generate a random spawn location within the screen bounds
-            x = random.randint(edge_padding, screen_width - edge_padding)
+            # Generate a random spawn location within the valid game bounds
+            x = random.randint(sidebar_width + edge_padding, screen_width - edge_padding)
             y = random.randint(edge_padding, screen_height - edge_padding)
 
-            # Check if the location is outside the dynamically calculated gray area
+            # Ensure spawn location is outside the gray center area
             if not (gray_left <= x <= gray_right and gray_top <= y <= gray_bottom):
                 return [x, y]
 
@@ -297,10 +334,14 @@ class Level1:
             self.paused = True
 
     def show_game_over_screen(self):
-        modal_width = 700
-        modal_height = 300
-        modal_x = (self.screen.get_width() - modal_width) // 2
-        modal_y = (self.screen.get_height() - modal_height) // 2
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+        game_width = self.screen.get_width() - sidebar_width
+        game_center_x = sidebar_width + game_width // 2
+        game_center_y = self.screen.get_height() // 2
+
+        modal_width, modal_height = 700, 300
+        modal_x = game_center_x - modal_width // 2
+        modal_y = game_center_y - modal_height // 2
 
         pygame.draw.rect(self.screen, (220, 220, 220), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 5)
@@ -356,8 +397,7 @@ class Level1:
                 quiz_index = 0
 
         # Reset macrophage
-        screen_width, screen_height = self.screen.get_width(), self.screen.get_height()
-        self.macrophage = Macrophage(screen_width, screen_height)
+        self.macrophage.set_initial_position(self.screen.get_width(), self.screen.get_height())
 
         # Recenter elements
         self.recenter_elements()
@@ -404,17 +444,27 @@ class Level1:
                         self.pause_start = None
                     self.paused = False  # Unpause game
         
-    def draw(self):   
-        center_x = self.screen.get_width() // 2
+    def draw(self):
+        # Determine sidebar width dynamically
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+
+        # Adjust the center and game area for the sidebar
+        game_width = self.screen.get_width() - sidebar_width
+        center_x = sidebar_width + game_width // 2  # Center within the adjusted game area
         center_y = self.screen.get_height() // 2
 
+        # Fill the screen background
         self.screen.fill((255, 255, 255))
 
+        # Draw the sidebar
+        self.sidebar.draw(self.screen)
+
+        # Adjust body image placement
         img = self.body_image
         img = pygame.transform.scale(img, (img.get_width() * 0.32, img.get_height() * 0.32))
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
-        
+
         # Draw cells, macrophages, and enemies
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
@@ -424,12 +474,12 @@ class Level1:
         for enemy in self.enemies:
             enemy.draw(self.screen)
 
-        # Draw cell modal on top of everything else
+        # Draw cell modals if active
         for cell in self.cells:
             if cell.show_modal:
                 cell.draw_modal(self.screen)
 
-        # Update timer only if game is running and not paused
+        # Update the timer only if the game is running and not paused
         if not self.paused and not self.game_over:
             current_time = pygame.time.get_ticks()
             elapsed_time = current_time - self.start_time - self.total_paused_time
@@ -439,13 +489,11 @@ class Level1:
                 self.game_over = True
                 self.paused = True
 
-        # Draw the timer
-        font = pygame.font.SysFont('Arial', 24)
-        time_text = font.render(f"Time Left: {self.remaining_time}s", True, (0, 0, 0))
-        self.screen.blit(time_text, (10, 10))
+        # Draw timer and pause/play button
+        self.timer.draw(self.screen, self.remaining_time, self.paused)
 
-        if self.paused and not self.game_over:
-            paused_font = pygame.font.SysFont('Arial', 24, bold=True)
-            paused_text = paused_font.render("Paused", True, (255, 0, 0))
-            text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
-            self.screen.blit(paused_text, text_rect)
+        button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
+        pause_button = pygame.image.load(button_icon)
+        pause_button = pygame.transform.scale(pause_button, (40, 40))
+        button_position = (self.screen.get_width() - 60, 22)
+        self.screen.blit(pause_button, button_position)

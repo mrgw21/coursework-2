@@ -1,6 +1,5 @@
 import pygame
 import math
-import random
 
 class Pathogen:
     def __init__(self, x, y, type, screen_width=None, screen_height=None):
@@ -34,10 +33,7 @@ class Pathogen:
 
     def move_towards_target(self, center_x, center_y, cell=None):
         if not self.alive:
-            # Move towards the screen center or a target cell
-            if cell and not self.target_cell:
-                self.target_cell = cell  # Assign a target cell if available
-            target_x, target_y = (self.target_cell.rect.center if self.target_cell else (center_x, center_y))
+            target_x, target_y = (cell.rect.center if cell else (center_x, center_y))
 
             dx, dy = target_x - self.x, target_y - self.y
             distance = math.hypot(dx, dy)
@@ -48,13 +44,12 @@ class Pathogen:
                 self.rect.center = (self.x, self.y)
             else:
                 self.alive = True
-                if self.target_cell:
-                    self.target_cell.die()
+                if cell:
+                    cell.die()
                 return True
         return False
 
     def attack_infected_cell(self):
-        """Attack infected cells with a delay."""
         current_time = pygame.time.get_ticks()
         if current_time - self.attack_timer > 1500:  # Attack delay of 1.5 seconds
             self.attack_timer = current_time  # Reset the attack timer
