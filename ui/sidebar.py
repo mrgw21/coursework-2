@@ -27,3 +27,18 @@ class Sidebar:
 
     def toggle(self):
         self.visible = not self.visible
+
+    def handle_event(self, event):
+        if not self.visible:
+            return False  # Sidebar is hidden, so don't handle the event
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if mouse_pos[0] < self.width:  # Click is inside the sidebar
+                y_offset = 100
+                for i, option in enumerate(self.options):
+                    option_rect = pygame.Rect(20, y_offset + i * 40, self.width - 40, 30)
+                    if option_rect.collidepoint(mouse_pos):
+                        # Handle sidebar actions here
+                        return True  # Event handled by the sidebar
+        return False  # Sidebar didn't handle the event

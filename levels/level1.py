@@ -68,6 +68,10 @@ class Level1:
                     pygame.display.flip()
                 """
 
+                # Pass event to sidebar first if it's visible
+                if self.sidebar.visible and self.sidebar.handle_event(event):
+                    continue  # Skip other event handling if the sidebar handles the event
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
                         self.toggle_fullscreen()
@@ -88,24 +92,29 @@ class Level1:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
-                    # Check if clicking the pause/play button
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
                     if pause_button_rect.collidepoint(mouse_pos):
                         self.paused = not self.paused
+                        continue  # Skip further processing if the pause button was clicked
 
-                    if not self.sidebar.visible and not self.game_over:
-                        for cell in self.cells:
-                            if cell.show_modal:
-                                cell.handle_modal_close(self.screen, mouse_pos, self)
-                                cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
-                            else:
-                                cell.handle_click(mouse_pos, self.cells, self)
+                    modal_active = False
+                    for cell in self.cells:
+                        if cell.show_modal:
+                            # Handle modal close or radio button interactions
+                            cell.handle_modal_close(self.screen, mouse_pos)
+                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+                            modal_active = True  # Modal interaction occurred
+                            break  # Only one modal is active at a time
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        for cell in self.cells:
-                            if cell.show_modal:
-                                cell.handle_keydown(event.key, self)
+                    if modal_active:
+                        self.paused = True  # Game remains paused if a modal is open
+                        continue  # Skip further processing if a modal interaction occurred
+
+                    for cell in self.cells:
+                        if not cell.show_modal:
+                            cell.handle_click(mouse_pos, self.cells, self)
+
+                    self.paused = any(cell.show_modal for cell in self.cells)
             
             if not self.paused and self.game_over:
                 self.check_game_over()
@@ -189,9 +198,16 @@ class Level1:
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
         self.game_width = self.screen.get_width() - sidebar_width
         self.game_center_x = sidebar_width + self.game_width // 2
+
         self.reposition_macrophage()
         self.reposition_pathogens()
-        self.draw()  # Redraw elements with updated positions
+
+        # Ensure any open modals are correctly repositioned
+        for cell in self.cells:
+            if cell.show_modal:
+                cell.modal_position_updated = True  # Add flag to trigger reposition logic in draw_modal
+
+        self.draw() # Redraw elements with updated positions
 
     def toggle_fullscreen(self):
         if platform.system() == "Darwin":
@@ -237,10 +253,28 @@ class Level1:
 
     def reposition_pathogens(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+        new_game_width = self.screen.get_width() - sidebar_width
+        new_screen_height = self.screen.get_height()
+
+        old_game_width = self.previous_width - self.sidebar_width
+        old_screen_height = self.previous_height
+
+        if old_game_width > 0 and old_screen_height > 0:
+            width_ratio = new_game_width / old_game_width
+            height_ratio = new_screen_height / old_screen_height
+
+            for pathogen in self.enemies:
+                # Dynamically reposition each pathogen
+                pathogen.reposition(sidebar_width, width_ratio, height_ratio)
+
+        # Ensure pathogens outside bounds after repositioning are adjusted
         for pathogen in self.enemies:
-            # Adjust the x-coordinate if pathogens are within the sidebar area
             if pathogen.rect.left < sidebar_width:
-                pathogen.rect.left = sidebar_width
+                pathogen.rect.left = sidebar_width + 20  # Offset slightly outside the sidebar
+
+        # Update previous dimensions
+        self.previous_width = self.screen.get_width()
+        self.previous_height = self.screen.get_height()
     
     def generate_spawn_location(self):
         screen_width = self.screen.get_width()
@@ -267,7 +301,7 @@ class Level1:
             x = random.randint(sidebar_width + edge_padding, screen_width - edge_padding)
             y = random.randint(edge_padding, screen_height - edge_padding)
 
-            # Ensure spawn location is outside the gray center area
+            # Ensure spawn location is outside the gray center area and sidebar
             if not (gray_left <= x <= gray_right and gray_top <= y <= gray_bottom):
                 return [x, y]
 
@@ -456,9 +490,6 @@ class Level1:
         # Fill the screen background
         self.screen.fill((255, 255, 255))
 
-        # Draw the sidebar
-        self.sidebar.draw(self.screen)
-
         # Adjust body image placement
         img = self.body_image
         img = pygame.transform.scale(img, (img.get_width() * 0.32, img.get_height() * 0.32))
@@ -468,7 +499,7 @@ class Level1:
         # Draw cells, macrophages, and enemies
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
-            cell.draw(self.screen)
+            cell.draw(self.screen, sidebar_width)
 
         self.macrophage.draw(self.screen)
         for enemy in self.enemies:
@@ -477,7 +508,7 @@ class Level1:
         # Draw cell modals if active
         for cell in self.cells:
             if cell.show_modal:
-                cell.draw_modal(self.screen)
+                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25)
 
         # Update the timer only if the game is running and not paused
         if not self.paused and not self.game_over:
@@ -497,3 +528,6 @@ class Level1:
         pause_button = pygame.transform.scale(pause_button, (40, 40))
         button_position = (self.screen.get_width() - 60, 22)
         self.screen.blit(pause_button, button_position)
+
+        # Finally, draw the sidebar on top of everything
+        self.sidebar.draw(self.screen)

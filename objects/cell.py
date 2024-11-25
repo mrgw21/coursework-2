@@ -43,23 +43,26 @@ class Cell:
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
         self.infection_timer = pygame.time.get_ticks()
     
-    def draw(self, screen):
+    def draw(self, screen, sidebar_width):
         screen.blit(self.image, self.rect)
-        if self.show_modal:
-            self.draw_modal(screen)
 
-    def draw_modal(self, screen):
+        if self.show_modal:
+            self.draw_modal(screen, sidebar_width)
+
+    def draw_modal(self, screen, sidebar_width):
         screen_width = screen.get_width()
 
         # Determine modal dimensions based on screen size
         if screen_width > 1200:  # Fullscreen mode
             modal_width = 500
             modal_height = 700
-            modal_x = 200
         else:
             modal_width = 300
             modal_height = 500
-            modal_x = 20
+
+        # Calculate modal position dynamically, respecting the sidebar
+        game_width = screen_width - sidebar_width
+        modal_x = sidebar_width + (game_width - modal_width) // 2 - 350
         modal_y = (screen.get_height() - modal_height) // 2
 
         # Draw modal background and border
@@ -74,12 +77,27 @@ class Cell:
         close_button_height = 25
         close_button_x = modal_x + modal_width - close_button_width - 10
         close_button_y = modal_y + 10
+
+        # Draw the button background (same as modal color)
+        pygame.draw.rect(screen, (220, 220, 220), (close_button_x, close_button_y, close_button_width, close_button_height))
+        # Draw button border in red
+        pygame.draw.rect(screen, (255, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
+
+        # Render the button text in red
         close_button_text = font.render("X (ESC)", True, (255, 0, 0))
         text_rect = close_button_text.get_rect(
             center=(close_button_x + close_button_width // 2, close_button_y + close_button_height // 2)
         )
         screen.blit(close_button_text, text_rect)
-        pygame.draw.rect(screen, (255, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
+
+        # Handle close button click detection
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pressed = pygame.mouse.get_pressed()
+
+        if (close_button_x <= mouse_pos[0] <= close_button_x + close_button_width and
+            close_button_y <= mouse_pos[1] <= close_button_y + close_button_height):
+            if mouse_pressed[0]:  # Left mouse button pressed
+                self.show_modal = False  # Close the modal
 
         # Display cell information
         cell_number_text = f"Cell #{self.cell_number}"
@@ -215,10 +233,10 @@ class Cell:
         if self.health == "uninfected" or self.health == "dead":
             return
 
-        # If the modal is already open
-        if self.show_modal:
-            # Close the modal when clicked outside the interactive elements
-            return  # Handle other modal interactions elsewhere
+        # Toggle modal on click
+        if self.rect.collidepoint(mouse_pos):
+            self.show_modal = not self.show_modal
+            level.paused = self.show_modal
 
         # If the modal is not open, check if the infected cell was clicked
         if self.rect.collidepoint(mouse_pos):
@@ -241,7 +259,7 @@ class Cell:
                 self.handle_quiz_answer(option_data["option"], level)
                 return
 
-    def handle_modal_close(self, screen, mouse_pos, level):
+    def handle_modal_close(self, screen, mouse_pos):
         screen_width = screen.get_width()
         if screen_width > 1200:  # Fullscreen mode
             modal_width = 500
@@ -258,11 +276,9 @@ class Cell:
         close_button_x = modal_x + modal_width - close_button_width - 10
         close_button_y = modal_y + 10
 
-        # Check if the mouse click is within the close button area
         if close_button_x <= mouse_pos[0] <= close_button_x + close_button_width and \
         close_button_y <= mouse_pos[1] <= close_button_y + close_button_height:
             self.show_modal = False
-            level.paused = False
 
     def handle_keydown(self, key, level):
         if key == pygame.K_ESCAPE and self.show_modal:

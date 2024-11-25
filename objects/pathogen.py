@@ -60,7 +60,15 @@ class Pathogen:
         if not self.alive:
             screen.blit(self.image, self.rect)
     
-    def reposition(self, width_ratio, height_ratio):
-        # Dynamically adjust position based on screen resize ratios
-        self.rect.centerx = int(self.rect.centerx * width_ratio)
-        self.rect.centery = int(self.rect.centery * height_ratio)
+    def reposition(self, sidebar_width, width_ratio, height_ratio):
+        # Adjust the position based on resizing ratios
+        new_x = sidebar_width + (self.rect.centerx - sidebar_width) * width_ratio
+        new_y = self.rect.centery * height_ratio
+
+        # Ensure pathogen does not overlap the sidebar
+        if new_x < sidebar_width:
+            new_x = sidebar_width + 20  # Offset slightly outside the sidebar
+
+        # Update pathogen position
+        self.rect.centerx = int(new_x)
+        self.rect.centery = int(new_y)
