@@ -78,7 +78,11 @@ class Level1:
                     elif event.key == pygame.K_m:  # Toggle sidebar
                         self.sidebar.toggle()
                         self.handle_sidebar_toggle()
-                    
+                    if event.key == pygame.K_ESCAPE and self.paused:
+                        for cell in self.cells:
+                            if cell.show_modal:
+                                cell.show_modal = False
+                        self.paused = False
                     if event.key == pygame.K_SPACE and self.game_over:
                         self.reset_game()
                 
@@ -92,23 +96,20 @@ class Level1:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
+                    # Pause/Play Button Handling
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
                     if pause_button_rect.collidepoint(mouse_pos):
                         self.paused = not self.paused
                         continue  # Skip further processing if the pause button was clicked
 
-                    modal_active = False
+                    modal_active = any(cell.show_modal for cell in self.cells)
+
+                    if self.paused and not modal_active:
+                        continue
+
                     for cell in self.cells:
                         if cell.show_modal:
-                            # Handle modal close or radio button interactions
-                            cell.handle_modal_close(self.screen, mouse_pos)
                             cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
-                            modal_active = True  # Modal interaction occurred
-                            break  # Only one modal is active at a time
-
-                    if modal_active:
-                        self.paused = True  # Game remains paused if a modal is open
-                        continue  # Skip further processing if a modal interaction occurred
 
                     for cell in self.cells:
                         if not cell.show_modal:
@@ -499,7 +500,7 @@ class Level1:
         # Draw cells, macrophages, and enemies
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
-            cell.draw(self.screen, sidebar_width)
+            cell.draw(self.screen, sidebar_width, self)
 
         self.macrophage.draw(self.screen)
         for enemy in self.enemies:
@@ -508,7 +509,7 @@ class Level1:
         # Draw cell modals if active
         for cell in self.cells:
             if cell.show_modal:
-                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25)
+                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
 
         # Update the timer only if the game is running and not paused
         if not self.paused and not self.game_over:

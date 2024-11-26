@@ -43,13 +43,13 @@ class Cell:
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
         self.infection_timer = pygame.time.get_ticks()
     
-    def draw(self, screen, sidebar_width):
+    def draw(self, screen, sidebar_width, level):
         screen.blit(self.image, self.rect)
 
         if self.show_modal:
-            self.draw_modal(screen, sidebar_width)
+            self.draw_modal(screen, sidebar_width, level)
 
-    def draw_modal(self, screen, sidebar_width):
+    def draw_modal(self, screen, sidebar_width, level):
         screen_width = screen.get_width()
 
         # Determine modal dimensions based on screen size
@@ -98,6 +98,7 @@ class Cell:
             close_button_y <= mouse_pos[1] <= close_button_y + close_button_height):
             if mouse_pressed[0]:  # Left mouse button pressed
                 self.show_modal = False  # Close the modal
+                level.paused = False
 
         # Display cell information
         cell_number_text = f"Cell #{self.cell_number}"
@@ -235,9 +236,9 @@ class Cell:
 
         # Toggle modal on click
         if self.rect.collidepoint(mouse_pos):
-            self.show_modal = not self.show_modal
-            level.paused = self.show_modal
+            self.show_modal = True
 
+        """
         # If the modal is not open, check if the infected cell was clicked
         if self.rect.collidepoint(mouse_pos):
             for cell in cells:
@@ -245,6 +246,7 @@ class Cell:
                     cell.show_modal = False
             self.show_modal = True
             level.paused = True
+        """
     
     def handle_radio_button_click(self, screen, mouse_pos, cells, level):
         if not self.show_modal or not hasattr(self, "option_coords"):
@@ -258,34 +260,6 @@ class Cell:
                 self.selected_option = option_data["option"]  # Mark the selected option
                 self.handle_quiz_answer(option_data["option"], level)
                 return
-
-    def handle_modal_close(self, screen, mouse_pos):
-        screen_width = screen.get_width()
-        if screen_width > 1200:  # Fullscreen mode
-            modal_width = 500
-            modal_height = 700
-            modal_x = 200
-        else:
-            modal_width = 300
-            modal_height = 500
-            modal_x = 20
-        modal_y = (pygame.display.get_surface().get_height() - modal_height) // 2
-
-        close_button_width = 90
-        close_button_height = 25
-        close_button_x = modal_x + modal_width - close_button_width - 10
-        close_button_y = modal_y + 10
-
-        if close_button_x <= mouse_pos[0] <= close_button_x + close_button_width and \
-        close_button_y <= mouse_pos[1] <= close_button_y + close_button_height:
-            self.show_modal = False
-
-    def handle_keydown(self, key, level):
-        if key == pygame.K_ESCAPE and self.show_modal:
-            self.show_modal = False
-            # Only unpause if the game was paused because of the modal
-            if level.paused:
-                level.paused = False
 
     def infect_neighbors(self):
         neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))
