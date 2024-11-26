@@ -122,6 +122,11 @@ class Level1:
 
                         continue  # Skip further processing for this click
 
+                    # Block all interactions if paused, except with the pause/play button and opening oracle
+                    if self.paused and not modal_active:
+                        self.oracle.handle_click(mouse_pos, self.cells, self)
+                        continue  # Ignore all other clicks while paused
+
                     # If a quiz modal is open, prioritize modal interactions
                     if modal_active:
                         for cell in self.cells:
