@@ -20,7 +20,7 @@ class Level1:
         self.sidebar_width = 400
         self.sidebar = Sidebar(options=["Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Statistics", "Settings", "Controls", "About"], font=pygame.font.SysFont("Arial", 24))
 
-        self.body_image = pygame.image.load('assets/images/body_placeholder.png')
+        self.body_image = pygame.image.load('assets/images/final/body.png')
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height, sidebar_width=self.sidebar_width)
 
@@ -226,7 +226,7 @@ class Level1:
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
         self.game_width = self.screen.get_width() - sidebar_width
         self.game_center_x = sidebar_width + self.game_width // 2
-
+        
         self.reposition_macrophage()
         self.reposition_pathogens()
         self.oracle.set_position()
@@ -345,7 +345,7 @@ class Level1:
     def check_collisions(self):
         for enemy in self.enemies[:]:
             # Check collision with macrophage
-            if self.macrophage.rect.colliderect(enemy.rect):
+            if self.macrophage.get_collision_rect().colliderect(enemy.get_collision_rect()):
                 if enemy.target_cell and not enemy.target_cell.state:  # Attacking an infected cell
                     if enemy.attack_infected_cell():  # Delay attacks
                         self.enemies.remove(enemy)  # Remove pathogen after attack
@@ -354,7 +354,7 @@ class Level1:
 
             # Check collision with cells
             for cell in self.cells:
-                if enemy.rect.colliderect(cell.rect) and cell.state:
+                if enemy.get_collision_rect().colliderect(cell.rect) and cell.state:
                     cell.die()  # Infect the cell
                     self.enemies.remove(enemy)
                     break
@@ -457,8 +457,8 @@ class Level1:
         for cell in self.cells:
             cell.state = True
             cell.health = "uninfected"
-            cell.image = pygame.image.load("assets/images/uninfected_cell.png")
-            cell.image = pygame.transform.scale(cell.image, (cell.image.get_width() // 2.5, cell.image.get_height() // 2.5))
+            cell.image = pygame.image.load("assets/images/final/uninfected_cell.png")
+            cell.image = pygame.transform.scale(cell.image, (cell.image.get_width() // 20, cell.image.get_height() // 20))
             cell.infection_timer = 0  # Reset infection timer
 
         # Reset sidebar and game center
@@ -517,7 +517,7 @@ class Level1:
 
         # Adjust body image placement
         img = self.body_image
-        img = pygame.transform.scale(img, (img.get_width() * 0.32, img.get_height() * 0.32))
+        img = pygame.transform.scale(img, (img.get_width() * 0.7, img.get_height() * 0.7))
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
 

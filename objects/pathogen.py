@@ -15,10 +15,11 @@ class Pathogen:
 
         if self.type == "bacteria":
             self.image = pygame.image.load("assets/images/bacteria_placeholder.png")
+            self.image = pygame.transform.scale(self.image, (20, 20))
         else:
-            self.image = pygame.image.load("assets/images/virus_placeholder.png")
-        
-        self.image = pygame.transform.scale(self.image, (20, 20))
+            self.image = pygame.image.load("assets/images/final/virus.png")
+            self.image = pygame.transform.scale(self.image, (180, 180))  # Large virus sprite
+
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
@@ -72,3 +73,11 @@ class Pathogen:
         # Update pathogen position
         self.rect.centerx = int(new_x)
         self.rect.centery = int(new_y)
+    
+    def get_collision_rect(self):
+        if self.type == "virus":
+            # Shrink the virus collision rect significantly
+            return self.rect.inflate(-120, -120)  # Aggressive reduction for large sprite
+        else:
+            # Slight reduction for bacteria
+            return self.rect.inflate(-10, -10)

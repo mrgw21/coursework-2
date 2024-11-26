@@ -2,9 +2,9 @@ import pygame
 import random
 
 class Cell:
-    def __init__(self, position, center_pos=(400, 300)):
-        self.image = pygame.image.load("assets/images/uninfected_cell.png")
-        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+    def __init__(self, position, center_pos=(0, 0)):
+        self.image = pygame.image.load("assets/images/final/uninfected_cell.png")
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.rect = self.image.get_rect()
         self.position = position
         self.state = True  # True means uninfected, False means infected
@@ -16,33 +16,54 @@ class Cell:
 
         self.hint_index = 0 # Start at first hint
         self.infection_timer = 0  # Timer for slowing infected cell attacks
-        self.neighbors = [] 
-
+        self.neighbors = []
 
         self.option_coords = []
 
         # Set initial position of the cell
         self.reposition(center_pos)
 
-    def reposition(self, center_pos, spacing=15):
-        row = [3, 5, 7, 7, 7, 5, 3]
-        y_offset = -3.5 * spacing
-        idx = 0 
-        
-        for i, count in enumerate(row):
-            x_offset = -(count // 2) * spacing - 5
-            for j in range(count):
-                if idx == self.position:
-                    self.rect.x = center_pos[0] + x_offset + j * spacing
-                    self.rect.y = center_pos[1] + y_offset + i * spacing
+    def reposition(self, center_pos, spacing=25):
+        # Diamond layout configuration
+        row_layout = [3, 5, 7, 7, 7, 5, 3]  # Cells per row
+        idx = 0
+
+        # Calculate the row and column position of the 19th cell (index 18)
+        target_row, target_col = None, None
+        for row_index, row_count in enumerate(row_layout):
+            if idx <= 18 < idx + row_count:
+                target_row = row_index
+                target_col = 18 - idx
+                break
+            idx += row_count
+
+        if target_row is None or target_col is None:
+            raise ValueError("Invalid cell index for the grid layout")
+
+        # Calculate the top-left corner of the diamond relative to the center
+        total_rows = len(row_layout)
+        diamond_top = center_pos[1] - (total_rows // 2) * spacing - 45
+        diamond_left = center_pos[0] - (row_layout[target_row] // 2) * spacing + 29
+
+        # Get the specific position for the current cell
+        row_index = 0
+        idx = 0
+        for row_index, row_count in enumerate(row_layout):
+            y_pos = diamond_top + row_index * spacing
+            x_start = diamond_left + (row_count // 2) * -spacing
+            for col_index in range(row_count):
+                x_pos = x_start + col_index * spacing
+                if idx == self.position:  # Current cell's position
+                    self.rect.x = x_pos
+                    self.rect.y = y_pos
                     return
                 idx += 1
 
     def die(self):
         self.state = False
         self.health = "infected"
-        self.image = pygame.image.load("assets/images/infected_cell.png")
-        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+        self.image = pygame.image.load("assets/images/final/infected_cell.png")
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = pygame.time.get_ticks()
     
     def draw(self, screen, sidebar_width, level):
@@ -119,12 +140,13 @@ class Cell:
 
         # Draw cell image
         if self.health == "dead":
-            cell_image = pygame.image.load("assets/images/dead_cell_placeholder.png")
-            cell_image = pygame.transform.scale(cell_image, (100, 100))
+            cell_image = pygame.image.load("assets/images/final/dead_cell.png")
+            cell_image = pygame.transform.scale(cell_image, (300, 300))
+            screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
         else:
-            cell_image = pygame.image.load("assets/images/infected_cell.png")
-            cell_image = pygame.transform.scale(cell_image, (100, 100))
-        screen.blit(cell_image, (modal_x + (modal_width // 2) - 50, content_start_y + 115))
+            cell_image = pygame.image.load("assets/images/final/infected_cell.png")
+            cell_image = pygame.transform.scale(cell_image, (300, 300))
+            screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
 
         # Draw quiz if applicable
         if self.quiz:
@@ -331,8 +353,8 @@ class Cell:
     def stop_infection(self):
         self.state = False  # Ensure the cell is marked as no longer infectious
         self.health = "dead"  # Update health status
-        self.image = pygame.image.load("assets/images/dead_cell_placeholder.png")
-        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+        self.image = pygame.image.load("assets/images/final/dead_cell.png")
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = None  # Disable infection spread
 
     def stop_infection_and_neighbors(self):
