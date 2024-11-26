@@ -337,17 +337,27 @@ class Cell:
                 break
 
     def infect_neighbors(self):
-        neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))
+        # Use the actual number of neighbors to limit infection spread
+        if not self.neighbors:
+            return  # Skip if the cell has no neighbors
+
+        # Calculate max neighbors to infect as a fraction of total neighbors
+        max_neighbors_to_infect = max(1, len(self.neighbors) // 2)  # Infect up to half of the neighbors, but at least 1
+        neighbors_to_infect = random.sample(self.neighbors, min(max_neighbors_to_infect, len(self.neighbors)))
+
         for neighbor in neighbors_to_infect:
             if neighbor.health == "uninfected":
                 neighbor.die()
-    
+
     def update_infection(self):
         if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
             return
+
         current_time = pygame.time.get_ticks()
-        if current_time - self.infection_timer > 2000:  # Delay of 2 seconds
-            self.infect_neighbors()  # Spread infection
+        infection_delay = 4000  # Set delay to 5 seconds (adjust as needed)
+
+        if current_time - self.infection_timer > infection_delay:
+            self.infect_neighbors()  # Spread infection to neighbors
             self.infection_timer = current_time  # Reset timer
 
     def stop_infection(self):

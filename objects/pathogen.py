@@ -5,7 +5,7 @@ class Pathogen:
     def __init__(self, x, y, type, screen_width=None, screen_height=None):
         self.x = x
         self.y = y
-        self.speed = 2
+        self.speed = 0.1
         self.alive = False
         self.type = type
 
@@ -15,7 +15,7 @@ class Pathogen:
 
         if self.type == "bacteria":
             self.image = pygame.image.load("assets/images/bacteria_placeholder.png")
-            self.image = pygame.transform.scale(self.image, (20, 20))
+            self.image = pygame.transform.scale(self.image, (30, 30))
         else:
             self.image = pygame.image.load("assets/images/final/virus.png")
             self.image = pygame.transform.scale(self.image, (180, 180))  # Large virus sprite
