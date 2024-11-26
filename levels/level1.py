@@ -99,54 +99,44 @@ class Level1:
                 if event.type == pygame.MOUSEMOTION:
                     mouse_pos = pygame.mouse.get_pos()
                     self.oracle.handle_hover(mouse_pos)
-
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-
-                    # Check if any cell's modal is active
-                    if not any(cell.show_modal for cell in self.cells):
-                        # Allow Oracle interaction only if no quiz modal is open
-                        self.oracle.handle_click(mouse_pos, self.cells, self)
-                        
-                    for cell in self.cells:
-                        if cell.show_modal:
-                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
-
-                        if not cell.show_modal:
-                            cell.handle_click(mouse_pos, self.cells, self)
-
-                    self.paused = any(cell.show_modal for cell in self.cells)
-
+                
                 if event.type == pygame.MOUSEBUTTONUP:
                     self.oracle.reset_image()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     modal_active = any(cell.show_modal for cell in self.cells)
-
-                    # Pause/Play Button Handling
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
 
+                    # Pause/Play Button Handling
                     if pause_button_rect.collidepoint(mouse_pos):
+                        # Toggle pause state
                         self.paused = not self.paused
+
+                        # Close all modals if unpausing
                         if not self.paused and modal_active:
                             for cell in self.cells:
                                 if cell.show_modal:
                                     cell.show_modal = False
                                     break
-                        continue  # Skip further processing if the pause button was clicked
 
-                    if self.paused and not modal_active:
-                        continue
-                        
+                        continue  # Skip further processing for this click
+
+                    # If a quiz modal is open, prioritize modal interactions
+                    if modal_active:
+                        for cell in self.cells:
+                            if cell.show_modal:
+                                cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+                        continue  # Skip further processing for this click
+
+                    # Allow Oracle interaction only if no quiz modal is open
+                    self.oracle.handle_click(mouse_pos, self.cells, self)
+
+                    # Handle cell clicks
                     for cell in self.cells:
-                        if cell.show_modal:
-                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+                        cell.handle_click(mouse_pos, self.cells, self)
 
-                    for cell in self.cells:
-                        if not cell.show_modal:
-                            cell.handle_click(mouse_pos, self.cells, self)
-
+                    # Update paused state based on active modals
                     self.paused = any(cell.show_modal for cell in self.cells)
             
             if not self.paused and self.game_over:

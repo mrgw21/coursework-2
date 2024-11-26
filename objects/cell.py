@@ -18,6 +18,7 @@ class Cell:
         self.infection_timer = 0  # Timer for slowing infected cell attacks
         self.neighbors = [] 
 
+
         self.option_coords = []
 
         # Set initial position of the cell
@@ -98,6 +99,7 @@ class Cell:
         if (close_button_x <= mouse_pos[0] <= close_button_x + close_button_width and
             close_button_y <= mouse_pos[1] <= close_button_y + close_button_height):
             if mouse_pressed[0]:  # Left mouse button pressed
+                self.reset_quiz_state()
                 self.show_modal = False  # Close the modal
                 level.paused = False
 
@@ -196,31 +198,55 @@ class Cell:
                 current_line = word
         lines.append(current_line)
         return lines
+    
+    def reset_quiz(self):
+        self.hint_index = 0
+        self.selected_option = None
+        self.quiz_feedback = None
 
     def handle_quiz_answer(self, selected_option, level):
-        for option in self.quiz["options"]:
-            if option == selected_option:
-                if option["is_correct"]:
-                    # Correct answer
-                    self.quiz_feedback = {"message": "Congratulations! You got the right answer!", "color": (0, 255, 0)}
-                    self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
-                    self.feedback_timer = pygame.time.get_ticks()  # Start feedback timer
-                    level.paused = True
-                else:
-                   # Incorrect answer
-                    hints = self.quiz.get("hints", [])
-                    if self.hint_index < len(hints):
-                        # Show the next hint based on the current hint index
-                        hint_message = hints[self.hint_index]
-                        self.quiz_feedback = {"message": hint_message, "color": (255, 0, 0)}
-                        self.hint_index += 1  # Move to the next hint for the next attempt
-                    else:
-                        # No more hints available
-                        self.quiz_feedback = {
-                            "message": "Incorrect! No more hints available.",
-                            "color": (255, 0, 0),
-                        } 
-                    level.paused = True
+        if selected_option["is_correct"]:
+            # Correct answer: Stop infection, show success feedback
+            self.quiz_feedback = {
+                "message": "Correct! You've saved this cell.",
+                "color": (0, 255, 0),
+            }
+            self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
+            self.feedback_timer = pygame.time.get_ticks()
+            level.paused = True
+        else:
+            # Incorrect answer: Show the next hint or fallback feedback
+            hints = self.quiz.get("hints", [])
+            if self.hint_index < len(hints):
+                # Display the next hint
+                hint_message = hints[self.hint_index]
+                self.quiz_feedback = {"message": hint_message, "color": (255, 0, 0)}
+                self.hint_index += 1
+            else:
+                # No more hints available
+                self.quiz_feedback = {
+                    "message": "Incorrect! No more hints are available.",
+                    "color": (255, 0, 0),
+                }
+            level.paused = True
+
+    def handle_hint(self, level):
+        hints = self.quiz.get("hints", [])
+        print("HINTS", hints)
+        if self.hint_index < len(hints):
+            # Show the next hint based on the current hint index
+            hint_message = hints[self.hint_index]
+            self.quiz_feedback = {"message": hint_message, "color": (255, 0, 0)}
+            self.hint_index += 1  # Move to the next hint for the next attempt
+        else:
+            # No more hints available
+            self.quiz_feedback = {"message": "Incorrect! No more hints available.", "color": (255, 0, 0)}
+        level.paused = True
+
+    def reset_quiz_state(self):
+        self.quiz_feedback = None  # Clear feedback
+        self.hint_index = 0  # Reset hint index
+        self.selected_option = None  # Reset selected option
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
         words = text.split(' ')
@@ -247,10 +273,15 @@ class Cell:
         if self.health == "uninfected" or self.health == "dead":
             return
 
-        # Toggle modal on click
         if self.rect.collidepoint(mouse_pos):
-            self.show_modal = True
+            # Close modals for all other cells and reset their quiz states
+            for cell in cells:
+                if cell != self:
+                    cell.reset_quiz_state()
 
+            # Open modal for the current cell
+            self.show_modal = True
+            level.paused = True
         """
         # If the modal is not open, check if the infected cell was clicked
         if self.rect.collidepoint(mouse_pos):
@@ -270,9 +301,14 @@ class Cell:
             radius = option_data["radius"]
             distance = ((mouse_pos[0] - circle_x) ** 2 + (mouse_pos[1] - circle_y) ** 2) ** 0.5
             if distance <= radius:
-                self.selected_option = option_data["option"]  # Mark the selected option
+                # Avoid re-processing the same option click
+                if self.selected_option == option_data["option"]:
+                    return  # Ignore duplicate clicks
+
+                # Process the new selected option
+                self.selected_option = option_data["option"]
                 self.handle_quiz_answer(option_data["option"], level)
-                return
+                break
 
     def infect_neighbors(self):
         neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))
@@ -301,3 +337,9 @@ class Cell:
             if neighbor.health == "infected":
                 # Only stop the spread but do not reset the health or state of infected neighbors
                 neighbor.infection_timer = None  # Stop infection spread from this neighbor
+    
+    def reset_quiz_state(self):
+        self.hint_index = 0
+        self.quiz_feedback = None
+        self.selected_option = None
+        self.show_modal = False
