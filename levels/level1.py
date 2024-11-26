@@ -223,12 +223,6 @@ class Level1:
             flags = pygame.FULLSCREEN if not self.fullscreen else pygame.RESIZABLE
         self.screen = pygame.display.set_mode((0, 0), flags)
         self.fullscreen = not self.fullscreen
-
-    def recenter_elements(self):
-        screen_width = self.screen.get_width()
-        screen_height = self.screen.get_height()
-
-        self.macrophage.reposition(screen_width, screen_height)
     
     def reposition_macrophage(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
@@ -436,12 +430,6 @@ class Level1:
             if quiz_index >= len(quizzes):
                 quiz_index = 0
 
-        # Reset macrophage
-        self.macrophage.set_initial_position(self.screen.get_width(), self.screen.get_height())
-
-        # Recenter elements
-        self.recenter_elements()
-
         # Reset infection state
         for cell in self.cells:
             cell.state = True
@@ -449,6 +437,14 @@ class Level1:
             cell.image = pygame.image.load("assets/images/uninfected_cell.png")
             cell.image = pygame.transform.scale(cell.image, (cell.image.get_width() // 2.5, cell.image.get_height() // 2.5))
             cell.infection_timer = 0  # Reset infection timer
+
+        # Reset sidebar and game center
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 25
+        self.game_width = self.screen.get_width() - sidebar_width
+        self.game_center_x = sidebar_width + self.game_width // 2
+
+        # Reset macrophage position
+        self.macrophage.set_initial_position(self.screen.get_width(), self.screen.get_height(), sidebar_width)
 
         # Reset game timers and state
         self.start_time = pygame.time.get_ticks()

@@ -9,12 +9,15 @@ class Macrophage:
         self.speed = 5
         self.rect = self.image.get_rect()
         self.sidebar_width = sidebar_width
-        self.set_initial_position(screen_width, screen_height)
+        self.set_initial_position(screen_width, screen_height, self.sidebar_width)
     
-    def set_initial_position(self, screen_width, screen_height):
+    def set_initial_position(self, screen_width, screen_height, sidebar_width):
         # Set the initial position, center x adjusted by -100
-        game_width = screen_width - self.sidebar_width
-        center_x = self.sidebar_width + game_width // 2 - 100
+        game_width = screen_width - sidebar_width
+        if sidebar_width == 400:
+            center_x = self.sidebar_width + game_width // 2 - 100
+        else:
+            center_x = self.sidebar_width + game_width // 2 - 525
         center_y = screen_height // 2
         self.rect.center = (center_x, center_y)
 
