@@ -8,8 +8,8 @@ quizzes = [
             {"text": "Straight RNA stored freely within the cell", "is_correct": False},
         ],
         "hints": [
-            "White blood cells are part of the immune system.",
-            "They help the body defend against infections."
+            "Bacteria do not have a nucleus, and their genetic material is stored differently from eukaryotes.",
+            "Bacteria store their genetic material in a single, circular molecule of DNA."
         ]
     },
     {
@@ -21,8 +21,8 @@ quizzes = [
             {"text": "Destroying red blood cells", "is_correct": False}
         ],
         "hints": [
-            "White blood cells are part of the immune system.",
-            "They help the body defend against infections."
+            "They are part of the innate immune system and act as first responders.",
+            "Their primary role is to engulf and digest foreign invaders like pathogens."
         ]
     },
     {
@@ -34,8 +34,8 @@ quizzes = [
             {"text": "Parasites", "is_correct": False}
         ],
         "hints": [
-            "White blood cells are part of the immune system.",
-            "They help the body defend against infections."
+            "This pathogen cannot replicate on its own.",
+            "It hijacks the machinery of the host cell to produce copies of itself."
         ]
     }
     # Add more quizzes...

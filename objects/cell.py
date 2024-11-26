@@ -130,13 +130,18 @@ class Cell:
         if self.quiz:
             self.draw_quiz(screen, modal_x, modal_y, content_start_y + 250, modal_width)
 
-        # Draw feedback
+        # Draw feedback (including hints)
         if hasattr(self, "quiz_feedback") and self.quiz_feedback:
-            feedback_text = font.render(self.quiz_feedback["message"], True, self.quiz_feedback["color"])
-            feedback_rect = feedback_text.get_rect(
-                center=(modal_x + modal_width // 2, modal_y + modal_height - 70)
-            )
-            screen.blit(feedback_text, feedback_rect)
+            feedback_text = self.quiz_feedback["message"]
+            feedback_color = self.quiz_feedback["color"]
+
+            # Adjust feedback position below the quiz or image
+            feedback_start_y = modal_y + modal_height - 150  # Reserve space near the bottom
+            feedback_lines = self.wrap_text(feedback_text, font, modal_width - 20)
+            for line in feedback_lines:
+                rendered_line = font.render(line, True, feedback_color)
+                screen.blit(rendered_line, (modal_x + 10, feedback_start_y))
+                feedback_start_y += 25  # Line spacing
     
     def draw_quiz(self, screen, modal_x, modal_y, start_y, modal_width):
         font = pygame.font.SysFont('Arial', 18)
@@ -220,7 +225,7 @@ class Cell:
             if self.hint_index < len(hints):
                 # Display the next hint
                 hint_message = hints[self.hint_index]
-                self.quiz_feedback = {"message": hint_message, "color": (255, 0, 0)}
+                self.quiz_feedback = {"message": f"Hint: {hint_message}", "color": (255, 0, 0)}
                 self.hint_index += 1
             else:
                 # No more hints available
@@ -232,7 +237,6 @@ class Cell:
 
     def handle_hint(self, level):
         hints = self.quiz.get("hints", [])
-        print("HINTS", hints)
         if self.hint_index < len(hints):
             # Show the next hint based on the current hint index
             hint_message = hints[self.hint_index]
