@@ -47,11 +47,19 @@ class Oracle:
         else:
             self.image = pygame.transform.scale(self.image_default, (400, 400))
 
-    def handle_click(self, mouse_pos):
+    def handle_click(self, mouse_pos, cells, level):
+        if any(cell.show_modal for cell in cells):
+            return
         # Change image to click state and toggle modal visibility
         if self.rect.collidepoint(mouse_pos):
             self.image = pygame.transform.scale(self.image_click, (400, 400))
             self.show_modal = not self.show_modal  # Toggle modal visibility
+
+            # Pause the game if Oracle's modal is opened
+            if self.show_modal:
+                level.paused = True
+            else:
+                level.paused = False
 
     def reset_image(self):
         # Reset to default image after a click

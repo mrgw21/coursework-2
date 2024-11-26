@@ -102,7 +102,20 @@ class Level1:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    self.oracle.handle_click(mouse_pos)
+
+                    # Check if any cell's modal is active
+                    if not any(cell.show_modal for cell in self.cells):
+                        # Allow Oracle interaction only if no quiz modal is open
+                        self.oracle.handle_click(mouse_pos, self.cells, self)
+                        
+                    for cell in self.cells:
+                        if cell.show_modal:
+                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+
+                        if not cell.show_modal:
+                            cell.handle_click(mouse_pos, self.cells, self)
+
+                    self.paused = any(cell.show_modal for cell in self.cells)
 
                 if event.type == pygame.MOUSEBUTTONUP:
                     self.oracle.reset_image()
