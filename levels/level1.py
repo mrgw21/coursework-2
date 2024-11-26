@@ -95,18 +95,23 @@ class Level1:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
+                    modal_active = any(cell.show_modal for cell in self.cells)
 
                     # Pause/Play Button Handling
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
+
                     if pause_button_rect.collidepoint(mouse_pos):
                         self.paused = not self.paused
+                        if not self.paused and modal_active:
+                            for cell in self.cells:
+                                if cell.show_modal:
+                                    cell.show_modal = False
+                                    break
                         continue  # Skip further processing if the pause button was clicked
-
-                    modal_active = any(cell.show_modal for cell in self.cells)
 
                     if self.paused and not modal_active:
                         continue
-
+                        
                     for cell in self.cells:
                         if cell.show_modal:
                             cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
