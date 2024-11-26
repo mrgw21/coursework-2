@@ -7,6 +7,7 @@ from objects.pathogen import Pathogen
 from data.quizzes import quizzes
 from ui.sidebar import Sidebar
 from ui.timer import Timer
+from objects.oracle import Oracle
 
 class Level1:
     def __init__(self, screen):
@@ -26,6 +27,8 @@ class Level1:
         self.game_width = screen_width - self.sidebar_width
         self.game_center_x = self.game_width // 2 + self.sidebar_width // 2
         self.cells = [Cell(i) for i in range(37)] 
+
+        self.oracle = Oracle(self.sidebar_width)
 
         random.shuffle(quizzes)
         quiz_index = 0
@@ -92,6 +95,17 @@ class Level1:
                         self.reposition_macrophage()
                         self.reposition_pathogens()
                         self.resize_pause_timer = pygame.time.get_ticks()
+                
+                if event.type == pygame.MOUSEMOTION:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self.oracle.handle_hover(mouse_pos)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self.oracle.handle_click(mouse_pos)
+
+                if event.type == pygame.MOUSEBUTTONUP:
+                    self.oracle.reset_image()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
@@ -207,6 +221,7 @@ class Level1:
 
         self.reposition_macrophage()
         self.reposition_pathogens()
+        self.oracle.set_position()
 
         # Ensure any open modals are correctly repositioned
         for cell in self.cells:
@@ -533,3 +548,4 @@ class Level1:
 
         # Finally, draw the sidebar on top of everything
         self.sidebar.draw(self.screen)
+        self.oracle.draw(self.screen)
