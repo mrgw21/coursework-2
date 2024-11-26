@@ -23,6 +23,7 @@ class Level1:
         self.body_image = pygame.image.load('assets/images/final/body.png')
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height, sidebar_width=self.sidebar_width)
+        self.colliding_pathogens = {}
 
         self.game_width = screen_width - self.sidebar_width
         self.game_center_x = self.game_width // 2 + self.sidebar_width // 2
@@ -341,22 +342,33 @@ class Level1:
                 # Virus
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "virus"))
             self.spawn_timer = pygame.time.get_ticks()
-    
+
     def check_collisions(self):
+        current_time = pygame.time.get_ticks()
         for enemy in self.enemies[:]:
             # Check collision with macrophage
             if self.macrophage.get_collision_rect().colliderect(enemy.get_collision_rect()):
-                if enemy.target_cell and not enemy.target_cell.state:  # Attacking an infected cell
-                    if enemy.attack_infected_cell():  # Delay attacks
-                        self.enemies.remove(enemy)  # Remove pathogen after attack
+                if enemy not in self.colliding_pathogens:
+                    # Start tracking the collision time
+                    self.colliding_pathogens[enemy] = current_time
                 else:
-                    self.enemies.remove(enemy)  # Normal attack speed for healthy cells
+                    # Check if the collision duration has exceeded the kill delay
+                    collision_duration = current_time - self.colliding_pathogens[enemy]
+                    if collision_duration >= 1000:  # 1 second delay
+                        self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
+                        del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+            else:
+                # Remove pathogen from tracking if it is no longer colliding
+                if enemy in self.colliding_pathogens:
+                    del self.colliding_pathogens[enemy]
 
             # Check collision with cells
             for cell in self.cells:
                 if enemy.get_collision_rect().colliderect(cell.rect) and cell.state:
                     cell.die()  # Infect the cell
                     self.enemies.remove(enemy)
+                    if enemy in self.colliding_pathogens:
+                        del self.colliding_pathogens[enemy]  # Remove pathogen from tracking
                     break
     
     def check_for_open_modal(self):
@@ -521,14 +533,17 @@ class Level1:
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
 
-        # Draw cells, macrophages, and enemies
+        # Draw cells
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
             cell.draw(self.screen, sidebar_width, self)
 
-        self.macrophage.draw(self.screen)
+        # Draw pathogens first (behind macrophage)
         for enemy in self.enemies:
             enemy.draw(self.screen)
+
+        # Draw macrophage (in front of pathogens)
+        self.macrophage.draw(self.screen)
 
         # Draw cell modals if active
         for cell in self.cells:
@@ -554,6 +569,5 @@ class Level1:
         button_position = (self.screen.get_width() - 60, 22)
         self.screen.blit(pause_button, button_position)
 
-        # Finally, draw the sidebar on top of everything
         self.sidebar.draw(self.screen)
         self.oracle.draw(self.screen)
