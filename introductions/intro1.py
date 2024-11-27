@@ -1,8 +1,12 @@
-import pygame
-
+import pygame   
+# image = pygame.image.load("assets/backgrounds/control_screen.png").convert()
+# WIDTH, HEIGHT = 0, 0  # Replace with your desired screen dimensions
+# image = pygame.transform.scale(image, (WIDTH, HEIGHT))
 class Intro1:
     def __init__(self, screen, pdf_images):
         self.screen = screen
+        self.next_screen = None
+        
         self.pdf_images = pdf_images
         self.current_page = 0
         self.running = True
@@ -194,6 +198,10 @@ class Intro1:
         clock = pygame.time.Clock()
         running = True
         next_screen = None  # Add transition attribute
+        
+        # Load image locally
+        control_image = pygame.image.load("assets/backgrounds/control_screen2.png").convert()
+        control_image = pygame.transform.scale(control_image, (screen.get_width(), screen.get_height()))
 
         while running:
             events = pygame.event.get()
@@ -209,6 +217,9 @@ class Intro1:
 
             # Draw control screen
             screen.fill((0, 0, 0))  # Black background
+            
+            screen.blit(control_image, (0, 0))
+            
             Intro1.draw_text("Controls Screen", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2)
             Intro1.draw_text("Press RETURN/ENTER to start the game", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 150)
 
@@ -223,7 +234,9 @@ class Intro1:
     def run_game_screen():
         screen = pygame.display.get_surface()
         clock = pygame.time.Clock()
-
+# Load image locally
+        control_image = pygame.image.load("assets/backgrounds/game_screen2.png").convert()
+        control_image = pygame.transform.scale(control_image, (screen.get_width(), screen.get_height()))
         running = True
         while running:
             events = pygame.event.get()
@@ -238,6 +251,8 @@ class Intro1:
 
             # Draw game screen
             screen.fill((0, 0, 0))  # Black background
+            
+            screen.blit(control_image, (0, 0))
             Intro1.draw_text("Game Screen", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2)
             Intro1.draw_text("Press RETURN/ENTER to start Level 1", pygame.font.Font(None, 40), (255, 255, 255), screen, screen.get_width() // 2, screen.get_height() // 2 + 50)
 
