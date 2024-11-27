@@ -92,10 +92,10 @@ class Level1:
 
             if self.paused:
                 if self.pause_start is None:
-                    self.pause_start = pygame.time.get_ticks()  # Start tracking pause time
+                    self.pause_start = pygame.time.get_ticks()
             else:
                 if self.pause_start is not None:
-                    # Calculate total paused duration and reset the pause_start
+                    # Account for modal pause duration in total paused time
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
 
@@ -131,6 +131,8 @@ class Level1:
                 if self.pause_start is not None:
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
+
+            self.handle_feedback_closure()
 
             self.draw()
 
@@ -337,17 +339,36 @@ class Level1:
 
     
     def reset_game(self):
+        # Reset cells
         self.cells = [Cell(i) for i in range(37)]
         self.assign_neighbors()
 
         # Clear existing enemies
         self.enemies = []
 
-        screen_width, screen_height = self.screen.get_width(), self.screen.get_height()
+        # Reset quizzes for cells
+        random.shuffle(quizzes)
+        quiz_index = 0
+        for cell in self.cells:
+            cell.quiz = quizzes[quiz_index]
+            quiz_index += 1
+            if quiz_index >= len(quizzes):
+                quiz_index = 0
 
+        # Reset macrophage
+        screen_width, screen_height = self.screen.get_width(), self.screen.get_height()
         self.macrophage = Macrophage(screen_width, screen_height)
 
+        # Recenter elements
         self.recenter_elements()
+
+        # Reset infection state
+        for cell in self.cells:
+            cell.state = True
+            cell.health = "uninfected"
+            cell.image = pygame.image.load("assets/images/uninfected_cell.png")
+            cell.image = pygame.transform.scale(cell.image, (cell.image.get_width() // 2.5, cell.image.get_height() // 2.5))
+            cell.infection_timer = 0  # Reset infection timer
 
         # Reset game timers and state
         self.start_time = pygame.time.get_ticks()
@@ -374,9 +395,13 @@ class Level1:
         current_time = pygame.time.get_ticks()
         for cell in self.cells:
             if cell.show_modal and hasattr(cell, "feedback_timer") and cell.feedback_timer:
-                if current_time - cell.feedback_timer > 1000:  # 1 second
+                if current_time - cell.feedback_timer > 1200:  # 1.2 seconds
                     cell.show_modal = False  # Close modal
                     cell.feedback_timer = None  # Reset timer
+                    # Update total paused time to exclude the modal duration
+                    if self.pause_start is not None:
+                        self.total_paused_time += pygame.time.get_ticks() - self.pause_start
+                        self.pause_start = None
                     self.paused = False  # Unpause game
         
     def draw(self):   
@@ -413,8 +438,6 @@ class Level1:
             if self.remaining_time <= 0:
                 self.game_over = True
                 self.paused = True
-        else:
-            pass
 
         # Draw the timer
         font = pygame.font.SysFont('Arial', 24)
@@ -426,5 +449,3 @@ class Level1:
             paused_text = paused_font.render("Paused", True, (255, 0, 0))
             text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
             self.screen.blit(paused_text, text_rect)
-
-        self.handle_feedback_closure()

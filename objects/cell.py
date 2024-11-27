@@ -12,6 +12,7 @@ class Cell:
         self.show_modal = False
         self.cell_number = position + 1  # Numbering for cells
         self.quiz = None 
+        self.selected_option = None
 
         self.infection_timer = 0  # Timer for slowing infected cell attacks
         self.neighbors = [] 
@@ -82,7 +83,7 @@ class Cell:
 
         # Display cell information
         cell_number_text = f"Cell #{self.cell_number}"
-        health_text = f"Health: {self.health}" if self.state else "infected"
+        health_text = f"Health: {self.health}"
         info_text = self.get_info_text()
 
         content_start_y = close_button_y + close_button_height + 20
@@ -116,7 +117,7 @@ class Cell:
             screen.blit(feedback_text, feedback_rect)
     
     def draw_quiz(self, screen, modal_x, modal_y, start_y, modal_width):
-        font = pygame.font.SysFont("Arial", 18)
+        font = pygame.font.SysFont('Arial', 18)
         quiz = self.quiz
 
         # Question text
@@ -134,19 +135,22 @@ class Cell:
         for i, option in enumerate(quiz["options"]):
             option_y = current_y + 20 + i * 40  # Adjust spacing between options
 
-            # Draw circle for radio button
+            # Determine the color based on selection
+            if hasattr(self, "selected_option") and self.selected_option == option:
+                if option["is_correct"]:
+                    circle_color = (0, 255, 0)  # Green for correct
+                    text_color = (0, 255, 0)
+                else:
+                    circle_color = (255, 0, 0)  # Red for incorrect
+                    text_color = (255, 0, 0)
+            else:
+                circle_color = (220, 220, 220)  # Modal background color (default filling)
+                text_color = (0, 0, 0)
+
+            # Draw filled circle for radio button
             circle_x = modal_x + 20  # Left margin for radio button
-            # Default circle and text color
-            circle_color = (0, 0, 0)
-            text_color = (0, 0, 0)
-
-            # Check if this option has a "selected_color"
-            for option_data in self.option_coords:
-                if option_data["option"] == option and "selected_color" in option_data:
-                    circle_color = option_data["selected_color"]
-                    text_color = option_data["selected_color"]
-
-            pygame.draw.circle(screen, circle_color, (circle_x, option_y), 10, 1)
+            pygame.draw.circle(screen, circle_color, (circle_x, option_y), 10, 0)  # Filled circle
+            pygame.draw.circle(screen, (0, 0, 0), (circle_x, option_y), 10, 1)  # Outline circle
 
             # Render option text
             rendered_text = font.render(option["text"], True, text_color)
@@ -155,8 +159,9 @@ class Cell:
             # Add this option to the clickable areas list
             new_option_coords.append({"circle": (circle_x, option_y), "radius": 10, "option": option})
 
-        # Update `self.option_coords` with the new values
-        self.option_coords = new_option_coords
+        # Update `option_coords` only if there's a change
+        if not hasattr(self, "option_coords") or self.option_coords != new_option_coords:
+            self.option_coords = new_option_coords
 
     def wrap_text(self, text, font, max_width):
         words = text.split(' ')
@@ -178,14 +183,12 @@ class Cell:
                 if option["is_correct"]:
                     # Correct answer
                     self.quiz_feedback = {"message": "Congratulations! You got the right answer!", "color": (0, 255, 0)}
-                    self.health = "dead"
-                    self.image = pygame.image.load("assets/images/dead_cell_placeholder.png")
-                    self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+                    self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
                     self.feedback_timer = pygame.time.get_ticks()  # Start feedback timer
+                    level.paused = True
                 else:
                     # Incorrect answer
                     self.quiz_feedback = {"message": "Wrong answer! Try again!", "color": (255, 0, 0)}
-                    self.feedback_timer = None  # No closure for incorrect answers
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
         words = text.split(' ')
@@ -209,7 +212,7 @@ class Cell:
         return "Cells protect the body from pathogens."
 
     def handle_click(self, mouse_pos, cells, level):
-        if self.health == "uninfected":
+        if self.health == "uninfected" or self.health == "dead":
             return
 
         # If the modal is already open
@@ -232,9 +235,9 @@ class Cell:
         for option_data in self.option_coords:
             circle_x, circle_y = option_data["circle"]
             radius = option_data["radius"]
-            # Check if the mouse position is within the radius of the radio button
             distance = ((mouse_pos[0] - circle_x) ** 2 + (mouse_pos[1] - circle_y) ** 2) ** 0.5
             if distance <= radius:
+                self.selected_option = option_data["option"]  # Mark the selected option
                 self.handle_quiz_answer(option_data["option"], level)
                 return
 
@@ -269,14 +272,29 @@ class Cell:
                 level.paused = False
 
     def infect_neighbors(self):
-        neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))  # Randomly select neighbors
+        neighbors_to_infect = random.sample(self.neighbors, random.randint(0, len(self.neighbors)))
         for neighbor in neighbors_to_infect:
-            if neighbor.state:  # Only infect uninfected neighbors
+            if neighbor.health == "uninfected":
                 neighbor.die()
     
     def update_infection(self):
-        if not self.state:  # If the cell is infected
-            current_time = pygame.time.get_ticks()
-            if current_time - self.infection_timer > 2000:  # Delay of 2 seconds
-                self.infect_neighbors()  # Spread infection
-                self.infection_timer = current_time  # Reset timer
+        if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
+            return
+        current_time = pygame.time.get_ticks()
+        if current_time - self.infection_timer > 2000:  # Delay of 2 seconds
+            self.infect_neighbors()  # Spread infection
+            self.infection_timer = current_time  # Reset timer
+
+    def stop_infection(self):
+        self.state = False  # Ensure the cell is marked as no longer infectious
+        self.health = "dead"  # Update health status
+        self.image = pygame.image.load("assets/images/dead_cell_placeholder.png")
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() // 2.5, self.image.get_height() // 2.5))
+        self.infection_timer = None  # Disable infection spread
+
+    def stop_infection_and_neighbors(self):
+        self.stop_infection()  # Stop the infection of this cell
+        for neighbor in self.neighbors:
+            if neighbor.health == "infected":
+                # Only stop the spread but do not reset the health or state of infected neighbors
+                neighbor.infection_timer = None  # Stop infection spread from this neighbor
