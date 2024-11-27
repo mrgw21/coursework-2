@@ -232,6 +232,7 @@ class Cell:
         self.quiz_feedback = None
 
     def handle_quiz_answer(self, selected_option, level):
+        current_time = pygame.time.get_ticks()
         if selected_option["is_correct"]:
             # Correct answer: Stop infection, show success feedback
             self.quiz_feedback = {
@@ -255,6 +256,8 @@ class Cell:
                     "message": "Incorrect! No more hints are available.",
                     "color": (255, 0, 0),
                 }
+                self.feedback_timer = current_time
+                level.paused = False
             level.paused = True
 
     def handle_hint(self, level):

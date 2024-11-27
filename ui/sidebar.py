@@ -6,24 +6,30 @@ class Sidebar:
         self.options = options
         self.visible = True
         self.font = font
-        self.title_font = pygame.font.SysFont("Arial", 30, bold=True)
+        self.title_font = pygame.font.SysFont("Arial", 40, bold=True)
+        self.menu_font = pygame.font.SysFont("Arial", 25, bold=True)
 
     def draw(self, screen):
         if not self.visible:
             return
+
         # Background
-        pygame.draw.rect(screen, (220, 220, 220), (0, 0, self.width, screen.get_height()))
+        pygame.draw.rect(screen, (0, 153, 153), (0, 0, self.width, screen.get_height()))
+
         # Title
-        title = self.title_font.render("Inside Immune", True, (0, 0, 0))
+        title = self.title_font.render("Inside Immune", True, (255, 255, 255))
         screen.blit(title, (20, 20))
-        title = self.title_font.render("Menu", True, (0, 0, 0))
-        screen.blit(title, (20, 60))
+
+        menu_title = self.menu_font.render("Menu", True, (255, 255, 255))
+        screen.blit(menu_title, (20, 70))  # Add some padding below the first title
+
         # Options
-        y_offset = 100
+        y_offset = 120  # Start below the titles with some padding
+        spacing = 50  # Space between each menu option
         for i, option in enumerate(self.options):
-            color = (0, 0, 0)
+            color = (255, 255, 255)
             text = self.font.render(option, True, color)
-            screen.blit(text, (20, y_offset + i * 40))
+            screen.blit(text, (20, y_offset + i * spacing))
 
     def toggle(self):
         self.visible = not self.visible

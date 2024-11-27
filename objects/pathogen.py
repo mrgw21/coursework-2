@@ -5,7 +5,7 @@ class Pathogen:
     def __init__(self, x, y, type, screen_width=None, screen_height=None):
         self.x = x
         self.y = y
-        self.speed = 0.1
+        self.speed = 0.5
         self.alive = False
         self.type = type
 
