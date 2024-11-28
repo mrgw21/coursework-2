@@ -311,15 +311,6 @@ class Cell:
             # Open modal for the current cell
             self.show_modal = True
             level.paused = True
-        """
-        # If the modal is not open, check if the infected cell was clicked
-        if self.rect.collidepoint(mouse_pos):
-            for cell in cells:
-                if cell != self:
-                    cell.show_modal = False
-            self.show_modal = True
-            level.paused = True
-        """
     
     def handle_radio_button_click(self, screen, mouse_pos, cells, level):
         if not self.show_modal or not hasattr(self, "option_coords"):

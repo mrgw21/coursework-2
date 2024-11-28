@@ -141,9 +141,6 @@ class Level1:
                     # Handle cell clicks
                     for cell in self.cells:
                         cell.handle_click(mouse_pos, self.cells, self)
-
-                    # Update paused state based on active modals
-                    self.paused = any(cell.show_modal for cell in self.cells)
             
             if not self.paused and self.game_over:
                 self.check_game_over()
@@ -153,9 +150,17 @@ class Level1:
                     self.pause_start = pygame.time.get_ticks()
             else:
                 if self.pause_start is not None:
-                    # Account for modal pause duration in total paused time
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
+            
+            if not self.paused and not self.game_over:
+                current_time = pygame.time.get_ticks()
+                elapsed_time = current_time - self.start_time - self.total_paused_time
+                self.remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
+
+                if self.remaining_time <= 0:
+                    self.game_over = True
+                    self.paused = True
 
             if not self.paused and not self.game_over:
                 self.check_game_over()
@@ -180,14 +185,6 @@ class Level1:
                         # Pass center coordinates and the current cell as arguments
                         if enemy.move_towards_target(self.game_center_x, self.screen.get_height() // 2, current_cell):
                             self.counter += 1
-            
-            if self.paused:
-                if self.pause_start is None:
-                    self.pause_start = pygame.time.get_ticks()
-            else:
-                if self.pause_start is not None:
-                    self.total_paused_time += pygame.time.get_ticks() - self.pause_start
-                    self.pause_start = None
 
             self.handle_feedback_closure()
 
@@ -549,16 +546,6 @@ class Level1:
         for cell in self.cells:
             if cell.show_modal:
                 cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
-
-        # Update the timer only if the game is running and not paused
-        if not self.paused and not self.game_over:
-            current_time = pygame.time.get_ticks()
-            elapsed_time = current_time - self.start_time - self.total_paused_time
-            self.remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
-
-            if self.remaining_time <= 0:
-                self.game_over = True
-                self.paused = True
 
         # Draw timer and pause/play button
         self.timer.draw(self.screen, self.remaining_time, self.paused)
