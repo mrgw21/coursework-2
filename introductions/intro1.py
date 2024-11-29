@@ -70,7 +70,6 @@ class Intro1(BaseScreen):
                     if event.key == pygame.K_m:
                         if self.sidebar:
                             self.sidebar.toggle()
-                            self.handle_sidebar_toggle()
 
                 # Pass individual events to the sidebar handler
                 if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
@@ -136,7 +135,7 @@ class Intro1(BaseScreen):
 
         # Set the y-position for the guidance text and icons
         text_y_position = screen_height - 20  # Adjust this value for spacing from the bottom
-        center_x = (screen_width - sidebar_width) // 2  # Center horizontally, accounting for sidebar
+        center_x = (screen_width + sidebar_width) // 2  # Center horizontally, accounting for sidebar
 
         # Draw guidance arrows and text based on the current page
         if self.current_page == len(self.pdf_images) - 1:  # Last page
@@ -236,13 +235,6 @@ class Intro1(BaseScreen):
         surface.blit(text2_obj, text2_rect)
         surface.blit(icon2, icon2_rect)
         surface.blit(text3_obj, text3_rect)
-    
-    def handle_sidebar_toggle(self):
-        # Adjust the layout depending on sidebar visibility
-        sidebar_width = self.sidebar.width if self.sidebar and self.sidebar.visible else 0
-        self.center_x = (self.screen.get_width() - sidebar_width) // 2
-        self.center_y = self.screen.get_height() // 2
-        self.draw()  # Redraw elements to reflect the changes
     
     def get_sidebar_option(self, mouse_pos, options):
         y_offset = 120  # Adjust to the starting Y position of options
