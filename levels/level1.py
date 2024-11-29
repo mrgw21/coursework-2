@@ -8,17 +8,21 @@ from data.quizzes import quizzes
 from ui.sidebar import Sidebar
 from ui.timer import Timer
 from objects.oracle import Oracle
+from screens.screen_manager import BaseScreen
 
-class Level1:
-    def __init__(self, screen):
-        self.screen = screen
+class Level1(BaseScreen):
+    def __init__(self, screen, manager):
+        super().__init__(screen)  # Initialize BaseScreen
+        self.manager = manager    # Add this line
+        self.screen = screen   # Assign the actual screen surface
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
         self.fullscreen = False
 
         self.sidebar_width = 400
-        self.sidebar = Sidebar(options=["Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Statistics", "Settings", "Controls", "About"], font=pygame.font.SysFont("Arial", 24))
+        self.sidebar = Sidebar()
+        self.sidebar.visible = True
 
         self.body_image = pygame.image.load('assets/images/final/body.png')
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
@@ -53,12 +57,14 @@ class Level1:
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
         self.win_time = 30000  # 30 seconds in milliseconds
+        self.remaining_time = self.win_time // 1000
 
         self.game_over = False
         self.win = True
 
         self.timer = Timer(font=pygame.font.SysFont("Arial", 24))
 
+        # Use `pygame.display` to get screen dimensions
         self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
 
     def run(self):
@@ -71,10 +77,6 @@ class Level1:
                 if event.type == pygame.FULLSCREEN:
                     pygame.display.flip()
                 """
-
-                # Pass event to sidebar first if it's visible
-                if self.sidebar.visible and self.sidebar.handle_event(event):
-                    continue  # Skip other event handling if the sidebar handles the event
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
@@ -106,6 +108,15 @@ class Level1:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
+
+                    if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
+                        mouse_pos = pygame.mouse.get_pos()
+                        option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
+                        if option_clicked:
+                            self.running = False
+                            self.manager.set_active_screen(option_clicked)
+                            return
+
                     modal_active = any(cell.show_modal for cell in self.cells)
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
 
@@ -141,6 +152,7 @@ class Level1:
                     # Handle cell clicks
                     for cell in self.cells:
                         cell.handle_click(mouse_pos, self.cells, self)
+                    
             
             if not self.paused and self.game_over:
                 self.check_game_over()
@@ -511,6 +523,20 @@ class Level1:
                         self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                         self.pause_start = None
                     self.paused = False  # Unpause game
+    
+    def get_sidebar_option(self, mouse_pos, options_mapping):
+        x, y = mouse_pos
+        sidebar_width = 400  # Ensure this matches your actual sidebar width
+        y_offset = 120  # Starting Y position of the first option
+        spacing = 50  # Spacing between each option in the sidebar
+
+        if x < sidebar_width:  # Check if the click is within the sidebar area
+            for index, option_text in enumerate(options_mapping):
+                # Define the rectangle for each option
+                option_rect = pygame.Rect(20, y_offset + index * spacing, sidebar_width - 40, 30)
+                if option_rect.collidepoint(x, y):  # Check if the mouse is within this option's rectangle
+                    return option_text
+        return None  # Return None if no option was clicked
         
     def draw(self):
         # Determine sidebar width dynamically

@@ -1,11 +1,14 @@
 import pygame
+from screens.screen_manager import BaseScreen
+from ui.sidebar import Sidebar 
 
-class Intro1:
-    def __init__(self, screen, pdf_images):
-        self.screen = screen
+class Intro1(BaseScreen):
+    def __init__(self, screen, pdf_images, manager):
+        super().__init__(screen)  # Initialize BaseScreen
         self.pdf_images = pdf_images
         self.current_page = 0
         self.running = True
+        self.manager = manager
 
         # Colors
         self.WHITE = (255, 255, 255)
@@ -32,6 +35,11 @@ class Intro1:
             pygame.image.load("assets/icons/computer.png").get_height() // 15)
         )
 
+        # Placeholder sidebar for compatibility
+        self.sidebar = Sidebar()
+
+        self.sidebar.visible = False
+
     def run(self):
         clock = pygame.time.Clock()
 
@@ -42,85 +50,132 @@ class Intro1:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     exit()
+                elif event.type == pygame.VIDEORESIZE:
+                    # Handle screen resizing
+                    width_ratio = event.w / self.previous_width
+                    height_ratio = event.h / self.previous_height
+                    self.update_positions(width_ratio, height_ratio)
 
-            self.handle_events(events)
-            self.screen.fill(self.WHITE)  # Clear the screen
-            self.draw(self.screen)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        if self.current_page < len(self.pdf_images) - 1:
+                            self.current_page += 1
+                    elif event.key == pygame.K_LEFT:
+                        if self.current_page > 0:
+                            self.current_page -= 1
+                    elif event.key == pygame.K_RETURN and self.current_page == len(self.pdf_images) - 1:
+                        self.running = False
+                        self.manager.set_active_screen("Level 1")
+                    
+                    if event.key == pygame.K_m:
+                        if self.sidebar:
+                            self.sidebar.toggle()
+                            self.handle_sidebar_toggle()
+
+                # Pass individual events to the sidebar handler
+                if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
+                    mouse_pos = pygame.mouse.get_pos()
+                    option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
+                    if option_clicked:
+                        self.running = False
+                        self.manager.set_active_screen(option_clicked)
+                        return
+
+            # Handle all events for this screen
+            self.handle_event(events)
+
+            # Clear the screen and draw the current state
+            self.screen.fill(self.WHITE)
+            self.draw()
 
             # Update the display
             pygame.display.flip()
             clock.tick(60)
-        
-        if self.next_screen == "control":
-            self.run_control_screen()
+    
+    def update_positions(self, width_ratio, height_ratio):
+        screen_width = self.screen.get_width()
+        screen_height = self.screen.get_height()
+        sidebar_width = self.sidebar.width if self.sidebar and self.sidebar.visible else 0
 
-    def handle_events(self, events):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT:
-                    # Go to the next page
-                    if self.current_page < len(self.pdf_images) - 1:
-                        self.current_page += 1
-                elif event.key == pygame.K_LEFT:
-                    # Go to the previous page
-                    if self.current_page > 0:
-                        self.current_page -= 1
-                elif event.key == pygame.K_RETURN and self.current_page == len(self.pdf_images) - 1:
-                    # Transition to the Control Screen
-                    self.running = False
-                    self.next_screen = "control"
+        # Adjust the center for the image and text based on the screen size and sidebar
+        self.center_x = (screen_width - sidebar_width) // 2
+        self.center_y = screen_height // 2
 
-    def draw(self, surface):
-        # Get the screen dimensions
-        screen_width = surface.get_width()
-        screen_height = surface.get_height()
+        # Adjust icon positions if necessary (scaled proportionally)
+        self.left_arrow = pygame.transform.scale(
+            self.left_arrow,
+            (int(self.left_arrow.get_width() * width_ratio), int(self.left_arrow.get_height() * height_ratio))
+        )
+        self.right_arrow = pygame.transform.scale(
+            self.right_arrow,
+            (int(self.right_arrow.get_width() * width_ratio), int(self.right_arrow.get_height() * height_ratio))
+        )
+        self.enter_icon = pygame.transform.scale(
+            self.enter_icon,
+            (int(self.enter_icon.get_width() * width_ratio), int(self.enter_icon.get_height() * height_ratio))
+        )
 
-        # Scale the current image to fit the full screen
-        scaled_image = pygame.transform.scale(self.pdf_images[self.current_page], (screen_width, screen_height))
-        surface.blit(scaled_image, (0, 0))
+    def load_and_scale_icon(self, path, scale_factor=15):
+        image = pygame.image.load(path)
+        return pygame.transform.scale(
+            image, (image.get_width() // scale_factor, image.get_height() // scale_factor)
+        )
+
+    def draw(self):
+        # Get the screen dimensions and sidebar width
+        screen_width = self.screen.get_width()
+        screen_height = self.screen.get_height()
+        sidebar_width = self.sidebar.width if self.sidebar and self.sidebar.visible else 0
+
+        # Scale the current image to fit the available screen space
+        scaled_image = pygame.transform.scale(
+            self.pdf_images[self.current_page],
+            (screen_width - sidebar_width, screen_height)
+        )
+        self.screen.blit(scaled_image, (sidebar_width, 0))
 
         # Set the y-position for the guidance text and icons
-        text_y_position = screen_height - 22  # Adjust this value for spacing from the bottom
+        text_y_position = screen_height - 20  # Adjust this value for spacing from the bottom
+        center_x = (screen_width - sidebar_width) // 2  # Center horizontally, accounting for sidebar
 
-        # Draw guidance arrows and text
+        # Draw guidance arrows and text based on the current page
         if self.current_page == len(self.pdf_images) - 1:  # Last page
-            # Text: "Press [icon] to return to tutorial. Press [icon] to play game!"
             self.draw_text_with_two_texts_and_icons(
                 "Press",
                 self.left_arrow,
                 "to return to tutorial. Press RETURN/ENTER",
                 self.enter_icon,
                 "to play game!",
-                surface,
-                screen_width // 2,
+                self.screen,
+                center_x,
                 text_y_position,
                 spacing=10
             )
         elif self.current_page == 0:  # First page
-            # Text: "Press [icon] to continue."
             self.draw_text_with_icon_and_following_text(
                 "Press right arrow",
                 self.right_arrow,
                 "to continue.",
-                surface,
-                screen_width // 2,
+                self.screen,
+                center_x,
                 text_y_position
             )
         else:  # Middle pages
-            # Text: "Press [icon1] [icon2] to navigate."
             self.draw_text_with_two_icons_and_following_text(
                 "Use arrows",
                 self.left_arrow,
                 self.right_arrow,
                 "to navigate.",
-                surface,
-                screen_width // 2,
+                self.screen,
+                center_x,
                 text_y_position,
                 spacing=10
             )
 
+        if self.sidebar and self.sidebar.visible:
+            self.sidebar.draw(self.screen)
+
     def draw_text_with_icon_and_following_text(self, text, icon, following_text, surface, x, y):
-        """Draws text with a single icon followed by more text."""
         # Render the first part of the text
         text_obj = self.TEXT_FONT.render(text, True, self.BLACK)
         text_rect = text_obj.get_rect(midright=(x - 10, y))  # Adjust position to the left of the icon
@@ -181,6 +236,22 @@ class Intro1:
         surface.blit(text2_obj, text2_rect)
         surface.blit(icon2, icon2_rect)
         surface.blit(text3_obj, text3_rect)
+    
+    def handle_sidebar_toggle(self):
+        # Adjust the layout depending on sidebar visibility
+        sidebar_width = self.sidebar.width if self.sidebar and self.sidebar.visible else 0
+        self.center_x = (self.screen.get_width() - sidebar_width) // 2
+        self.center_y = self.screen.get_height() // 2
+        self.draw()  # Redraw elements to reflect the changes
+    
+    def get_sidebar_option(self, mouse_pos, options):
+        y_offset = 120  # Adjust to the starting Y position of options
+        spacing = 50  # Space between each option
+        for i, option in enumerate(options):
+            option_rect = pygame.Rect(20, y_offset + i * spacing, 360, 40)  # Match the sidebar dimensions
+            if option_rect.collidepoint(mouse_pos):
+                return option
+        return None
 
     @staticmethod
     def draw_text(text, font, color, surface, x, y):
