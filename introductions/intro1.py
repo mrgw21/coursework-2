@@ -173,7 +173,7 @@ class Intro1(BaseScreen):
             )
 
         if self.sidebar and self.sidebar.visible:
-            self.sidebar.draw(self.screen)
+            self.sidebar.draw(self.screen, "Introduction")
 
     def draw_text_with_icon_and_following_text(self, text, icon, following_text, surface, x, y):
         # Render the first part of the text

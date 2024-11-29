@@ -26,7 +26,6 @@ class AboutScreen(BaseScreen):
         self.running = True
 
     def calculate_text_positions(self):
-        """Calculate positions for the title and text lines dynamically."""
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         center_x = self.screen.get_width() // 2 + (sidebar_width // 2)
 
@@ -66,7 +65,6 @@ class AboutScreen(BaseScreen):
             pygame.display.flip()
 
     def draw(self):
-        """Draw the about screen."""
         # Determine sidebar width
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         center_x = self.screen.get_width() // 2 + (sidebar_width // 2)
@@ -85,14 +83,12 @@ class AboutScreen(BaseScreen):
 
         # Draw sidebar if visible
         if self.sidebar.visible:
-            self.sidebar.draw(self.screen)
+            self.sidebar.draw(self.screen, "About")
 
     def handle_sidebar_toggle(self):
-        """Recalculate positions when the sidebar is toggled."""
         self.calculate_text_positions()
 
     def reposition_elements(self, new_width, new_height):
-        """Recalculate positions when the screen is resized."""
         old_width, old_height = self.screen.get_size()
         width_ratio = new_width / old_width
         height_ratio = new_height / old_height
@@ -114,7 +110,6 @@ class AboutScreen(BaseScreen):
         ]
 
     def get_sidebar_option(self, mouse_pos, options):
-        """Return the option clicked in the sidebar."""
         y_offset = 120  # Adjust to the starting Y position of options
         spacing = 50  # Space between each option
         for i, option in enumerate(options):

@@ -9,7 +9,7 @@ class Sidebar:
         self.menu_font = pygame.font.SysFont("Arial", 25, bold=True)
         self.font = pygame.font.SysFont("Arial", 24)
 
-    def draw(self, screen):
+    def draw(self, screen, current_screen, clicked_option=None):
         if not self.visible:
             return
 
@@ -27,8 +27,17 @@ class Sidebar:
         y_offset = 120  # Start below the titles with some padding
         spacing = 50  # Space between each menu option
         for i, option in enumerate(self.options):
-            color = (255, 255, 255)
-            text = self.font.render(option, True, color)
+            if option == clicked_option:
+                font = self.menu_font  # Use bold font for clicked option
+                color = (255, 215, 0)  # Golden yellow for clicked option
+            elif option == current_screen:
+                font = self.menu_font  # Bold the current screen
+                color = (0, 0, 0)  # Black for current screen
+            else:
+                font = self.font  # Regular font for others
+                color = (255, 255, 255)  # White for others
+
+            text = font.render(option, True, color)
             screen.blit(text, (20, y_offset + i * spacing))
 
     def toggle(self):

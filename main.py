@@ -67,7 +67,11 @@ def main():
                         clicked_option = active_screen.sidebar.handle_event(event)
                         if clicked_option:
                             if clicked_option == "Exit Game":
-                                running = False  # Stop the game loop
+                                active_screen.sidebar.draw(active_screen.screen, "Exit Game")
+                                pygame.display.flip()
+                                pygame.time.delay(500)
+                                pygame.quit()
+                                exit()
                             elif clicked_option in sidebar_options:
                                 # Switch to a valid screen
                                 manager.set_active_screen(sidebar_options[clicked_option])
@@ -86,6 +90,7 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+    exit()
 
 
 def get_sidebar_option(mouse_pos, options_mapping):

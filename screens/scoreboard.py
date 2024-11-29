@@ -106,7 +106,7 @@ class ScoreboardScreen(BaseScreen):
 
         # Draw sidebar if visible
         if self.sidebar.visible:
-            self.sidebar.draw(self.screen)
+            self.sidebar.draw(self.screen, "Scoreboard")
 
     def handle_sidebar_toggle(self):
         self.calculate_row_positions()

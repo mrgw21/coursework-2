@@ -72,7 +72,7 @@ class QuizzesScreen(BaseScreen):
             self.screen.blit(text, text.get_rect(center=(self.text_positions[i][0], self.text_positions[i][1])))
 
         if self.sidebar.visible:
-            self.sidebar.draw(self.screen)
+            self.sidebar.draw(self.screen, "Quizzes")
 
     def handle_sidebar_toggle(self):
         self.calculate_text_positions()

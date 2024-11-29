@@ -582,5 +582,5 @@ class Level1(BaseScreen):
         button_position = (self.screen.get_width() - 60, 22)
         self.screen.blit(pause_button, button_position)
 
-        self.sidebar.draw(self.screen)
+        self.sidebar.draw(self.screen, "Level 1")
         self.oracle.draw(self.screen)
