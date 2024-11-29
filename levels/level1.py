@@ -194,8 +194,7 @@ class Level1(BaseScreen):
                 if self.counter < len(self.cells):
                     current_cell = self.cells[self.counter]
                     for enemy in self.enemies:
-                        # Pass center coordinates and the current cell as arguments
-                        if enemy.move_towards_target(self.game_center_x, self.screen.get_height() // 2, current_cell):
+                        if enemy.move_towards_target(self.cells):
                             self.counter += 1
 
             self.handle_feedback_closure()
@@ -354,7 +353,8 @@ class Level1(BaseScreen):
 
     def check_collisions(self):
         current_time = pygame.time.get_ticks()
-        for enemy in self.enemies[:]:
+
+        for enemy in self.enemies[:]:  # Iterate over a copy of the enemies list
             # Check collision with macrophage
             if self.macrophage.get_collision_rect().colliderect(enemy.get_collision_rect()):
                 if enemy not in self.colliding_pathogens:
@@ -371,14 +371,14 @@ class Level1(BaseScreen):
                 if enemy in self.colliding_pathogens:
                     del self.colliding_pathogens[enemy]
 
-            # Check collision with cells
+            # Check collision with specific cells
             for cell in self.cells:
-                if enemy.get_collision_rect().colliderect(cell.rect) and cell.state:
+                if cell.state and enemy.get_collision_rect().colliderect(cell.get_collision_rect()):
                     cell.die()  # Infect the cell
-                    self.enemies.remove(enemy)
+                    self.enemies.remove(enemy)  # Remove the pathogen
                     if enemy in self.colliding_pathogens:
-                        del self.colliding_pathogens[enemy]  # Remove pathogen from tracking
-                    break
+                        del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+                    break  # Stop checking other cells for this pathogen
     
     def check_for_open_modal(self):
         for cell in self.cells:

@@ -59,6 +59,11 @@ class Cell:
                     return
                 idx += 1
 
+    def get_collision_rect(self):
+        base_rect = self.image.get_rect(center=self.rect.center)
+        collision_rect = base_rect.inflate(-70, -70)
+        return collision_rect
+
     def die(self):
         self.state = False
         self.health = "infected"
@@ -68,6 +73,7 @@ class Cell:
     
     def draw(self, screen, sidebar_width, level):
         screen.blit(self.image, self.rect)
+        # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
         if self.show_modal:
             self.draw_modal(screen, sidebar_width, level)
