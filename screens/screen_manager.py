@@ -1,4 +1,3 @@
-# screens/screen_manager.py
 import pygame
 
 class BaseScreen:
@@ -39,28 +38,38 @@ class ScreenManager:
 
     def register_screen(self, name, screen_class, *args, **kwargs):
         self.screens[name] = (screen_class, args, kwargs)
+        print(f"[DEBUG] Registered screen: {name}")
 
     def set_active_screen(self, name):
         if name in self.screens:
             screen_class, args, kwargs = self.screens[name]
+            print(f"[DEBUG] Switching to screen: {name}")
             self.active_screen = screen_class(self.screen, *args, **kwargs)
+            if hasattr(self.active_screen, "run"):
+                print(f"[DEBUG] Active screen set to: {type(self.active_screen).__name__}")
+            else:
+                print(f"[ERROR] Screen '{name}' does not have a 'run' method.")
         elif name == "Exit Game":
-            pass
+            print("[DEBUG] Exiting game.")
         else:
             raise ValueError(f"Screen '{name}' is not registered.")
 
     def run_active_screen(self):
         if self.active_screen:
+            print(f"[DEBUG] Running screen: {type(self.active_screen).__name__}")
             self.active_screen.run()
 
     def draw_active_screen(self):
         if self.active_screen:
+            print(f"[DEBUG] Drawing screen: {type(self.active_screen).__name__}")
             self.active_screen.draw()
 
     def handle_event(self, event):
         if self.active_screen:
+            print(f"[DEBUG] Handling event in screen: {type(self.active_screen).__name__}")
             self.active_screen.handle_event(event)
 
     def reposition_active_screen(self):
         if self.active_screen:
+            print(f"[DEBUG] Repositioning elements in screen: {type(self.active_screen).__name__}")
             self.active_screen.reposition_elements()

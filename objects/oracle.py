@@ -19,6 +19,12 @@ class Oracle:
         # Set Oracle's initial position and modal position
         self.set_position()
 
+        # Initialize message attributes
+        self.message_surface = None
+        self.message_rect = None
+        self.font = pygame.font.SysFont("Arial", 24)  # Font for messages
+        self.message = ""  # Default empty message
+
     def set_position(self):
         # Adjust Oracle position within the sidebar
         screen_height = pygame.display.get_surface().get_height()
@@ -64,3 +70,13 @@ class Oracle:
     def reset_image(self):
         # Reset to default image after a click
         self.image = pygame.transform.scale(self.image_default, (250, 200))
+
+    def display_message(self, message):
+        self.message = message
+        self.message_surface = self.font.render(self.message, True, (0, 0, 0))  # Black text
+        self.message_rect = self.message_surface.get_rect()
+        self.message_rect.topleft = (self.rect.x, self.rect.top - 30)  # Display above Oracle
+
+    def draw_message(self, screen):
+        if self.message_surface and self.message_rect:
+            screen.blit(self.message_surface, self.message_rect)

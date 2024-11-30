@@ -8,6 +8,8 @@ from screens.quizzes import QuizzesScreen
 from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
+from screens.tutorials.bacteria_screen import BacteriaScreen
+from screens.tutorials.virus_screen import VirusScreen
 import os
 
 
@@ -21,13 +23,15 @@ def main():
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
     manager.register_screen("Introduction", Intro1, pdf_images, manager)
-    manager.register_screen("Level 1", Level1, manager)
+    manager.register_screen("Level 1", Level1, manager, True, 0)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)
     manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
     manager.register_screen("About", AboutScreen, manager)
+    manager.register_screen("bacteria_tutorial", BacteriaScreen, manager)
+    manager.register_screen("virus_tutorial", VirusScreen, manager)
 
     # Set the starting screen
     manager.set_active_screen("Introduction")
@@ -62,36 +66,40 @@ def main():
             else:
                 active_screen = manager.active_screen
                 if active_screen:
-                    # Check if sidebar is visible and handle option clicks
-                    if hasattr(active_screen, "sidebar") and active_screen.sidebar.visible:
-                        clicked_option = active_screen.sidebar.handle_event(event)
-                        if clicked_option:
-                            if clicked_option == "Exit Game":
-                                active_screen.sidebar.draw(active_screen.screen, "Exit Game")
-                                pygame.display.flip()
-                                pygame.time.delay(500)
-                                pygame.quit()
-                                exit()
-                            elif clicked_option in sidebar_options:
-                                # Switch to a valid screen
-                                manager.set_active_screen(sidebar_options[clicked_option])
-                                break
-                    else:
-                        # Pass event to the active screen if the sidebar isn't handling it
+                    # Check if it's a tutorial screen
+                    if isinstance(active_screen, VirusScreen) or isinstance(active_screen, BacteriaScreen):
                         active_screen.handle_event(event)
+                        # Check completion flag
+                        if hasattr(active_screen, "completed") and active_screen.completed:
+                            print("[DEBUG] Tutorial completed. Returning to Level 1.")
+                            manager.set_active_screen("Level 1")
+                    else:
+                        # Sidebar handling for other screens
+                        if hasattr(active_screen, "sidebar") and active_screen.sidebar.visible:
+                            clicked_option = active_screen.sidebar.handle_event(event)
+                            if clicked_option:
+                                if clicked_option == "Exit Game":
+                                    pygame.quit()
+                                    exit()
+                                elif clicked_option in sidebar_options:
+                                    manager.set_active_screen(sidebar_options[clicked_option])
+                                    break
+                        else:
+                            # Pass event to the active screen if no sidebar
+                            active_screen.handle_event(event)
 
-        # Update and draw the active screen
+        # Run the active screen
         if manager.active_screen:
             manager.run_active_screen()
-            screen.fill((255, 255, 255))  # Clear the screen
-            manager.draw_active_screen()
 
-        pygame.display.flip()  # Update the display
+        # Clear screen and draw
+        screen.fill((255, 255, 255))
+        manager.draw_active_screen()
+        pygame.display.flip()
         clock.tick(60)
 
     pygame.quit()
     exit()
-
 
 def get_sidebar_option(mouse_pos, options_mapping):
     x, y = mouse_pos
