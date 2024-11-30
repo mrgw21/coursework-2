@@ -22,6 +22,7 @@ class Oracle:
         # Initialize message attributes
         self.message_surface = None
         self.message_rect = None
+        self.message_bg_rect = None  # Background rect for the message
         self.font = pygame.font.SysFont("Arial", 24)  # Font for messages
         self.message = ""  # Default empty message
 
@@ -71,12 +72,30 @@ class Oracle:
         # Reset to default image after a click
         self.image = pygame.transform.scale(self.image_default, (250, 200))
 
-    def display_message(self, message):
+    def display_message(self, message, screen):
         self.message = message
+
+        # Create the text surface
         self.message_surface = self.font.render(self.message, True, (0, 0, 0))  # Black text
         self.message_rect = self.message_surface.get_rect()
-        self.message_rect.topleft = (self.rect.x, self.rect.top - 30)  # Display above Oracle
+        
+        # Position the text above the Oracle
+        self.message_rect.topleft = (self.rect.x - 40, self.rect.top - 35)  # Display above Oracle
+
+        # Create an oval background shape for the message
+        padding = 30  # Padding around the text
+        self.message_bg_rect = pygame.Rect(
+            self.message_rect.x - padding,  # Left side with padding
+            self.message_rect.y - padding,  # Top side with padding
+            self.message_rect.width + padding * 2,  # Width with padding
+            self.message_rect.height + padding * 2  # Height with padding
+        )
 
     def draw_message(self, screen):
-        if self.message_surface and self.message_rect:
+        if self.message_surface and self.message_bg_rect:
+            # Draw the message background
+            pygame.draw.ellipse(screen, (255, 255, 255), self.message_bg_rect)  # White background
+            pygame.draw.ellipse(screen, (0, 0, 0), self.message_bg_rect, 2)  # Black border
+
+            # Draw the message text
             screen.blit(self.message_surface, self.message_rect)

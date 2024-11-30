@@ -84,7 +84,6 @@ class Level1(BaseScreen):
             )
             self.handle_tutorial_clicks()  # Handle mouse clicks during the tutorial
             self.check_collisions()
-            self.show_oracle_instructions()
             # Move enemies towards the center and cells
             if self.counter < len(self.cells):
                 current_cell = self.cells[self.counter]
@@ -400,10 +399,15 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens.append(virus)
                 self.handle_tutorial_clicks()
 
+            if elapsed_time >= 2000:
+                self.oracle.display_message("Take a look at the coming phatogen, it's a virus!", self.screen)
+
             # Pause the game after 5 seconds to ensure the virus is visible
             if elapsed_time >= 5000:  # Wait 5 seconds
                 self.paused = True
-                self.oracle.display_message("Click on the virus to learn about it.")
+                self.tutorial_pathogens[0].speed = 0
+                self.oracle.display_message("Take a look at !", self.screen)
+                self.oracle.display_message("Click on the virus to learn about it!", self.screen)
 
         elif self.tutorial_step == 1 and not any(p.type == "virus" for p in self.enemies):
             # After the virus has been clicked and removed
@@ -420,7 +424,6 @@ class Level1(BaseScreen):
                 self.enemies.append(bacteria)
                 self.tutorial_pathogens.append(bacteria)
             self.oracle.display_message("Click on the bacteria to learn about it.")
-            self.paused = True  # Pause until bacteria is clicked
             self.tutorial_step += 1
 
         elif self.tutorial_step == 3 and not any(p.type == "bacteria" for p in self.enemies):
@@ -722,10 +725,11 @@ class Level1(BaseScreen):
             enemy.draw(self.screen)
         
         if self.tutorial_phase:
+            """
             for pathogen in self.tutorial_pathogens:
                 pygame.draw.rect(self.screen, (0, 255, 0), pathogen.get_collision_rect(), 2)
             self.oracle.draw_message(self.screen)
-
+            """
         # Draw macrophage (in front of pathogens)
         self.macrophage.draw(self.screen)
 
@@ -735,13 +739,13 @@ class Level1(BaseScreen):
                 cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
 
         # Draw timer and pause/play button
-        self.timer.draw(self.screen, self.remaining_time, self.paused)
-
-        button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
-        pause_button = pygame.image.load(button_icon)
-        pause_button = pygame.transform.scale(pause_button, (40, 40))
-        button_position = (self.screen.get_width() - 60, 22)
-        self.screen.blit(pause_button, button_position)
+        if not self.tutorial_phase:
+            self.timer.draw(self.screen, self.remaining_time, self.paused)
+            button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
+            pause_button = pygame.image.load(button_icon)
+            pause_button = pygame.transform.scale(pause_button, (40, 40))
+            button_position = (self.screen.get_width() - 60, 22)
+            self.screen.blit(pause_button, button_position)
 
         self.sidebar.draw(self.screen, "Level 1")
         self.oracle.draw(self.screen)
