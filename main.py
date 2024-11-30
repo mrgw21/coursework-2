@@ -71,8 +71,8 @@ def main():
                         active_screen.handle_event(event)
                         # Check completion flag
                         if hasattr(active_screen, "completed") and active_screen.completed:
-                            print("[DEBUG] Tutorial completed. Returning to Level 1.")
-                            manager.set_active_screen("Level 1")
+                            manager.register_screen("Level 1 " + str(active_screen.step + 1), Level1, manager, True, active_screen.step + 1)
+                            manager.set_active_screen("Level 1 " + str(active_screen.step + 1))
                     else:
                         # Sidebar handling for other screens
                         if hasattr(active_screen, "sidebar") and active_screen.sidebar.visible:

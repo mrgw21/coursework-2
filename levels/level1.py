@@ -71,6 +71,7 @@ class Level1(BaseScreen):
 
         # Use `pygame.display` to get screen dimensions
         self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
+        
 
     def run(self):
         while self.tutorial_step < 6 and self.tutorial_phase:
@@ -406,14 +407,19 @@ class Level1(BaseScreen):
             if elapsed_time >= 5000:  # Wait 5 seconds
                 self.paused = True
                 self.tutorial_pathogens[0].speed = 0
-                self.oracle.display_message("Take a look at !", self.screen)
                 self.oracle.display_message("Click on the virus to learn about it!", self.screen)
 
         elif self.tutorial_step == 1 and not any(p.type == "virus" for p in self.enemies):
-            # After the virus has been clicked and removed
-            self.oracle.display_message("Use WASD to move the macrophage and kill the virus.")
+            if not any(p.type == "virus" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                virus = Pathogen(x, y, "virus")
+                virus.is_tutorial = True
+                virus.speed = 0.1
+                self.enemies.append(virus)
+                self.tutorial_pathogens.append(virus)
+            
+            self.oracle.display_message("Use WASD to move the macrophage and kill a virus.", self.screen)
             self.paused = False  # Allow player movement
-            self.tutorial_step += 1
 
         elif self.tutorial_step == 2 and not any(p.type == "virus" for p in self.enemies):
             # Spawn the bacteria after the virus is killed
@@ -421,27 +427,41 @@ class Level1(BaseScreen):
                 x, y = self.generate_spawn_location()
                 bacteria = Pathogen(x, y, "bacteria")
                 bacteria.is_tutorial = True
+                bacteria.speed = 0.1
                 self.enemies.append(bacteria)
                 self.tutorial_pathogens.append(bacteria)
-            self.oracle.display_message("Click on the bacteria to learn about it.")
-            self.tutorial_step += 1
+
+            if elapsed_time >= 2000:
+                self.oracle.display_message("Look at another phatogen coming, it's a bacteria!", self.screen)
+
+            if elapsed_time >= 5000:  
+                self.oracle.display_message("Click on the bacteria to learn about it.", self.screen)
+                self.tutorial_pathogens[0].speed = 0
+                self.tutorial_step += 1
 
         elif self.tutorial_step == 3 and not any(p.type == "bacteria" for p in self.enemies):
-            # After the bacteria has been clicked
-            self.oracle.display_message("Kill the bacteria!")
+            if not any(p.type == "bacteria" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                virus = Pathogen(x, y, "bacteria")
+                virus.is_tutorial = True
+                virus.speed = 0.1
+                self.enemies.append(virus)
+                self.tutorial_pathogens.append(virus)
+            
+            self.oracle.display_message("Kill a bacteria!", self.screen)
             self.paused = False  # Allow gameplay to continue
-            self.tutorial_step += 1
 
         elif self.tutorial_step == 4 and not self.enemies:
             # Tutorial is over
-            self.oracle.display_message("Protect the cells!")
-            self.tutorial_phase = False  # End tutorial
+            self.tutorial_phase = False
+            if elapsed_time <= 5000:
+                self.oracle.display_message("Protect the cells!", self.screen)
+            if elapsed_time > 5000:
+                self.oracle.display_message("Click me for hints!", self.screen)
 
     def handle_tutorial_clicks(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.tutorial_phase = False
-                self.running = False
                 exit()
             """
             if event.type == pygame.FULLSCREEN:
@@ -497,6 +517,7 @@ class Level1(BaseScreen):
                             return
                         elif pathogen.type == "bacteria":
                             self.running = False
+                            self.tutorial_phase = False
                             self.manager.set_active_screen("bacteria_tutorial")  # Switch to bacteria tutorial
                             return
 
@@ -525,6 +546,8 @@ class Level1(BaseScreen):
                     if collision_duration >= 1000:  # 1 second delay
                         self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+                        if self.tutorial_phase:
+                            self.tutorial_step += 1
             else:
                 # Remove pathogen from tracking if it is no longer colliding
                 if enemy in self.colliding_pathogens:

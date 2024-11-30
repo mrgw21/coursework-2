@@ -1,87 +1,93 @@
-# screens/tutorials/bacteria_screen.py
 import pygame
+from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
-
 
 class BacteriaScreen(BaseScreen):
     def __init__(self, screen, manager):
         super().__init__(screen)
         self.manager = manager
         self.running = True
+        self.completed = False  # To indicate when to switch back
+        self.step = 3
+        self.sidebar = Sidebar()
+        self.font = pygame.font.SysFont("Arial", 24)
+        self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
 
-        # Background color or image
-        self.background_color = (230, 230, 250)  # Light lavender background
-        self.title_font = pygame.font.SysFont("Arial", 36)
-        self.content_font = pygame.font.SysFont("Arial", 20)
+        # Tutorial-specific content
+        self.content = [
+            "Bacteria are single-celled microorganisms.",
+            "They can reproduce independently.",
+            "Use the macrophage to neutralize bacteria!",
+        ]
+        self.current_index = 0  # Start with the first page of content
 
-        # Button for returning to the game
-        self.button_font = pygame.font.SysFont("Arial", 24)
-        self.button_text = "Back to Game"
-        self.button_width = 200
-        self.button_height = 50
-        self.button_color = (200, 50, 50)
-        self.button_hover_color = (255, 80, 80)
-        self.button_rect = pygame.Rect(
-            (self.screen.get_width() - self.button_width) // 2,
-            self.screen.get_height() - 100,
-            self.button_width,
-            self.button_height,
+        # Dynamic centering variables
+        self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+        self.content_center = self.calculate_center()
+
+    def calculate_center(self):
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+        return (
+            (self.screen.get_width() - sidebar_width) // 2 + sidebar_width,
+            self.screen.get_height() // 2,
         )
+
+    def handle_sidebar_toggle(self):
+        self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+        self.content_center = self.calculate_center()
 
     def handle_event(self, event):
-        if event.type == pygame.QUIT:
-            self.running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.manager.set_active_screen("level1")  # Return to the game
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            if self.button_rect.collidepoint(mouse_pos):
-                self.manager.set_active_screen("level1")  # Return to the game
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                self.completed = True  # Mark as completed to trigger screen switch
+                self.running = False
+            elif event.key == pygame.K_RIGHT:
+                self.current_index = min(self.current_index + 1, len(self.content) - 1)
+            elif event.key == pygame.K_LEFT:
+                self.current_index = max(self.current_index - 1, 0)
+            elif event.key == pygame.K_m:
+                self.sidebar.toggle()
+                self.handle_sidebar_toggle()  # Adjust content position dynamically
+        elif event.type == pygame.MOUSEBUTTONDOWN and self.sidebar.visible:
+            option = self.sidebar.get_option_clicked(event.pos)
+            if option:
+                self.manager.set_active_screen(option)
+                self.running = False
 
     def draw(self):
-        # Background
-        self.screen.fill(self.background_color)
+        self.screen.fill((200, 200, 200))
 
-        # Title
-        title_text = self.title_font.render("Bacteria Tutorial", True, (50, 50, 50))
-        self.screen.blit(
-            title_text,
-            ((self.screen.get_width() - title_text.get_width()) // 2, 50),
+        # Draw title
+        title_text = self.title_font.render("Bacteria Information", True, (0, 0, 0))
+        title_rect = title_text.get_rect(center=(self.content_center[0], 100))
+        self.screen.blit(title_text, title_rect)
+
+        # Draw content
+        content_text = self.font.render(self.content[self.current_index], True, (0, 0, 0))
+        content_rect = content_text.get_rect(center=self.content_center)
+        self.screen.blit(content_text, content_rect)
+
+        # Draw navigation hints
+        nav_hint = self.font.render(
+            "Use LEFT/RIGHT arrows to navigate. Press ENTER to return.",
+            True,
+            (50, 50, 50),
         )
-
-        # Content
-        content_lines = [
-            "Bacteria are single-celled microorganisms.",
-            "Some bacteria are harmful and can cause infections.",
-            "Others are beneficial and help with digestion and immunity.",
-            "In this game, bacteria are oval-shaped pathogens.",
-        ]
-        y_offset = 150
-        for line in content_lines:
-            content_text = self.content_font.render(line, True, (50, 50, 50))
-            self.screen.blit(content_text, (50, y_offset))
-            y_offset += 30
-
-        # Button
-        mouse_pos = pygame.mouse.get_pos()
-        if self.button_rect.collidepoint(mouse_pos):
-            pygame.draw.rect(self.screen, self.button_hover_color, self.button_rect)
-        else:
-            pygame.draw.rect(self.screen, self.button_color, self.button_rect)
-
-        button_text = self.button_font.render(self.button_text, True, (255, 255, 255))
-        self.screen.blit(
-            button_text,
-            (
-                self.button_rect.centerx - button_text.get_width() // 2,
-                self.button_rect.centery - button_text.get_height() // 2,
-            ),
+        nav_hint_rect = nav_hint.get_rect(
+            center=(self.content_center[0], self.screen.get_height() - 50)
         )
+        self.screen.blit(nav_hint, nav_hint_rect)
+
+        # Draw the sidebar if visible
+        if self.sidebar.visible:
+            self.sidebar.draw(self.screen, "Bacteria Information")
 
     def run(self):
         while self.running:
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
                 self.handle_event(event)
 
             self.draw()

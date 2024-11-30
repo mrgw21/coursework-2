@@ -7,6 +7,7 @@ class VirusScreen(BaseScreen):
         super().__init__(screen)
         self.manager = manager
         self.running = True
+        self.step = 0
         self.completed = False  # To indicate when to switch back
         self.sidebar = Sidebar()
         self.font = pygame.font.SysFont("Arial", 24)
