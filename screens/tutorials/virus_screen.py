@@ -25,7 +25,6 @@ class VirusScreen(BaseScreen):
         self.content_center = self.calculate_center()
 
     def calculate_center(self):
-        """Calculate the center position for content, accounting for sidebar."""
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         return (
             (self.screen.get_width() - sidebar_width) // 2 + sidebar_width,
@@ -33,7 +32,6 @@ class VirusScreen(BaseScreen):
         )
 
     def handle_sidebar_toggle(self):
-        """Recalculate positions dynamically when toggling the sidebar."""
         self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         self.content_center = self.calculate_center()
 
@@ -52,7 +50,6 @@ class VirusScreen(BaseScreen):
         elif event.type == pygame.MOUSEBUTTONDOWN and self.sidebar.visible:
             option = self.sidebar.get_option_clicked(event.pos)
             if option:
-                print(f"[DEBUG] Sidebar clicked: {option}")
                 self.manager.set_active_screen(option)
                 self.running = False
 
@@ -60,7 +57,7 @@ class VirusScreen(BaseScreen):
         self.screen.fill((200, 200, 200))
 
         # Draw title
-        title_text = self.title_font.render("Virus Tutorial", True, (0, 0, 0))
+        title_text = self.title_font.render("Virus Information", True, (0, 0, 0))
         title_rect = title_text.get_rect(center=(self.content_center[0], 100))
         self.screen.blit(title_text, title_rect)
 
@@ -82,7 +79,7 @@ class VirusScreen(BaseScreen):
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
-            self.sidebar.draw(self.screen, "Virus Tutorial")
+            self.sidebar.draw(self.screen, "Virus Information")
 
     def run(self):
         while self.running:
