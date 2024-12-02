@@ -80,7 +80,7 @@ class Oracle:
         self.message_rect = self.message_surface.get_rect()
         
         # Position the text above the Oracle
-        self.message_rect.topleft = (self.rect.x - 40, self.rect.top - 35)  # Display above Oracle
+        self.message_rect.topleft = (self.rect.x - 10, self.rect.top - 35)  # Display above Oracle
 
         # Create an oval background shape for the message
         padding = 30  # Padding around the text

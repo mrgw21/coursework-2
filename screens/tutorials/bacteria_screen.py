@@ -8,7 +8,7 @@ class BacteriaScreen(BaseScreen):
         self.manager = manager
         self.running = True
         self.completed = False  # To indicate when to switch back
-        self.step = 3
+        self.step = 2
         self.sidebar = Sidebar()
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
