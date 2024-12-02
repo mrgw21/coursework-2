@@ -78,11 +78,12 @@ class Level1(BaseScreen):
             # Tutorial logic
             self.clock.tick(60)  # Ensure consistent 60 FPS for the tutorial
             self.spawn_tutorial_pathogens()
-            self.macrophage.update(
-                self.screen.get_width(),
-                self.screen.get_height(),
-                self.sidebar.width if self.sidebar.visible else 25
-            )
+            if self.tutorial_step == 1 or self.tutorial_step == 3:
+                self.macrophage.update(
+                    self.screen.get_width(),
+                    self.screen.get_height(),
+                    self.sidebar.width if self.sidebar.visible else 25
+                )
             self.handle_tutorial_clicks()  # Handle mouse clicks during the tutorial
             self.check_collisions()
             # Move enemies towards the center and cells
@@ -202,6 +203,7 @@ class Level1(BaseScreen):
                     self.paused = True
                 
                 if elapsed_time >= 5000:
+                    self.oracle.display_message
                     self.oracle.display_message("Click me for help!", self.screen)
 
             if not self.paused and not self.game_over:
@@ -420,9 +422,8 @@ class Level1(BaseScreen):
                 virus.speed = 0.1
                 self.enemies.append(virus)
                 self.tutorial_pathogens.append(virus)
-            
+
             self.oracle.display_message("Use WASD to move the macrophage and kill a virus.", self.screen)
-            self.paused = False  # Allow player movement
 
         elif self.tutorial_step == 2 and not any(p.type == "virus" for p in self.enemies):
             # Spawn the bacteria after the virus is killed
