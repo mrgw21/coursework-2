@@ -45,6 +45,7 @@ class Macrophage:
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+        # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
     def get_collision_rect(self):
-        return self.rect.inflate(-10, -10) 
+        return self.rect.inflate(0, 0) 

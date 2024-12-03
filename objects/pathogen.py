@@ -14,12 +14,15 @@ class Pathogen:
         self.attack_timer = 0  # For delayed attacks
 
         if self.type == "bacteria":
-            self.image = pygame.image.load("assets/images/bacteria_placeholder.png")
-            self.image = pygame.transform.scale(self.image, (30, 30))
+            self.original_image = pygame.image.load("assets/images/final/bacteria.png")
+            self.original_image = pygame.transform.scale(self.original_image, (80, 80))
+            self.collision_shrink = -35  # Collision box shrink for bacteria
         else:
-            self.image = pygame.image.load("assets/images/final/virus.png")
-            self.image = pygame.transform.scale(self.image, (180, 180))  # Large virus sprite
+            self.original_image = pygame.image.load("assets/images/final/virus.png")
+            self.original_image = pygame.transform.scale(self.original_image, (180, 180))
+            self.collision_shrink = -140  # Collision box shrink for virus
 
+        self.image = self.original_image  # Copy of the image for rotation
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
@@ -32,23 +35,53 @@ class Pathogen:
         self.rect.x = screen_width // 2 + (self.rect.x - screen_width // 2)
         self.rect.y = screen_height // 2 + (self.rect.y - screen_height // 2)
 
-    def move_towards_target(self, center_x, center_y, cell=None):
-        if not self.alive:
-            target_x, target_y = (cell.rect.center if cell else (center_x, center_y))
+    def move_towards_target(self, cells):
+        # Find the closest uninfected cell
+        target_cell = self.find_closest_uninfected_cell(cells)
+
+        if target_cell:
+            target_x, target_y = target_cell.rect.center
+
+            # Rotate to face the target
+            self.rotate_towards_target(target_x, target_y)
 
             dx, dy = target_x - self.x, target_y - self.y
             distance = math.hypot(dx, dy)
-            if distance > 30:
+
+            if distance > 30:  # Move towards the cell
                 dx, dy = dx / distance, dy / distance
                 self.x += dx * self.speed
                 self.y += dy * self.speed
                 self.rect.center = (self.x, self.y)
-            else:
-                self.alive = True
-                if cell:
-                    cell.die()
+            elif self.get_collision_rect().colliderect(target_cell.get_collision_rect()):
+                # Infect the cell if colliding
+                target_cell.die()
+                self.alive = True  # Mark pathogen as used
                 return True
         return False
+
+    def rotate_towards_target(self, target_x, target_y):
+        # Calculate the angle to the target
+        dx, dy = target_x - self.x, target_y - self.y
+        angle = math.degrees(math.atan2(dy, -dx))
+
+        # Rotate the image
+        self.image = pygame.transform.rotate(self.original_image, angle)
+        # Preserve the center after rotation
+        self.rect = self.image.get_rect(center=self.rect.center)
+    
+    def find_closest_uninfected_cell(self, cells):
+        closest_cell = None
+        min_distance = float('inf')
+        
+        for cell in cells:
+            if cell.health == "uninfected":  # Only target uninfected cells
+                distance = math.hypot(cell.rect.centerx - self.x, cell.rect.centery - self.y)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_cell = cell
+
+        return closest_cell
 
     def attack_infected_cell(self):
         current_time = pygame.time.get_ticks()
@@ -59,7 +92,11 @@ class Pathogen:
 
     def draw(self, screen):
         if not self.alive:
+            # Draw the pathogen image
             screen.blit(self.image, self.rect)
+
+            # Draw collision rect for debugging
+            # pygame.draw.rect(screen, (255, 0, 0), self.get_collision_rect(), 2)
     
     def reposition(self, sidebar_width, width_ratio, height_ratio):
         # Adjust the position based on resizing ratios
@@ -73,11 +110,12 @@ class Pathogen:
         # Update pathogen position
         self.rect.centerx = int(new_x)
         self.rect.centery = int(new_y)
+        self.x, self.y = self.rect.center  # Update the logical position as well
     
     def get_collision_rect(self):
-        if self.type == "virus":
-            # Shrink the virus collision rect significantly
-            return self.rect.inflate(-120, -120)  # Aggressive reduction for large sprite
-        else:
-            # Slight reduction for bacteria
-            return self.rect.inflate(-10, -10)
+        # Get the original, unrotated rect based on the original image size
+        base_rect = self.original_image.get_rect(center=self.rect.center)
+        
+        # Inflate the base rect dynamically to create the collision rect
+        collision_rect = base_rect.inflate(self.collision_shrink, self.collision_shrink)
+        return collision_rect
