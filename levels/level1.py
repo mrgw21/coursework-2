@@ -7,8 +7,9 @@ from objects.pathogen import Pathogen
 from data.quizzes import quizzes
 
 class Level1:
-    def __init__(self, screen):
+    def __init__(self, screen,score_tracker):
         self.screen = screen
+        self.score_tracker = score_tracker
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
@@ -18,6 +19,10 @@ class Level1:
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height)
         self.cells = [Cell(i) for i in range(37)] 
+
+        # Pass the score_tracker to each cell
+        for cell in self.cells:
+            cell.setup(score_tracker=self.score_tracker)
 
         random.shuffle(quizzes)
         quiz_index = 0
@@ -255,8 +260,10 @@ class Level1:
                 if enemy.target_cell and not enemy.target_cell.state:  # Attacking an infected cell
                     if enemy.attack_infected_cell():  # Delay attacks
                         self.enemies.remove(enemy)  # Remove pathogen after attack
+                        self.score_tracker.add_points(10)
                 else:
                     self.enemies.remove(enemy)  # Normal attack speed for healthy cells
+                    self.score_tracker.add_points(10)
 
             # Check collision with cells
             for cell in self.cells:
@@ -449,3 +456,8 @@ class Level1:
             paused_text = paused_font.render("Paused", True, (255, 0, 0))
             text_rect = paused_text.get_rect(topright=(self.screen.get_width() - 10, 10))
             self.screen.blit(paused_text, text_rect)
+
+        #Draw Score
+        font = pygame.font.SysFont('Arial', 24)
+        score_text = font.render(f"Score: {self.score_tracker.get_score()}", True, (0, 0, 0))
+        self.screen.blit(score_text, (10, 40))

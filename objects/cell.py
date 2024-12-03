@@ -22,6 +22,9 @@ class Cell:
         # Set initial position of the cell
         self.reposition(center_pos)
 
+    def setup(self, score_tracker):
+        self.score_tracker = score_tracker
+
     def reposition(self, center_pos, spacing=15):
         row = [3, 5, 7, 7, 7, 5, 3]
         y_offset = -3.5 * spacing
@@ -182,6 +185,7 @@ class Cell:
             if option == selected_option:
                 if option["is_correct"]:
                     # Correct answer
+                    self.score_tracker.add_points(15)
                     self.quiz_feedback = {"message": "Congratulations! You got the right answer!", "color": (0, 255, 0)}
                     self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
                     self.feedback_timer = pygame.time.get_ticks()  # Start feedback timer
@@ -189,6 +193,7 @@ class Cell:
                 else:
                     # Incorrect answer
                     self.quiz_feedback = {"message": "Wrong answer! Try again!", "color": (255, 0, 0)}
+                    level.score_tracker.add_points(-5)  # Deduct points for wrong answers
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
         words = text.split(' ')
