@@ -78,7 +78,7 @@ class Level1(BaseScreen):
             # Tutorial logic
             self.clock.tick(60)  # Ensure consistent 60 FPS for the tutorial
             self.spawn_tutorial_pathogens()
-            if self.tutorial_step == 1 or self.tutorial_step == 3:
+            if self.tutorial_step == 2 or self.tutorial_step == 4:
                 self.macrophage.update(
                     self.screen.get_width(),
                     self.screen.get_height(),

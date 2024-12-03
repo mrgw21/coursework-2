@@ -7,7 +7,7 @@ class VirusScreen(BaseScreen):
         super().__init__(screen)
         self.manager = manager
         self.running = True
-        self.step = 0
+        self.step = 1
         self.completed = False  # To indicate when to switch back
         self.sidebar = Sidebar()
         self.font = pygame.font.SysFont("Arial", 24)
@@ -16,8 +16,6 @@ class VirusScreen(BaseScreen):
         # Tutorial-specific content
         self.content = [
             "Viruses are tiny infectious agents.",
-            "They replicate only inside living cells.",
-            "Use the macrophage to defeat the viruses!",
         ]
         self.current_index = 0  # Start with the first page of content
 

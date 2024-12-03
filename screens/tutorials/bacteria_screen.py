@@ -8,7 +8,7 @@ class BacteriaScreen(BaseScreen):
         self.manager = manager
         self.running = True
         self.completed = False  # To indicate when to switch back
-        self.step = 4
+        self.step = 3
         self.sidebar = Sidebar()
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
@@ -16,8 +16,6 @@ class BacteriaScreen(BaseScreen):
         # Tutorial-specific content
         self.content = [
             "Bacteria are single-celled microorganisms.",
-            "They can reproduce independently.",
-            "Use the macrophage to neutralize bacteria!",
         ]
         self.current_index = 0  # Start with the first page of content
 
