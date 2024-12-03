@@ -9,6 +9,7 @@ from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
 from screens.tutorials.bacteria_screen import BacteriaScreen
+from screens.tutorials.macrophage_screen import MacrophageScreen
 from screens.tutorials.virus_screen import VirusScreen
 import os
 
@@ -31,6 +32,7 @@ def main():
     manager.register_screen("Controls", ControlsScreen, manager)
     manager.register_screen("About", AboutScreen, manager)
     manager.register_screen("bacteria_tutorial", BacteriaScreen, manager)
+    manager.register_screen("macrophage_tutorial", MacrophageScreen, manager)
     manager.register_screen("virus_tutorial", VirusScreen, manager)
 
     # Set the starting screen
@@ -67,7 +69,7 @@ def main():
                 active_screen = manager.active_screen
                 if active_screen:
                     # Check if it's a tutorial screen
-                    if isinstance(active_screen, VirusScreen) or isinstance(active_screen, BacteriaScreen):
+                    if isinstance(active_screen, MacrophageScreen) or isinstance(active_screen, VirusScreen) or isinstance(active_screen, BacteriaScreen):
                         active_screen.handle_event(event)
                         # Check completion flag
                         if hasattr(active_screen, "completed") and active_screen.completed:

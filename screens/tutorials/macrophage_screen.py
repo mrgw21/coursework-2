@@ -2,22 +2,20 @@ import pygame
 from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
 
-class BacteriaScreen(BaseScreen):
+class MacrophageScreen(BaseScreen):
     def __init__(self, screen, manager):
         super().__init__(screen)
         self.manager = manager
         self.running = True
+        self.step = 0
         self.completed = False  # To indicate when to switch back
-        self.step = 4
         self.sidebar = Sidebar()
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
 
         # Tutorial-specific content
         self.content = [
-            "Bacteria are single-celled microorganisms.",
-            "They can reproduce independently.",
-            "Use the macrophage to neutralize bacteria!",
+            "Macrophage!",
         ]
         self.current_index = 0  # Start with the first page of content
 
@@ -58,7 +56,7 @@ class BacteriaScreen(BaseScreen):
         self.screen.fill((200, 200, 200))
 
         # Draw title
-        title_text = self.title_font.render("Bacteria Information", True, (0, 0, 0))
+        title_text = self.title_font.render("Macrophage Information", True, (0, 0, 0))
         title_rect = title_text.get_rect(center=(self.content_center[0], 100))
         self.screen.blit(title_text, title_rect)
 
@@ -80,7 +78,7 @@ class BacteriaScreen(BaseScreen):
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
-            self.sidebar.draw(self.screen, "Bacteria Information")
+            self.sidebar.draw(self.screen, "Macrophage Information")
 
     def run(self):
         while self.running:

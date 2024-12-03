@@ -396,6 +396,10 @@ class Level1(BaseScreen):
         elapsed_time = current_time - self.tutorial_start_time
 
         if self.tutorial_step == 0:
+            self.oracle.display_message("Click on the Macrophage!", self.screen)
+            self.handle_tutorial_clicks()
+
+        if self.tutorial_step == 1:
             # Spawn the virus at a random location using generate_spawn_location
             if not any(p.type == "virus" for p in self.enemies):
                 x, y = self.generate_spawn_location()
@@ -415,7 +419,7 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens[0].speed = 0
                 self.oracle.display_message("Click on the virus to learn about it!", self.screen)
 
-        elif self.tutorial_step == 1:
+        elif self.tutorial_step == 2:
             if not any(p.type == "virus" for p in self.enemies):
                 x, y = self.generate_spawn_location()
                 virus = Pathogen(x, y, "virus")
@@ -428,7 +432,7 @@ class Level1(BaseScreen):
             if elapsed_time >= 5000:
                 self.tutorial_pathogens[0].speed = 0
 
-        elif self.tutorial_step == 2 and not any(p.type == "virus" for p in self.enemies):
+        elif self.tutorial_step == 3 and not any(p.type == "virus" for p in self.enemies):
             # Spawn the bacteria after the virus is killed
             if not any(p.type == "bacteria" for p in self.enemies):
                 x, y = self.generate_spawn_location()
@@ -444,7 +448,7 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens[0].speed = 0
                 self.oracle.display_message("Click on the bacteria to learn about it.", self.screen)
 
-        elif self.tutorial_step == 3:
+        elif self.tutorial_step == 4:
             if not any(p.type == "bacteria" for p in self.enemies):
                 x, y = self.generate_spawn_location()
                 virus = Pathogen(x, y, "bacteria")
@@ -457,7 +461,7 @@ class Level1(BaseScreen):
             if elapsed_time >= 5000:
                 self.tutorial_pathogens[0].speed = 0
 
-        elif self.tutorial_step == 4 and not self.enemies:
+        elif self.tutorial_step == 5 and not self.enemies:
             # Tutorial is over
             self.tutorial_phase = False
             self.tutorial_completed = True  # Mark tutorial as completed
@@ -507,6 +511,12 @@ class Level1(BaseScreen):
                 # Pause/Play Button Handling
                 if pause_button_rect.collidepoint(mouse_pos):
                     self.paused = not self.paused
+
+                if self.macrophage.rect.collidepoint(mouse_pos):
+                    self.running = False
+                    self.tutorial_phase = False
+                    self.manager.set_active_screen("macrophage_tutorial") 
+                    return
 
                 # Check if a sidebar option is clicked
                 if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
