@@ -22,13 +22,13 @@ class HomeScreen:
         self.title_font = pygame.font.Font(None, 72)
 
         # Background image
-        self.background_image = pygame.image.load("assets/images/homebg2.webp").convert()
+        self.background_image = pygame.image.load("../assets/images/homebg2.webp").convert()
         self.background_image = pygame.transform.scale(self.background_image, (self.WIDTH, self.HEIGHT))
 
-        # Buttons data
+        # Buttons
         self.buttons = {
             "Levels": {"rect": pygame.Rect(self.WIDTH // 2 - 100, self.HEIGHT // 3 - 50, 200, 50), "color": self.GRAY,
-                       "options": ["Introduction 1", "Level 1", "Introduction 2", "Level 2", "Introduction 3", "Level 3"]},
+                       "options": ["Introduction 1", "Level 1", "Introduction 2", "Level 2"]},
             "Scoreboard": {"rect": pygame.Rect(self.WIDTH // 2 - 100, self.HEIGHT // 3 + 100, 200, 50), "color": self.GRAY,
                            "options": ["Statistics", "Scoreboard"]}
         }
