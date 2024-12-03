@@ -194,6 +194,7 @@ class Level1(BaseScreen):
 
             # Main game logic
             if not self.paused and not self.game_over:
+                self.check_game_over()
                 current_time = pygame.time.get_ticks()
                 elapsed_time = current_time - self.start_time - self.total_paused_time
                 self.remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
@@ -203,7 +204,6 @@ class Level1(BaseScreen):
                     self.paused = True
                 
                 if elapsed_time >= 5000:
-                    self.oracle.display_message
                     self.oracle.display_message("Click me for help!", self.screen)
 
             if not self.paused and not self.game_over:
@@ -238,6 +238,7 @@ class Level1(BaseScreen):
 
             if self.game_over:
                 self.show_game_over_screen()
+                continue
 
             # Update the screen
             pygame.display.flip()
@@ -414,7 +415,7 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens[0].speed = 0
                 self.oracle.display_message("Click on the virus to learn about it!", self.screen)
 
-        elif self.tutorial_step == 1 and not any(p.type == "virus" for p in self.enemies):
+        elif self.tutorial_step == 1:
             if not any(p.type == "virus" for p in self.enemies):
                 x, y = self.generate_spawn_location()
                 virus = Pathogen(x, y, "virus")
@@ -424,6 +425,8 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens.append(virus)
 
             self.oracle.display_message("Use WASD to move the macrophage and kill a virus.", self.screen)
+            if elapsed_time >= 5000:
+                self.tutorial_pathogens[0].speed = 0
 
         elif self.tutorial_step == 2 and not any(p.type == "virus" for p in self.enemies):
             # Spawn the bacteria after the virus is killed
@@ -437,8 +440,7 @@ class Level1(BaseScreen):
             
             if elapsed_time >= 2000 and elapsed_time < 5000:
                 self.oracle.display_message("Look at another phatogen coming, it's a bacteria!", self.screen)
-
-            if elapsed_time >= 5000:
+            elif elapsed_time >= 5000:
                 self.tutorial_pathogens[0].speed = 0
                 self.oracle.display_message("Click on the bacteria to learn about it.", self.screen)
 
