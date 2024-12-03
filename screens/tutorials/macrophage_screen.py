@@ -30,12 +30,12 @@ class MacrophageScreen(BaseScreen):
                 "context": "The macrophage is one of your first lines of defense against pathogens.",
             },
             {
-                "relative_position": (100, 70),  # Relative to the image top-left
-                "context": "The macrophage can recognize, bind to, and engulf foreign pathogens.",
+                "relative_position": (100, 400),  # Relative to the image top-left
+                "context": "Vesicles, called lysosomes, containing hydrolytic enzymes merge with the phagosome, causing the degradation of the pathogen.​.",
             },
             {
-                "relative_position": (150, 300),  # Relative to the image top-left
-                "context": "Vesicles merge with the pathogen to degrade it.",
+                "relative_position": (415, 250),  # Relative to the image top-left
+                "context": "The macrophage can recognize, bind to, and engulf foreign pathogens.",
             },
         ]
         self.clicked_button_index = None  # To track which button is clicked
@@ -65,11 +65,12 @@ class MacrophageScreen(BaseScreen):
             relative_x, relative_y = button["relative_position"]
             button["position"] = (self.image_rect.left + relative_x, self.image_rect.top + relative_y)
 
-            # Context position (to the right of the image or dynamically adjust)
-            context_offset = 50 if not self.sidebar.visible else self.sidebar_width + 50
+            # Place the context text closer to the button
+            context_offset_x = 50  # Horizontal offset from the button
+            context_offset_y = -20  # Vertical offset from the button
             button["context_position"] = (
-                self.image_rect.right + context_offset,
-                self.image_rect.top + relative_y,
+                button["position"][0] + context_offset_x,
+                button["position"][1] + context_offset_y,
             )
 
     def handle_event(self, event):
@@ -78,7 +79,11 @@ class MacrophageScreen(BaseScreen):
             for i, button in enumerate(self.buttons):
                 button_rect = pygame.Rect(button["position"], (30, 30))
                 if button_rect.collidepoint(mouse_pos):
-                    self.clicked_button_index = i  # Set the clicked button
+                    # Toggle context visibility
+                    if self.clicked_button_index == i:
+                        self.clicked_button_index = None  # Hide context and arrow
+                    else:
+                        self.clicked_button_index = i  # Show context and arrow for this button
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.completed = True  # Mark as completed to trigger screen switch
@@ -91,8 +96,8 @@ class MacrophageScreen(BaseScreen):
             exit()
 
     def draw_arrow(self, start, end, color=(0, 0, 0), width=2):
-        # Shorten the arrow length further
-        shorten_factor = 0.6  # Reduce the arrow length to 60% of the original
+        # Further reduce the arrow length
+        shorten_factor = 0.1  # Reduce the arrow length to 50% of the original
         dx, dy = end[0] - start[0], end[1] - start[1]
         shortened_end = (start[0] + dx * shorten_factor, start[1] + dy * shorten_factor)
 
@@ -123,6 +128,10 @@ class MacrophageScreen(BaseScreen):
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 50))
         self.screen.blit(title_text, title_rect)
 
+        guide_text = self.font.render("Click on the stars!", True, (0, 0, 0))
+        guide_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 100))
+        self.screen.blit(guide_text, guide_rect)
+
         # Draw the macrophage tutorial image
         self.screen.blit(self.image, self.image_rect)
 
@@ -144,7 +153,7 @@ class MacrophageScreen(BaseScreen):
             # Draw an arrow from the button to the context
             self.draw_arrow(
                 (button["position"][0] + 15, button["position"][1] + 15),  # Center of star
-                context_rect.topleft,
+                context_rect.midtop,  # Adjusted to point closer to the center of the text
             )
 
         # Draw the sidebar if visible
