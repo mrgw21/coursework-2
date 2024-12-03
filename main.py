@@ -15,7 +15,7 @@ def main():
     intro1 = Intro1(screen, pdf_images)
     intro1.run()
 
-    level1 = Level1(screen,score_tracker)
+    level1 = Level1(screen)
     level1.run()
 
     pygame.quit()

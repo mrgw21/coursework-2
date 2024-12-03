@@ -5,11 +5,13 @@ from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
 from data.quizzes import quizzes
+from objects.score_tracker import ScoreTracker
 
 class Level1:
-    def __init__(self, screen,score_tracker):
+    def __init__(self, screen):
         self.screen = screen
-        self.score_tracker = score_tracker
+        self.score_tracker = ScoreTracker()
+        self.added_to_leaderboard = False
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
@@ -45,7 +47,7 @@ class Level1:
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 30000  # 30 seconds in milliseconds
+        self.win_time = 10000  # 30 seconds in milliseconds
 
         self.game_over = False
         self.win = True
@@ -338,6 +340,30 @@ class Level1:
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
 
+        temp_score=self.score_tracker.get_score()
+            
+        #Display Final Score
+        score_text = font_large.render(f"Your Score: {temp_score}", True, (0, 0, 0))  # Use temp_score
+        score_text_rect = score_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+        self.screen.blit(score_text, score_text_rect)
+        current_y += 80
+
+        if not self.added_to_leaderboard:
+            # Add current score to leaderboard
+            self.score_tracker.add_to_leaderboard()
+            self.added_to_leaderboard = True
+
+        # Display leaderboard
+        leaderboard = self.score_tracker.get_leaderboard()
+        leaderboard_text = font_small.render("Leaderboard:", True, (0, 0, 0))
+        self.screen.blit(leaderboard_text, (modal_x + 20, current_y))
+        current_y += 30
+
+        for rank, score in enumerate(leaderboard[:5], start=1):  # Show top 5 scores
+            score_text = font_small.render(f"{rank}. {score}", True, (0, 0, 0))
+            self.screen.blit(score_text, (modal_x + 20, current_y))
+            current_y += 30
+
         restart_text = font_small.render("Press SPACE to restart", True, (0, 0, 0))
         restart_text_rect = restart_text.get_rect(center=(modal_x + modal_width // 2, current_y))
         self.screen.blit(restart_text, restart_text_rect)
@@ -346,6 +372,10 @@ class Level1:
 
     
     def reset_game(self):
+
+        #Reset score
+        #self.score_tracker.reset()
+
         # Reset cells
         self.cells = [Cell(i) for i in range(37)]
         self.assign_neighbors()
@@ -387,6 +417,8 @@ class Level1:
         self.win = True
         self.paused = False
         self.remaining_time = self.win_time // 1000
+        self.score_tracker.reset()
+        self.added_to_leaderboard = False
 
     def countdown_before_resume(self):
         font = pygame.font.SysFont('Arial', 48)
