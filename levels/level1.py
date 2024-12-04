@@ -779,13 +779,13 @@ class Level1(BaseScreen):
             cell.reposition(center_pos=(center_x, center_y))
             cell.draw(self.screen, sidebar_width, self)
 
+        # Draw macrophage (in front of pathogens)
+        self.macrophage.draw(self.screen)
+
         # Draw cell modals if active
         for cell in self.cells:
             if cell.show_modal:
                 cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
-
-        # Draw macrophage (in front of pathogens)
-        self.macrophage.draw(self.screen)
 
         # Draw timer and pause/play button
         if not self.tutorial_phase:
