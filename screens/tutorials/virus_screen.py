@@ -22,23 +22,36 @@ class VirusScreen(BaseScreen):
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/virus.png")
 
-        # Load and scale the star icon
+        # Load and scale the star icons
         self.original_star_image = pygame.image.load("assets/icons/star.png")
+        self.grey_star_image = pygame.image.load("assets/icons/grey_star.png")
         self.star_image = pygame.transform.scale(self.original_star_image, (30, 30))
+        self.grey_star_image = pygame.transform.scale(self.grey_star_image, (30, 30))
+
+        # Load and set up the continue button
+        self.continue_button_image = pygame.image.load("assets/icons/continue.png")
+        self.continue_button_image = pygame.transform.scale(self.continue_button_image, (100, 50))
+        self.continue_button_rect = self.continue_button_image.get_rect(
+            topright=(self.screen.get_width() - 20, 20)
+        )
+        self.show_continue_button = False  # Flag to display the continue button
 
         # Define button locations and their corresponding context text
         self.buttons = [
             {
                 "relative_position": (50, 100),
                 "context": "Viral genetic information is stored within a protein capsid.",
+                "clicked": False,
             },
             {
                 "relative_position": (150, 300),
                 "context": "Viruses tend to be small ~ 20-800nm.",
+                "clicked": False,
             },
             {
                 "relative_position": (400, 200),
                 "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication.",
+                "clicked": False,
             },
         ]
         self.clicked_button_index = None
@@ -68,31 +81,45 @@ class VirusScreen(BaseScreen):
             relative_x, relative_y = button["relative_position"]
             button["position"] = (self.image_rect.left + relative_x, self.image_rect.top + relative_y)
 
+        # Adjust the continue button position
+        self.continue_button_rect = self.continue_button_image.get_rect(
+            topright=(self.screen.get_width() - 20, 20)
+        )
+
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
 
+            # Check for star button clicks
             clicked_any_button = False
             for i, button in enumerate(self.buttons):
                 button_rect = pygame.Rect(button["position"], (30, 30))
-                if button_rect.collidepoint(mouse_pos):
+                if button_rect.collidepoint(mouse_pos) and not button["clicked"]:
                     clicked_any_button = True
-                    if self.clicked_button_index == i:
-                        # Hide modal if the same button is clicked again
-                        self.clicked_button_index = None
-                        self.manager.close_modal()
-                    else:
-                        # Show modal with the button's context
-                        self.clicked_button_index = i
-                        self.manager.show_modal(button["context"])
+                    button["clicked"] = True  # Mark the button as clicked
+                    self.manager.show_modal(button["context"])
 
-            if not clicked_any_button:
-                # Close modal if clicking outside any buttons
-                self.clicked_button_index = None
+                    # If all buttons are clicked, show the continue button
+                    if all(b["clicked"] for b in self.buttons):
+                        self.show_continue_button = True
+
+            # Check if the continue button is clicked
+            if self.show_continue_button and self.continue_button_rect.collidepoint(mouse_pos):
+                # Close the modal before transitioning
+                if self.manager.modal_active:
+                    self.manager.close_modal()
+                self.completed = True
+                self.running = False
+
+            # Close the modal if no button was clicked
+            if not clicked_any_button and self.manager.modal_active:
                 self.manager.close_modal()
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
+                # Close the modal before transitioning
+                if self.manager.modal_active:
+                    self.manager.close_modal()
                 self.completed = True
                 self.running = False
             elif event.key == pygame.K_m:
@@ -119,7 +146,12 @@ class VirusScreen(BaseScreen):
 
         # Draw the star buttons
         for button in self.buttons:
-            self.screen.blit(self.star_image, button["position"])
+            star_image = self.grey_star_image if button["clicked"] else self.star_image
+            self.screen.blit(star_image, button["position"])
+
+        # Draw the continue button if applicable
+        if self.show_continue_button:
+            self.screen.blit(self.continue_button_image, self.continue_button_rect)
 
         # Draw the Oracle
         self.oracle.draw(self.screen)

@@ -11,7 +11,7 @@ class MacrophageScreen(BaseScreen):
         self.manager = manager
         self.running = True
         self.completed = False
-        self.step = 0  # Retaining the `step` instance variable
+        self.step = 0
         self.sidebar = Sidebar()
         self.sidebar.visible = False
         self.sidebar_width = 400
@@ -22,30 +22,42 @@ class MacrophageScreen(BaseScreen):
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/macrophage.png")
 
-        # Load and scale the star icon
+        # Load and scale the star icons
         self.original_star_image = pygame.image.load("assets/icons/star.png")
+        self.grey_star_image = pygame.image.load("assets/icons/grey_star.png")
         self.star_image = pygame.transform.scale(self.original_star_image, (30, 30))
+        self.grey_star_image = pygame.transform.scale(self.grey_star_image, (30, 30))
+
+        # Load and set up the continue button
+        self.continue_button_image = pygame.image.load("assets/icons/continue.png")
+        self.continue_button_image = pygame.transform.scale(self.continue_button_image, (100, 50))
+        self.continue_button_rect = self.continue_button_image.get_rect(
+            topright=(self.screen.get_width() - 20, 20)
+        )
+        self.show_continue_button = False  # Flag to display the continue button
 
         # Define button locations and their corresponding context text
         self.buttons = [
             {
-                "relative_position": (70, 100),  # Relative to the image top-left
+                "relative_position": (70, 100),
                 "context": "The macrophage is one of your first lines of defense against pathogens.",
+                "clicked": False,
             },
             {
-                "relative_position": (100, 400),  # Relative to the image top-left
+                "relative_position": (100, 400),
                 "context": "Vesicles, called lysosomes, containing hydrolytic enzymes merge with the phagosome, causing the degradation of the pathogen.",
+                "clicked": False,
             },
             {
-                "relative_position": (415, 250),  # Relative to the image top-left
+                "relative_position": (415, 250),
                 "context": "The macrophage can recognize, bind to, and engulf foreign pathogens.",
+                "clicked": False,
             },
         ]
-        self.clicked_button_index = None  # To track which button is clicked
+        self.clicked_button_index = None
 
-        # Initialize positions
         self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
-        self.reposition_elements()  # Now called after initializing self.buttons
+        self.reposition_elements()
 
     def reposition_elements(self):
         screen_width, screen_height = self.screen.get_size()
@@ -68,83 +80,62 @@ class MacrophageScreen(BaseScreen):
             relative_x, relative_y = button["relative_position"]
             button["position"] = (self.image_rect.left + relative_x, self.image_rect.top + relative_y)
 
-            # Place the context text closer to the button
-            context_offset_x = 50  # Horizontal offset from the button
-            context_offset_y = -20  # Vertical offset from the button
-            button["context_position"] = (
-                button["position"][0] + context_offset_x,
-                button["position"][1] + context_offset_y,
-            )
+        # Adjust the continue button position
+        self.continue_button_rect = self.continue_button_image.get_rect(
+            topright=(self.screen.get_width() - 20, 20)
+        )
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
 
-            clicked_any_button = False  # Track if a button is clicked
+            # Check for star button clicks
+            clicked_any_button = False
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (30, 30))  # Adjust size to match star_image
-                if button_rect.collidepoint(mouse_pos):
+                button_rect = pygame.Rect(button["position"], (30, 30))
+                if button_rect.collidepoint(mouse_pos) and not button["clicked"]:
                     clicked_any_button = True
-                    if self.clicked_button_index == i:
-                        # Hide context and modal if the same button is clicked again
-                        self.clicked_button_index = None
-                        self.manager.close_modal()
-                    else:
-                        # Show context in the modal for the clicked button
-                        self.clicked_button_index = i
-                        self.manager.show_modal(button["context"])
+                    button["clicked"] = True  # Mark the button as clicked
+                    self.manager.show_modal(button["context"])
 
-            # If no button was clicked, close the modal
+                    # If all buttons are clicked, show the continue button
+                    if all(b["clicked"] for b in self.buttons):
+                        self.show_continue_button = True
+
+            # Check if the continue button is clicked
+            if self.show_continue_button and self.continue_button_rect.collidepoint(mouse_pos):
+                # Close the modal before transitioning
+                if self.manager.modal_active:
+                    self.manager.close_modal()
+                self.completed = True
+                self.running = False
+
+            # Close the modal if no button was clicked
             if not clicked_any_button and self.manager.modal_active:
-                self.clicked_button_index = None
                 self.manager.close_modal()
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                self.completed = True  # Mark as completed to trigger screen switch
+                # Close the modal before transitioning
+                if self.manager.modal_active:
+                    self.manager.close_modal()
+                self.completed = True
                 self.running = False
             elif event.key == pygame.K_m:
                 self.sidebar.toggle()
-                self.reposition_elements()  # Adjust layout based on sidebar visibility
+                self.reposition_elements()
         elif event.type == pygame.QUIT:
             pygame.quit()
             exit()
 
-    def draw_arrow(self, start, end, color=(0, 0, 0), width=2):
-        # Further reduce the arrow length
-        shorten_factor = 0.1  # Reduce the arrow length to 50% of the original
-        dx, dy = end[0] - start[0], end[1] - start[1]
-        shortened_end = (start[0] + dx * shorten_factor, start[1] + dy * shorten_factor)
-
-        # Draw the shortened main line
-        pygame.draw.line(self.screen, color, start, shortened_end, width)
-
-        # Calculate the angle and draw the arrowhead
-        arrow_size = 10
-        angle = math.atan2(dy, dx)
-        arrow_head_points = [
-            shortened_end,
-            (
-                shortened_end[0] - arrow_size * math.cos(angle - math.pi / 6),
-                shortened_end[1] - arrow_size * math.sin(angle - math.pi / 6),
-            ),
-            (
-                shortened_end[0] - arrow_size * math.cos(angle + math.pi / 6),
-                shortened_end[1] - arrow_size * math.sin(angle + math.pi / 6),
-            ),
-        ]
-        pygame.draw.polygon(self.screen, color, arrow_head_points)
-
     def draw(self):
         self.screen.fill((200, 200, 200))
 
-        # Dynamically calculate the title position
+        # Draw the title
         effective_center_x = (
             (self.screen.get_width() - (self.sidebar.width if self.sidebar.visible else 0)) // 2
             + (self.sidebar.width if self.sidebar.visible else 0)
         )
-
-        # Draw the title
         title_text = self.title_font.render("Macrophage Information", True, (0, 0, 0))
         title_rect = title_text.get_rect(center=(effective_center_x, 50))
         self.screen.blit(title_text, title_rect)
@@ -158,7 +149,12 @@ class MacrophageScreen(BaseScreen):
 
         # Draw the star buttons
         for button in self.buttons:
-            self.screen.blit(self.star_image, button["position"])
+            star_image = self.grey_star_image if button["clicked"] else self.star_image
+            self.screen.blit(star_image, button["position"])
+
+        # Draw the continue button if applicable
+        if self.show_continue_button:
+            self.screen.blit(self.continue_button_image, self.continue_button_rect)
 
         # Draw the Oracle
         self.oracle.draw(self.screen)
@@ -173,5 +169,5 @@ class MacrophageScreen(BaseScreen):
                 self.handle_event(event)
 
             self.draw()
-            self.manager.draw_active_screen()  # Ensure modal gets drawn over screen content
+            self.manager.draw_active_screen()
             pygame.display.flip()
