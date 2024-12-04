@@ -13,6 +13,6 @@ class Timer:
         # Draw "Paused" text if the game is paused and not over
         if paused and not game_over:
             paused_font = pygame.font.SysFont('Arial', 24)
-            paused_text = paused_font.render("Paused", True, (255, 0, 0))
+            paused_text = paused_font.render("Paused", True, (0, 0, 139))
             paused_rect = paused_text.get_rect(right=timer_rect.left - 10, centery=timer_rect.centery)
             screen.blit(paused_text, paused_rect)

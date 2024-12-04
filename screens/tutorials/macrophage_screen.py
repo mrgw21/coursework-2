@@ -2,6 +2,7 @@ import pygame
 import math
 from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
+from objects.oracle import Oracle
 
 
 class MacrophageScreen(BaseScreen):
@@ -13,15 +14,18 @@ class MacrophageScreen(BaseScreen):
         self.step = 0  # Retaining the `step` instance variable
         self.sidebar = Sidebar()
         self.sidebar.visible = False
+        self.sidebar_width = 400
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.oracle = Oracle(self.sidebar_width)
+        self.modal_active = False
 
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/macrophage.png")
 
         # Load and scale the star icon
         self.original_star_image = pygame.image.load("assets/icons/star.png")
-        self.star_image = pygame.transform.scale(self.original_star_image, (30, 30))
+        self.star_image = pygame.transform.scale(self.original_star_image, (50, 50))
 
         # Define button locations and their corresponding context text
         self.buttons = [
@@ -76,14 +80,26 @@ class MacrophageScreen(BaseScreen):
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
+
+            clicked_any_button = False  # Track if a button is clicked
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (30, 30))
+                button_rect = pygame.Rect(button["position"], (50, 50))  # Adjust size to match star_image
                 if button_rect.collidepoint(mouse_pos):
-                    # Toggle context visibility
+                    clicked_any_button = True
                     if self.clicked_button_index == i:
-                        self.clicked_button_index = None  # Hide context and arrow
+                        # Hide context and modal if the same button is clicked again
+                        self.clicked_button_index = None
+                        self.oracle.show_modal = False
                     else:
-                        self.clicked_button_index = i  # Show context and arrow for this button
+                        # Show context and modal for the clicked button
+                        self.clicked_button_index = i
+                        self.oracle.tutorial_handle_click(button["context"])
+
+            # If no button was clicked, close the modal
+            if not clicked_any_button and self.oracle.show_modal:
+                self.clicked_button_index = None
+                self.oracle.show_modal = False
+
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.completed = True  # Mark as completed to trigger screen switch
@@ -123,13 +139,19 @@ class MacrophageScreen(BaseScreen):
     def draw(self):
         self.screen.fill((200, 200, 200))
 
+        # Dynamically calculate the title position
+        effective_center_x = (
+            (self.screen.get_width() - (self.sidebar.width if self.sidebar.visible else 0)) // 2
+            + (self.sidebar.width if self.sidebar.visible else 0)
+        )
+
         # Draw the title
         title_text = self.title_font.render("Macrophage Information", True, (0, 0, 0))
-        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 50))
+        title_rect = title_text.get_rect(center=(effective_center_x, 50))
         self.screen.blit(title_text, title_rect)
 
         guide_text = self.font.render("Click on the stars!", True, (0, 0, 0))
-        guide_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 100))
+        guide_rect = guide_text.get_rect(center=(effective_center_x, 100))
         self.screen.blit(guide_text, guide_rect)
 
         # Draw the macrophage tutorial image
@@ -139,22 +161,9 @@ class MacrophageScreen(BaseScreen):
         for button in self.buttons:
             self.screen.blit(self.star_image, button["position"])
 
-        # If a button is clicked, display its context and draw an arrow
-        if self.clicked_button_index is not None:
-            button = self.buttons[self.clicked_button_index]
-            context_text = self.font.render(button["context"], True, (0, 0, 0))
-            context_rect = context_text.get_rect(topleft=button["context_position"])
-
-            # Draw background for text
-            pygame.draw.rect(self.screen, (255, 255, 255), context_rect.inflate(10, 10))
-            pygame.draw.rect(self.screen, (0, 0, 0), context_rect.inflate(10, 10), 2)
-            self.screen.blit(context_text, context_rect)
-
-            # Draw an arrow from the button to the context
-            self.draw_arrow(
-                (button["position"][0] + 15, button["position"][1] + 15),  # Center of star
-                context_rect.midtop,  # Adjusted to point closer to the center of the text
-            )
+        # Draw the Oracle and its modal
+        self.oracle.draw(self.screen)
+        self.oracle.draw_message(self.screen)
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
