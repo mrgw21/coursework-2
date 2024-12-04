@@ -39,18 +39,28 @@ class VirusScreen(BaseScreen):
         # Define button locations and their corresponding context text
         self.buttons = [
             {
-                "relative_position": (50, 100),
+                "relative_position": (600, 250),
                 "context": "Viral genetic information is stored within a protein capsid.",
                 "clicked": False,
             },
             {
-                "relative_position": (150, 300),
+                "relative_position": (500, 350),
                 "context": "Viruses tend to be small ~ 20-800nm.",
                 "clicked": False,
             },
             {
                 "relative_position": (400, 200),
-                "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication.",
+                "context": "Viruses reproduce using infected cell machinery. Either using reverse transcriptase (to turn the viral RNA into nascent DNA) or the RNA is structured similarly to host RNA so is treated as normal mRNA.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (540, 230),
+                "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication. The virus genome tends to be very small, containing only enough information to code for the assembly of more viral particles.​ The precise nature of the RNA varies, it can be either single or double stranded. Retroviruses (such as HIV) have single stranded RNA.​",
+                "clicked": False,
+            },
+            {
+                "relative_position": (425, 300),
+                "context": "Viral particles have external ‘binding proteins’ these lead to attachment and promote insertion of the contents of the virus into target cells.",
                 "clicked": False,
             },
         ]

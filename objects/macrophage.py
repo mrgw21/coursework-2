@@ -3,9 +3,9 @@ import pygame
 class Macrophage:
     
     def __init__(self, screen_width, screen_height, sidebar_width=400):
-        self.image = pygame.image.load("assets/images/macrophage_placeholder.png")
+        self.image = pygame.image.load("assets/images/final/macrophage.png")
         img = self.image
-        self.image = pygame.transform.scale(img, (img.get_width() * 0.5, img.get_height() * 0.5))
+        self.image = pygame.transform.scale(img, (img.get_width() * 0.2, img.get_height() * 0.2))
         self.speed = 5
         self.rect = self.image.get_rect()
         self.sidebar_width = sidebar_width

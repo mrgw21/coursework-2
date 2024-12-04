@@ -40,18 +40,43 @@ class BacteriaScreen(BaseScreen):
         # Define button locations and their corresponding context text
         self.buttons = [
             {
-                "relative_position": (60, 120),
-                "context": "Bacteria are single-celled microorganisms found almost everywhere on Earth.",
+                "relative_position": (400, 300),
+                "context": "Peptidoglycan cell wall, like plant cells enables cell ‘turgidness’.",
                 "clicked": False,
             },
             {
-                "relative_position": (140, 350),
-                "context": "Some bacteria are beneficial, while others cause diseases like tuberculosis.",
+                "relative_position": (400, 250),
+                "context": "Ribosomes, used for protein production.​",
                 "clicked": False,
             },
             {
                 "relative_position": (400, 200),
-                "context": "Bacteria reproduce through binary fission, doubling their population rapidly.",
+                "context": "Bacteria do not need to enter your cell to cause an infection, unlike Viruses. In addition, they can play useful rolls, such as in your gut microbiome and in plants during nitrogen fixation.​",
+                "clicked": False,
+            },
+            {
+                "relative_position": (400, 350),
+                "context": "Bacteria are larger than viruses, around 1-2μm.​​",
+                "clicked": False,
+            },
+                        {
+                "relative_position": (300, 200),
+                "context": "Flagellum, used for movement.​​​",
+                "clicked": False,
+            },
+                        {
+                "relative_position": (300, 250),
+                "context": "Membrane invaginations, used for a variety of processes such as photosynthesis and nitrogen fixation.​​​",
+                "clicked": False,
+            },
+                        {
+                "relative_position": (300, 300),
+                "context": "Protein Capsid, additional DNA that can be passed by a process known as ‘horizontal transfer,’ the main reason for antibiotic resistance amongst bacterial populations.",
+                "clicked": False,
+            },
+                        {
+                "relative_position": (300, 350),
+                "context": "Pilli, used for attachment to other cells.​​​",
                 "clicked": False,
             },
         ]

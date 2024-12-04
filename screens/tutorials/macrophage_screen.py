@@ -53,6 +53,16 @@ class MacrophageScreen(BaseScreen):
                 "context": "The macrophage can recognize, bind to, and engulf foreign pathogens.",
                 "clicked": False,
             },
+            {
+                "relative_position": (600, 535),
+                "context": "Once broken down, the material is then expelled from the cell.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (800, 205),
+                "context": "This forms a ‘phagosome’, inside the cytoplasm of the phagocyte.​",
+                "clicked": False,
+            },
         ]
         self.clicked_button_index = None
 
