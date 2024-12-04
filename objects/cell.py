@@ -193,8 +193,8 @@ class Cell:
             # Determine the color based on selection
             if hasattr(self, "selected_option") and self.selected_option == option:
                 if option["is_correct"]:
-                    circle_color = (0, 255, 0)  # Green for correct
-                    text_color = (0, 255, 0)
+                    circle_color = (0, 128, 128)  # Green for correct
+                    text_color = (0, 128, 128)
                 else:
                     circle_color = (255, 0, 0)  # Red for incorrect
                     text_color = (255, 0, 0)
@@ -243,7 +243,7 @@ class Cell:
             # Correct answer: Stop infection, show success feedback
             self.quiz_feedback = {
                 "message": "Correct! You've saved this cell.",
-                "color": (0, 255, 0),
+                "color": (0, 128, 128),
             }
             self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
             self.feedback_timer = pygame.time.get_ticks()

@@ -31,15 +31,15 @@ class VirusScreen(BaseScreen):
         self.buttons = [
             {
                 "relative_position": (50, 100),
-                "context": "Viruses are tiny infectious agents that replicate only inside living cells.",
+                "context": "Viral genetic information is stored within a protein capsid.",
             },
             {
                 "relative_position": (150, 300),
-                "context": "They infect the host by attaching to and penetrating the cell membrane.",
+                "context": "Viruses tend to be small ~ 20-800nm.",
             },
             {
                 "relative_position": (400, 200),
-                "context": "Once inside, the virus uses the cell's machinery to reproduce.",
+                "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication.",
             },
         ]
         self.clicked_button_index = None  # To track which button is clicked

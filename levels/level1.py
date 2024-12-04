@@ -752,16 +752,16 @@ class Level1(BaseScreen):
         # Fill the screen background
         self.screen.fill((255, 255, 255))
 
+        if self.tutorial_phase:
+            self.sidebar.draw(self.screen, "Introduction")
+        else:
+            self.sidebar.draw(self.screen, "Level 1")
+
         # Adjust body image placement
         img = self.body_image
         img = pygame.transform.scale(img, (img.get_width() * 0.7, img.get_height() * 0.7))
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
-
-        # Draw cells
-        for cell in self.cells:
-            cell.reposition(center_pos=(center_x, center_y))
-            cell.draw(self.screen, sidebar_width, self)
 
         # Draw pathogens first (behind macrophage)
         for enemy in self.enemies:
@@ -775,6 +775,11 @@ class Level1(BaseScreen):
             """
         # Draw macrophage (in front of pathogens)
         self.macrophage.draw(self.screen)
+
+        # Draw cells
+        for cell in self.cells:
+            cell.reposition(center_pos=(center_x, center_y))
+            cell.draw(self.screen, sidebar_width, self)
 
         # Draw cell modals if active
         for cell in self.cells:
@@ -790,9 +795,5 @@ class Level1(BaseScreen):
             button_position = (self.screen.get_width() - 60, 22)
             self.screen.blit(pause_button, button_position)
 
-        if self.tutorial_phase:
-            self.sidebar.draw(self.screen, "Introduction")
-        else:
-            self.sidebar.draw(self.screen, "Level 1")
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)
