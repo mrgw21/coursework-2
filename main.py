@@ -4,6 +4,7 @@ from introductions.intro1 import Intro1
 from levels.level1 import Level1
 from screens.controls import ControlsScreen
 from screens.about import AboutScreen
+from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
 from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
@@ -23,8 +24,9 @@ def main():
 
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
-    manager.register_screen("Introduction", Level1, manager, True, 0)
-    manager.register_screen("Level 1", Level1, manager, False, 7)
+    manager.register_screen("Home", HomeScreen, manager)
+    manager.register_screen("Introduction", Intro1, pdf_images, manager)
+    manager.register_screen("Level 1", Level1, manager)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)
@@ -36,7 +38,7 @@ def main():
     manager.register_screen("virus_tutorial", VirusScreen, manager)
 
     # Set the starting screen
-    manager.set_active_screen("Introduction")
+    manager.set_active_screen("Home")
 
     sidebar_options = {
         "Introduction": "Introduction",
