@@ -1,8 +1,8 @@
 import pygame
 import math
+from objects.oracle import Oracle
 from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
-from objects.oracle import Oracle
 
 
 class MacrophageScreen(BaseScreen):
@@ -18,7 +18,6 @@ class MacrophageScreen(BaseScreen):
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
         self.oracle = Oracle(self.sidebar_width)
-        self.modal_active = False
 
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/macrophage.png")
@@ -35,7 +34,7 @@ class MacrophageScreen(BaseScreen):
             },
             {
                 "relative_position": (100, 400),  # Relative to the image top-left
-                "context": "Vesicles, called lysosomes, containing hydrolytic enzymes merge with the phagosome, causing the degradation of the pathogen.​.",
+                "context": "Vesicles, called lysosomes, containing hydrolytic enzymes merge with the phagosome, causing the degradation of the pathogen.",
             },
             {
                 "relative_position": (415, 250),  # Relative to the image top-left
@@ -89,16 +88,16 @@ class MacrophageScreen(BaseScreen):
                     if self.clicked_button_index == i:
                         # Hide context and modal if the same button is clicked again
                         self.clicked_button_index = None
-                        self.oracle.show_modal = False
+                        self.manager.close_modal()
                     else:
-                        # Show context and modal for the clicked button
+                        # Show context in the modal for the clicked button
                         self.clicked_button_index = i
-                        self.oracle.tutorial_handle_click(button["context"])
+                        self.manager.show_modal(button["context"])
 
             # If no button was clicked, close the modal
-            if not clicked_any_button and self.oracle.show_modal:
+            if not clicked_any_button and self.manager.modal_active:
                 self.clicked_button_index = None
-                self.oracle.show_modal = False
+                self.manager.close_modal()
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -161,9 +160,8 @@ class MacrophageScreen(BaseScreen):
         for button in self.buttons:
             self.screen.blit(self.star_image, button["position"])
 
-        # Draw the Oracle and its modal
+        # Draw the Oracle
         self.oracle.draw(self.screen)
-        self.oracle.draw_message(self.screen)
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
@@ -175,4 +173,5 @@ class MacrophageScreen(BaseScreen):
                 self.handle_event(event)
 
             self.draw()
+            self.manager.draw_active_screen()  # Ensure modal gets drawn over screen content
             pygame.display.flip()

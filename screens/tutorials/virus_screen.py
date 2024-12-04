@@ -11,14 +11,13 @@ class VirusScreen(BaseScreen):
         self.manager = manager
         self.running = True
         self.completed = False
-        self.step = 1  # Retaining the `step` instance variable
+        self.step = 1
         self.sidebar = Sidebar()
         self.sidebar.visible = False
         self.sidebar_width = 400
         self.font = pygame.font.SysFont("Arial", 24)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
         self.oracle = Oracle(self.sidebar_width)
-        self.modal_active = False
 
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/virus.png")
@@ -42,11 +41,11 @@ class VirusScreen(BaseScreen):
                 "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication.",
             },
         ]
-        self.clicked_button_index = None  # To track which button is clicked
+        self.clicked_button_index = None
 
         # Initialize positions
         self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
-        self.reposition_elements()  # Now called after initializing self.buttons
+        self.reposition_elements()
 
     def reposition_elements(self):
         screen_width, screen_height = self.screen.get_size()
@@ -69,14 +68,6 @@ class VirusScreen(BaseScreen):
             relative_x, relative_y = button["relative_position"]
             button["position"] = (self.image_rect.left + relative_x, self.image_rect.top + relative_y)
 
-            # Place the context text closer to the button
-            context_offset_x = 50
-            context_offset_y = -20
-            button["context_position"] = (
-                button["position"][0] + context_offset_x,
-                button["position"][1] + context_offset_y,
-            )
-
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
@@ -87,15 +78,18 @@ class VirusScreen(BaseScreen):
                 if button_rect.collidepoint(mouse_pos):
                     clicked_any_button = True
                     if self.clicked_button_index == i:
+                        # Hide modal if the same button is clicked again
                         self.clicked_button_index = None
-                        self.oracle.show_modal = False
+                        self.manager.close_modal()
                     else:
+                        # Show modal with the button's context
                         self.clicked_button_index = i
-                        self.oracle.tutorial_handle_click(button["context"])
+                        self.manager.show_modal(button["context"])
 
-            if not clicked_any_button and self.oracle.show_modal:
+            if not clicked_any_button:
+                # Close modal if clicking outside any buttons
                 self.clicked_button_index = None
-                self.oracle.show_modal = False
+                self.manager.close_modal()
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -127,9 +121,8 @@ class VirusScreen(BaseScreen):
         for button in self.buttons:
             self.screen.blit(self.star_image, button["position"])
 
-        # Draw the Oracle and its modal
+        # Draw the Oracle
         self.oracle.draw(self.screen)
-        self.oracle.draw_message(self.screen)
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
@@ -141,4 +134,5 @@ class VirusScreen(BaseScreen):
                 self.handle_event(event)
 
             self.draw()
+            self.manager.draw_active_screen()  # Ensure modal is drawn
             pygame.display.flip()
