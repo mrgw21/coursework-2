@@ -25,7 +25,7 @@ class VirusScreen(BaseScreen):
 
         # Load and scale the star icon
         self.original_star_image = pygame.image.load("assets/icons/star.png")
-        self.star_image = pygame.transform.scale(self.original_star_image, (50, 50))
+        self.star_image = pygame.transform.scale(self.original_star_image, (30, 30))
 
         # Define button locations and their corresponding context text
         self.buttons = [
@@ -83,7 +83,7 @@ class VirusScreen(BaseScreen):
 
             clicked_any_button = False
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (50, 50))
+                button_rect = pygame.Rect(button["position"], (30, 30))
                 if button_rect.collidepoint(mouse_pos):
                     clicked_any_button = True
                     if self.clicked_button_index == i:

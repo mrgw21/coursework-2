@@ -18,10 +18,10 @@ class Sidebar:
 
         # Title
         title = self.title_font.render("Inside Immune", True, (255, 255, 255))
-        screen.blit(title, (20, 20))
+        screen.blit(title, (20, 40))
 
-        menu_title = self.menu_font.render("Menu", True, (255, 255, 255))
-        screen.blit(menu_title, (20, 70))  # Add some padding below the first title
+        # menu_title = self.menu_font.render("Menu", True, (255, 255, 255))
+        # screen.blit(menu_title, (20, 70))  # Add some padding below the first title
 
         # Options
         y_offset = 120  # Start below the titles with some padding

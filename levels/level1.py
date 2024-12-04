@@ -773,8 +773,6 @@ class Level1(BaseScreen):
                 pygame.draw.rect(self.screen, (0, 255, 0), pathogen.get_collision_rect(), 2)
             self.oracle.draw_message(self.screen)
             """
-        # Draw macrophage (in front of pathogens)
-        self.macrophage.draw(self.screen)
 
         # Draw cells
         for cell in self.cells:
@@ -785,6 +783,9 @@ class Level1(BaseScreen):
         for cell in self.cells:
             if cell.show_modal:
                 cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
+
+        # Draw macrophage (in front of pathogens)
+        self.macrophage.draw(self.screen)
 
         # Draw timer and pause/play button
         if not self.tutorial_phase:
