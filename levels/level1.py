@@ -51,7 +51,6 @@ class Level1(BaseScreen):
         self.tutorial_step = tutorial_step
         self.tutorial_start_time = pygame.time.get_ticks()
 
-
         self.spawn_timer = 0
         self.spawn_interval = 2000
         self.resize_pause_timer = 0
@@ -791,6 +790,9 @@ class Level1(BaseScreen):
             button_position = (self.screen.get_width() - 60, 22)
             self.screen.blit(pause_button, button_position)
 
-        self.sidebar.draw(self.screen, "Level 1")
+        if self.tutorial_phase:
+            self.sidebar.draw(self.screen, "Introduction")
+        else:
+            self.sidebar.draw(self.screen, "Level 1")
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)

@@ -23,8 +23,8 @@ def main():
 
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
-    manager.register_screen("Introduction", Intro1, pdf_images, manager)
-    manager.register_screen("Level 1", Level1, manager, True, 0)
+    manager.register_screen("Introduction", Level1, manager, True, 0)
+    manager.register_screen("Level 1", Level1, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)

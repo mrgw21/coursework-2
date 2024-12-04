@@ -47,6 +47,36 @@ class Oracle:
             pygame.draw.rect(screen, (220, 220, 220), self.modal_rect)  # White background
             pygame.draw.rect(screen, (0, 0, 0), self.modal_rect, 3)    # Black border
 
+            # Render the message inside the modal
+            if hasattr(self, "message") and self.message:
+                font = pygame.font.SysFont("Arial", 18)
+                max_line_width = self.modal_rect.width - 20  # Padding inside the modal
+                lines = self.wrap_text(self.message, font, max_line_width)
+                line_height = font.get_linesize()
+                start_y = self.modal_rect.top + 10  # Vertical padding from top
+                for i, line in enumerate(lines):
+                    text_surface = font.render(line, True, (0, 0, 0))
+                    text_x = self.modal_rect.left + 10  # Horizontal padding
+                    text_y = start_y + i * line_height
+                    if text_y + line_height > self.modal_rect.bottom - 10:  # Prevent overflow
+                        break
+                    screen.blit(text_surface, (text_x, text_y))
+
+    def wrap_text(self, text, font, max_width):
+        words = text.split(" ")
+        lines = []
+        current_line = ""
+        for word in words:
+            test_line = current_line + word + " "
+            if font.size(test_line)[0] <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:  # Add any remaining text as the last line
+            lines.append(current_line.strip())
+        return lines
+
     def handle_hover(self, mouse_pos):
         # Change image to hover state if mouse is over Oracle
         if self.rect.collidepoint(mouse_pos):
@@ -67,6 +97,17 @@ class Oracle:
                 level.paused = True
             else:
                 level.paused = False
+    
+    def tutorial_handle_click(self, message):
+        self.image = pygame.transform.scale(self.image_click, (250, 200))
+        self.show_modal = not self.show_modal  # Toggle modal visibility
+
+        # Assign the dynamic message for display in the modal
+        if self.show_modal:
+            self.message = message
+        else:
+            self.message = ""  # Clear the message when modal is closed
+            
 
     def reset_image(self):
         # Reset to default image after a click
