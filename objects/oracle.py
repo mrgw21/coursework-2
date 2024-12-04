@@ -29,7 +29,7 @@ class Oracle:
     def set_position(self):
         # Adjust Oracle position within the sidebar
         screen_height = pygame.display.get_surface().get_height()
-        self.rect.bottom = screen_height - 20  # Margin from the bottom
+        self.rect.bottom = screen_height - 10  # Margin from the bottom
         self.rect.x = self.sidebar_width // 2 - self.rect.width // 2  # Center horizontally in sidebar
 
         # Dynamically position modal (top right of Oracle)
