@@ -41,6 +41,7 @@ def main():
     manager.set_active_screen("Home")
 
     sidebar_options = {
+        "Home": "Home",
         "Introduction": "Introduction",
         "Level 1": "Level 1",
         "Quizzes": "Quizzes",
