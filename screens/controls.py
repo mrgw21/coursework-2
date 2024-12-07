@@ -17,7 +17,6 @@ class ControlsScreen(BaseScreen):
             "Move: W A S D keys",
             "Toggle Sidebar: M",
             "Pause: P",
-            "Back to Menu: Esc",
         ]
         self.text_positions = []
         self.calculate_text_positions()

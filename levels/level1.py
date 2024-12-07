@@ -111,6 +111,8 @@ class Level1(BaseScreen):
                     elif event.key == pygame.K_m:  # Toggle sidebar
                         self.sidebar.toggle()
                         self.handle_sidebar_toggle()
+                    elif event.key == pygame.K_p:  # Toggle sidebar
+                        self.paused = not self.paused
                     if event.key == pygame.K_ESCAPE and self.paused:
                         for cell in self.cells:
                             if cell.show_modal:
