@@ -526,7 +526,7 @@ class Level1(BaseScreen):
                 if pause_button_rect.collidepoint(mouse_pos):
                     self.paused = not self.paused
 
-                if self.macrophage.rect.collidepoint(mouse_pos):
+                if self.macrophage.rect.collidepoint(mouse_pos) and self.tutorial_step == 0:
                     self.running = False
                     self.tutorial_phase = False
                     self.manager.set_active_screen("macrophage_tutorial") 
@@ -544,12 +544,12 @@ class Level1(BaseScreen):
                 # Check clicks on tutorial pathogens
                 for pathogen in self.tutorial_pathogens:
                     if pathogen.get_collision_rect().collidepoint(mouse_pos):
-                        if pathogen.type == "virus":
+                        if pathogen.type == "virus" and self.tutorial_step == 1:
                             self.running = False
                             self.tutorial_phase = False
                             self.manager.set_active_screen("virus_tutorial")  # Switch to virus tutorial
                             return
-                        elif pathogen.type == "bacteria":
+                        elif pathogen.type == "bacteria" and self.tutorial_step == 3:
                             self.running = False
                             self.tutorial_phase = False
                             self.manager.set_active_screen("bacteria_tutorial")  # Switch to bacteria tutorial
@@ -580,7 +580,8 @@ class Level1(BaseScreen):
                     if collision_duration >= 1000:  # 1 second delay
                         if enemy in self.enemies:
                             self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
-                        self.add_points(100) 
+                        if not self.tutorial_phase:
+                            self.add_points(100) 
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                         if self.tutorial_phase:
                             self.tutorial_step += 1
