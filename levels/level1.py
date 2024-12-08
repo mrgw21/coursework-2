@@ -779,10 +779,8 @@ class Level1(BaseScreen):
                     self.reset_game()
 
     def add_points(self, amount):
-        self.points += amount
-        # Prevent score from dropping below 0
-        if self.points < 0:
-            self.points = 0
+        if self.points + amount >= 0:
+            self.points += amount
     
     def reset_game(self):
         # Reset cells

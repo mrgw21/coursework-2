@@ -2,6 +2,7 @@ import pygame
 from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
 from objects.oracle import Oracle
+import math
 
 
 class BacteriaScreen(BaseScreen):
@@ -14,7 +15,7 @@ class BacteriaScreen(BaseScreen):
         self.sidebar = Sidebar()
         self.sidebar.visible = False
         self.sidebar_width = 400
-        self.font = pygame.font.SysFont("Arial", 24)
+        self.font = pygame.font.SysFont("Arial", 20)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
         self.oracle = Oracle(self.sidebar_width)
 
@@ -59,28 +60,29 @@ class BacteriaScreen(BaseScreen):
                 "context": "Bacteria are larger than viruses, around 1-2μm.​​",
                 "clicked": False,
             },
-                        {
+            {
                 "relative_position": (300, 200),
                 "context": "Flagellum, used for movement.​​​",
                 "clicked": False,
             },
-                        {
+            {
                 "relative_position": (300, 250),
                 "context": "Membrane invaginations, used for a variety of processes such as photosynthesis and nitrogen fixation.​​​",
                 "clicked": False,
             },
-                        {
+            {
                 "relative_position": (300, 300),
                 "context": "Protein Capsid, additional DNA that can be passed by a process known as ‘horizontal transfer,’ the main reason for antibiotic resistance amongst bacterial populations.",
                 "clicked": False,
             },
-                        {
+            {
                 "relative_position": (300, 350),
                 "context": "Pilli, used for attachment to other cells.​​​",
                 "clicked": False,
             },
         ]
         self.clicked_button_index = None
+        self.pulse_start_time = None  # For pulsing effect
 
         # Initialize positions
         self.sidebar_width = self.sidebar.width if self.sidebar.visible else 0
@@ -107,18 +109,45 @@ class BacteriaScreen(BaseScreen):
             relative_x, relative_y = button["relative_position"]
             button["position"] = (self.image_rect.left + relative_x, self.image_rect.top + relative_y)
 
+    def wrap_text(self, text, font, max_width):
+        words = text.split(' ')
+        lines = []
+        current_line = words[0]
+
+        for word in words[1:]:
+            if font.size(current_line + ' ' + word)[0] <= max_width:
+                current_line += ' ' + word
+            else:
+                lines.append(current_line)
+                current_line = word
+        lines.append(current_line)
+        return lines
+
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
 
+            # Check if the modal is open and the click is outside the modal
+            if self.clicked_button_index is not None:
+                modal_width = self.image_rect.width
+                modal_height = 100
+                modal_x = (self.screen.get_width() - modal_width) // 2
+                modal_y = self.screen.get_height() - modal_height - 50
+
+                # If click is outside the modal
+                if not (modal_x <= mouse_pos[0] <= modal_x + modal_width and
+                        modal_y <= mouse_pos[1] <= modal_y + modal_height):
+                    self.clicked_button_index = None  # Close the modal
+                    return
+
             # Check for star button clicks
-            clicked_any_button = False
             for i, button in enumerate(self.buttons):
                 button_rect = pygame.Rect(button["position"], (30, 30))
-                if button_rect.collidepoint(mouse_pos) and not button["clicked"]:
-                    clicked_any_button = True
-                    button["clicked"] = True  # Mark the button as clicked
-                    self.manager.show_modal(button["context"])
+                if button_rect.collidepoint(mouse_pos):
+                    if self.clicked_button_index != i:  # New context
+                        self.pulse_start_time = pygame.time.get_ticks()  # Restart pulse timer
+                    self.clicked_button_index = i
+                    button["clicked"] = True
 
                     # If all buttons are clicked, show the continue button
                     if all(b["clicked"] for b in self.buttons):
@@ -129,15 +158,8 @@ class BacteriaScreen(BaseScreen):
                 self.completed = True
                 self.running = False
 
-            # Close the modal if no button was clicked
-            if not clicked_any_button and self.manager.modal_active:
-                self.manager.close_modal()
-
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                # Close the modal before transitioning
-                if self.manager.modal_active:
-                    self.manager.close_modal()
                 self.completed = True
                 self.running = False
             elif event.key == pygame.K_m:
@@ -146,6 +168,56 @@ class BacteriaScreen(BaseScreen):
         elif event.type == pygame.QUIT:
             pygame.quit()
             exit()
+
+    def draw_modal_with_pulsing_context(self):
+        if self.clicked_button_index is None:
+            return
+
+        # Get the current button context
+        context = self.buttons[self.clicked_button_index]["context"]
+
+        # Set modal dimensions
+        modal_width = self.image_rect.width
+        base_font_size = 20
+        max_font_size = 24
+        pulse_duration = 1000  # Slower pulse duration
+        total_pulses = 2  # Number of pulses
+
+        # Handle pulsing effect
+        if self.pulse_start_time is not None:
+            elapsed_time = pygame.time.get_ticks() - self.pulse_start_time
+            current_pulse = elapsed_time // pulse_duration
+
+            if current_pulse < total_pulses:
+                pulse_progress = (elapsed_time % pulse_duration) / pulse_duration
+                scale_factor = 1 + 0.1 * math.sin(pulse_progress * math.pi)
+                font_size = min(int(base_font_size * scale_factor), max_font_size)
+                pulsing_font = pygame.font.SysFont("Arial", font_size)
+            else:
+                pulsing_font = pygame.font.SysFont("Arial", base_font_size)
+                self.pulse_start_time = None
+        else:
+            pulsing_font = pygame.font.SysFont("Arial", base_font_size)
+
+        # Wrap text and calculate required height
+        wrapped_text = self.wrap_text(context, pulsing_font, modal_width - 20)
+        text_height = sum(pulsing_font.size(line)[1] + 5 for line in wrapped_text)  # Add 5 for line spacing
+        modal_height = max(100, text_height + 40)  # Ensure a minimum modal height
+
+        # Keep the modal lower on the screen
+        modal_x = (self.screen.get_width() - modal_width) // 2
+        modal_y = self.screen.get_height() - modal_height - 50  # Original lower position
+
+        # Draw modal background (white) and border
+        pygame.draw.rect(self.screen, (255, 255, 255), (modal_x, modal_y, modal_width, modal_height))
+        pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
+
+        # Render the wrapped text inside the modal
+        y_offset = modal_y + 20  # Padding at the top of the modal
+        for line in wrapped_text:
+            text_surface = pulsing_font.render(line, True, (0, 0, 0))
+            self.screen.blit(text_surface, (modal_x + 10, y_offset))
+            y_offset += pulsing_font.get_height() + 5  # Add line spacing
 
     def draw(self):
         self.screen.fill((200, 200, 200))
@@ -170,6 +242,9 @@ class BacteriaScreen(BaseScreen):
         # Draw the continue button if applicable
         if self.show_continue_button:
             self.screen.blit(self.continue_button_image, self.continue_button_rect)
+
+        # Draw the modal with pulsing context
+        self.draw_modal_with_pulsing_context()
 
         # Draw the Oracle
         self.oracle.draw(self.screen)

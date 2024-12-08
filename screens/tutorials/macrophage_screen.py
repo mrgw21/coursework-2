@@ -129,7 +129,7 @@ class MacrophageScreen(BaseScreen):
 
             # Check for star button clicks
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (30, 30))
+                button_rect = pygame.Rect(button["position"], (50, 50))
                 if button_rect.collidepoint(mouse_pos):
                     if self.clicked_button_index != i:  # New context
                         self.pulse_start_time = pygame.time.get_ticks()  # Restart pulse timer
@@ -165,35 +165,42 @@ class MacrophageScreen(BaseScreen):
 
         # Set modal dimensions
         modal_width = self.image_rect.width
-        modal_height = 100
+        base_font_size = 20
+        max_font_size = 24
+        pulse_duration = 1000  # Slower pulse duration
+        total_pulses = 2  # Number of pulses
+
+        # Handle pulsing effect
+        if self.pulse_start_time is not None:
+            elapsed_time = pygame.time.get_ticks() - self.pulse_start_time
+            current_pulse = elapsed_time // pulse_duration
+
+            if current_pulse < total_pulses:
+                pulse_progress = (elapsed_time % pulse_duration) / pulse_duration
+                scale_factor = 1 + 0.2 * math.sin(pulse_progress * math.pi)
+                font_size = min(int(base_font_size * scale_factor), max_font_size)
+                pulsing_font = pygame.font.SysFont("Arial", font_size)
+            else:
+                pulsing_font = pygame.font.SysFont("Arial", base_font_size)
+                self.pulse_start_time = None
+        else:
+            pulsing_font = pygame.font.SysFont("Arial", base_font_size)
+
+        # Wrap text and calculate required height
+        wrapped_text = self.wrap_text(context, pulsing_font, modal_width - 20)
+        text_height = sum(pulsing_font.size(line)[1] + 5 for line in wrapped_text)  # Add 5 for line spacing
+        modal_height = max(100, text_height + 40)  # Ensure a minimum modal height
+
+        # Keep the modal lower on the screen
         modal_x = (self.screen.get_width() - modal_width) // 2
-        modal_y = self.screen.get_height() - modal_height - 50
+        modal_y = self.screen.get_height() - modal_height - 50  # Original lower position
 
         # Draw modal background (white) and border
         pygame.draw.rect(self.screen, (255, 255, 255), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
 
-        # Handle pulsing effect based on the number of pulses
-        if self.pulse_start_time is not None:
-            elapsed_time = pygame.time.get_ticks() - self.pulse_start_time
-            pulse_duration = 500  # Each pulse lasts 500 ms
-            total_pulses = 2  # Number of pulses
-            current_pulse = elapsed_time // pulse_duration
-
-            if current_pulse < total_pulses:
-                scale_factor = 1 + 0.05 * math.sin((elapsed_time % pulse_duration) / pulse_duration * math.pi)
-                font_size = int(24 * scale_factor)
-                pulsing_font = pygame.font.SysFont("Arial", font_size)
-            else:
-                pulsing_font = pygame.font.SysFont("Arial", 20)  # Default font after pulsing ends
-                self.pulse_start_time = None  # Stop pulsing
-        else:
-            pulsing_font = pygame.font.SysFont("Arial", 20)  # Default font size
-
-        # Wrap text to fit within modal width
-        wrapped_text = self.wrap_text(context, pulsing_font, modal_width - 20)
-        y_offset = modal_y + 20  # Start rendering slightly below the top of the modal
-
+        # Render the wrapped text inside the modal
+        y_offset = modal_y + 20  # Padding at the top of the modal
         for line in wrapped_text:
             text_surface = pulsing_font.render(line, True, (0, 0, 0))
             self.screen.blit(text_surface, (modal_x + 10, y_offset))

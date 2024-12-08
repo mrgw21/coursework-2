@@ -373,7 +373,7 @@ class Cell:
         for neighbor in neighbors_to_infect:
             if neighbor.health == "uninfected":
                 neighbor.die()
-                level.points -= 10
+                level.add_points(-10)
 
     def update_infection(self, level):
         if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
