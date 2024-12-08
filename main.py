@@ -2,6 +2,8 @@ import pygame
 from screens.screen_manager import ScreenManager
 from introductions.intro1 import Intro1
 from levels.level1 import Level1
+from levels.level2 import Level2
+from levels.level3 import Level3
 from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
@@ -34,6 +36,8 @@ def main():
     manager.register_screen("Home", HomeScreen, manager)
     manager.register_screen("Introduction", Level1, manager, True, 0)
     manager.register_screen("Level 1", Level1, manager, False, 7)
+    manager.register_screen("Level 2", Level2, manager, False, 7)
+    manager.register_screen("Level 3", Level3, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
@@ -54,6 +58,8 @@ def main():
         "Home": "Home",
         "Introduction": "Introduction",
         "Level 1": "Level 1",
+        "Level 2": "Level 2",
+        "Level 3": "Level 3",
         "Quizzes": "Quizzes",
         "Statistics": "Statistics",
         "Leaderboards": "Leaderboards",

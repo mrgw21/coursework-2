@@ -1,6 +1,7 @@
 import pygame
 import random
 import platform
+from datetime import datetime
 from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
@@ -9,9 +10,10 @@ from ui.sidebar import Sidebar
 from ui.timer import Timer
 from objects.oracle import Oracle
 from screens.screen_manager import BaseScreen
+from data.leaderboard_manager import LeaderboardManager
 
 class Level2(BaseScreen):
-    def __init__(self, screen, manager):
+    def __init__(self, screen, manager, tutorial_phase, tutorial_step):
         super().__init__(screen)  # Initialize BaseScreen
         self.manager = manager    # Add this line
         self.screen = screen   # Assign the actual screen surface
@@ -46,6 +48,10 @@ class Level2(BaseScreen):
         self.assign_neighbors()
 
         self.enemies = []
+        self.tutorial_pathogens = []  # Special pathogens for the tutorial phase
+        self.tutorial_phase = tutorial_phase
+        self.tutorial_step = tutorial_step
+        self.tutorial_start_time = pygame.time.get_ticks()
 
         self.spawn_timer = 0
         self.spawn_interval = 2000
@@ -56,8 +62,11 @@ class Level2(BaseScreen):
         self.start_time = pygame.time.get_ticks()
         self.pause_start = None  # To track when the game was paused
         self.total_paused_time = 0  # Total time paused
-        self.win_time = 30000  # 30 seconds in milliseconds
+        self.win_time = 90000  # 90 seconds in milliseconds
         self.remaining_time = self.win_time // 1000
+
+        self.points = 0  # Add points tracking
+        self.leaderboard = LeaderboardManager(filepath="data/leaderboards/level2_leaderboard.json")
 
         self.game_over = False
         self.win = True
@@ -66,13 +75,36 @@ class Level2(BaseScreen):
 
         # Use `pygame.display` to get screen dimensions
         self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
+        
 
     def run(self):
+        while self.tutorial_phase:
+            # Tutorial logic
+            self.clock.tick(60)  # Ensure consistent 60 FPS for the tutorial
+            self.spawn_tutorial_pathogens()
+            if self.tutorial_step == 2 or self.tutorial_step == 4:
+                self.macrophage.update(
+                    self.screen.get_width(),
+                    self.screen.get_height(),
+                    self.sidebar.width if self.sidebar.visible else 25
+                )
+            self.handle_tutorial_clicks()  # Handle mouse clicks during the tutorial
+            self.check_collisions()
+            # Move enemies towards the center and cells
+            if self.counter < len(self.cells):
+                current_cell = self.cells[self.counter]
+                for enemy in self.enemies:
+                    if enemy.move_towards_target(self.cells):
+                        self.counter += 1
+            self.draw()  # Draw the updated state for the tutorial
+            pygame.display.flip()  # Update the screen
+                
+
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-
+                    exit()
                 """
                 if event.type == pygame.FULLSCREEN:
                     pygame.display.flip()
@@ -84,6 +116,8 @@ class Level2(BaseScreen):
                     elif event.key == pygame.K_m:  # Toggle sidebar
                         self.sidebar.toggle()
                         self.handle_sidebar_toggle()
+                    elif event.key == pygame.K_p:  # Toggle sidebar
+                        self.paused = not self.paused
                     if event.key == pygame.K_ESCAPE and self.paused:
                         for cell in self.cells:
                             if cell.show_modal:
@@ -109,20 +143,19 @@ class Level2(BaseScreen):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
-                    if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
-                        mouse_pos = pygame.mouse.get_pos()
-                        option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
+                    # Handle sidebar clicks first, if the sidebar is visible
+                    if self.sidebar and self.sidebar.visible:
+                        option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
                             self.manager.set_active_screen(option_clicked)
-                            return
+                            return  # Exit after handling sidebar click
 
                     modal_active = any(cell.show_modal for cell in self.cells)
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
 
                     # Pause/Play Button Handling
                     if pause_button_rect.collidepoint(mouse_pos):
-                        # Toggle pause state
                         self.paused = not self.paused
 
                         # Close all modals if unpausing
@@ -134,10 +167,10 @@ class Level2(BaseScreen):
 
                         continue  # Skip further processing for this click
 
-                    # Block all interactions if paused, except with the pause/play button and opening oracle
+                    # Block all interactions if paused, except Oracle clicks and pause/play button
                     if self.paused and not modal_active:
                         self.oracle.handle_click(mouse_pos, self.cells, self)
-                        continue  # Ignore all other clicks while paused
+                        continue
 
                     # If a quiz modal is open, prioritize modal interactions
                     if modal_active:
@@ -146,17 +179,18 @@ class Level2(BaseScreen):
                                 cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
                         continue  # Skip further processing for this click
 
-                    # Allow Oracle interaction only if no quiz modal is open
+                    # Allow Oracle interaction when not paused
                     self.oracle.handle_click(mouse_pos, self.cells, self)
 
                     # Handle cell clicks
                     for cell in self.cells:
                         cell.handle_click(mouse_pos, self.cells, self)
-                    
-            
+
+            # Check if the game is over
             if not self.paused and self.game_over:
                 self.check_game_over()
 
+            # Timer handling
             if self.paused:
                 if self.pause_start is None:
                     self.pause_start = pygame.time.get_ticks()
@@ -164,8 +198,10 @@ class Level2(BaseScreen):
                 if self.pause_start is not None:
                     self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                     self.pause_start = None
-            
+
+            # Main game logic
             if not self.paused and not self.game_over:
+                self.check_game_over()
                 current_time = pygame.time.get_ticks()
                 elapsed_time = current_time - self.start_time - self.total_paused_time
                 self.remaining_time = max(0, (self.win_time - elapsed_time) // 1000)
@@ -173,20 +209,24 @@ class Level2(BaseScreen):
                 if self.remaining_time <= 0:
                     self.game_over = True
                     self.paused = True
+                
+                if elapsed_time >= 5000:
+                    self.oracle.display_message("Click me for help!", self.screen)
 
             if not self.paused and not self.game_over:
-                self.check_game_over()
                 # Dynamically calculate the center of the screen
                 self.game_center_x = (self.game_width // 2) + (self.sidebar_width // 2)
 
                 self.screen.fill((255, 255, 255))
                 self.clock.tick(60)
 
+                # Update cells and pathogens
                 for cell in self.cells:
                     cell.update_infection()
 
-                # Spawn enemies
-                self.spawn_enemy()
+                if not self.tutorial_phase:
+                    self.spawn_enemy()
+
                 self.macrophage.update(self.screen.get_width(), self.screen.get_height(), self.sidebar.width if self.sidebar.visible else 25)
                 self.check_collisions()
 
@@ -197,14 +237,18 @@ class Level2(BaseScreen):
                         if enemy.move_towards_target(self.cells):
                             self.counter += 1
 
+            # Handle feedback closures for modals
             self.handle_feedback_closure()
 
+            # Draw game elements
             self.draw()
 
             if self.game_over:
+                self.leaderboard.update_leaderboard("Level2", self.points)
                 self.show_game_over_screen()
-            
-            pygame.display.flip()  # Update the screen with the new drawing
+
+            # Update the screen
+            pygame.display.flip()
     
     def assign_neighbors(self):
         # Diamond layout (row-based)
@@ -338,6 +382,9 @@ class Level2(BaseScreen):
                 return [x, y]
 
     def spawn_enemy(self):
+        if self.tutorial_phase:  # Skip spawning during tutorial phase
+            return
+        
         if pygame.time.get_ticks() - self.resize_pause_timer < self.resize_pause_duration:
             return
         
@@ -350,6 +397,166 @@ class Level2(BaseScreen):
                 # Virus
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "virus"))
             self.spawn_timer = pygame.time.get_ticks()
+
+    def spawn_tutorial_pathogens(self):
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.tutorial_start_time
+
+        if self.tutorial_step == 0:
+            self.oracle.display_message("Click on the Macrophage!", self.screen)
+            self.handle_tutorial_clicks()
+
+        if self.tutorial_step == 1:
+            # Spawn the virus at a random location using generate_spawn_location
+            if not any(p.type == "virus" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                virus = Pathogen(x, y, "virus")
+                virus.is_tutorial = True
+                virus.speed = 0.1
+                self.enemies.append(virus)
+                self.tutorial_pathogens.append(virus)
+                self.handle_tutorial_clicks()
+
+            if elapsed_time >= 2000 and elapsed_time < 5000:
+                self.oracle.display_message("Take a look at the coming phatogen, it's a virus!", self.screen)
+
+            # Pause the game after 5 seconds to ensure the virus is visible
+            if elapsed_time >= 5000:  # Wait 5 seconds
+                self.paused = True
+                self.tutorial_pathogens[0].speed = 0
+                self.oracle.display_message("Click on the virus to learn about it!", self.screen)
+
+        elif self.tutorial_step == 2:
+            if not any(p.type == "virus" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                virus = Pathogen(x, y, "virus")
+                virus.is_tutorial = True
+                virus.speed = 0.1
+                self.enemies.append(virus)
+                self.tutorial_pathogens.append(virus)
+
+            self.oracle.display_message("Use WASD to move the macrophage and kill a virus.", self.screen)
+            if elapsed_time >= 5000:
+                self.tutorial_pathogens[0].speed = 0
+
+        elif self.tutorial_step == 3 and not any(p.type == "virus" for p in self.enemies):
+            # Spawn the bacteria after the virus is killed
+            if not any(p.type == "bacteria" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                bacteria = Pathogen(x, y, "bacteria")
+                bacteria.is_tutorial = True
+                bacteria.speed = 0.1
+                self.enemies.append(bacteria)
+                self.tutorial_pathogens.append(bacteria)
+            
+            if elapsed_time >= 2000 and elapsed_time < 5000:
+                self.oracle.display_message("Look at another phatogen coming, it's a bacteria!", self.screen)
+            elif elapsed_time >= 5000:
+                self.tutorial_pathogens[0].speed = 0
+                self.oracle.display_message("Click on the bacteria to learn about it.", self.screen)
+
+        elif self.tutorial_step == 4:
+            if not any(p.type == "bacteria" for p in self.enemies):
+                x, y = self.generate_spawn_location()
+                virus = Pathogen(x, y, "bacteria")
+                virus.is_tutorial = True
+                virus.speed = 0.1
+                self.enemies.append(virus)
+                self.tutorial_pathogens.append(virus)
+            
+            self.oracle.display_message("Kill a bacteria!", self.screen)
+            if elapsed_time >= 5000:
+                self.tutorial_pathogens[0].speed = 0
+
+        elif self.tutorial_step == 5 and not self.enemies:
+            # Tutorial is over
+            self.tutorial_phase = False
+            self.tutorial_completed = True  # Mark tutorial as completed
+            self.oracle.display_message("Tutorial completed! Protect the cells!", self.screen)
+
+            # Reset game timer
+            if self.tutorial_completed:
+                self.start_time = pygame.time.get_ticks()  # Reset start time
+                self.total_paused_time = 0  # Reset paused time
+                self.tutorial_completed = False  # Ensure this logic runs only once
+
+    def handle_tutorial_clicks(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                exit()
+            """
+            if event.type == pygame.FULLSCREEN:
+                pygame.display.flip()
+            """
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    self.toggle_fullscreen()
+                elif event.key == pygame.K_m:  # Toggle sidebar
+                    self.sidebar.toggle()
+                    self.handle_sidebar_toggle()
+                if event.key == pygame.K_ESCAPE and self.paused:
+                    for cell in self.cells:
+                        if cell.show_modal:
+                            cell.show_modal = False
+                    self.paused = False
+                if event.key == pygame.K_SPACE and self.game_over:
+                    self.reset_game()
+            
+            if event.type == pygame.VIDEORESIZE:
+                if not self.fullscreen:
+                    self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    self.reposition_macrophage()
+                    self.reposition_pathogens()
+                    self.resize_pause_timer = pygame.time.get_ticks()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+
+                pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
+
+                # Pause/Play Button Handling
+                if pause_button_rect.collidepoint(mouse_pos):
+                    self.paused = not self.paused
+
+                if self.macrophage.rect.collidepoint(mouse_pos):
+                    self.running = False
+                    self.tutorial_phase = False
+                    self.manager.set_active_screen("macrophage_tutorial") 
+                    return
+
+                # Check if a sidebar option is clicked
+                if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
+                    option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
+                    if option_clicked:
+                        self.running = False
+                        self.tutorial_phase = False
+                        self.manager.set_active_screen(option_clicked)
+                        return
+
+                # Check clicks on tutorial pathogens
+                for pathogen in self.tutorial_pathogens:
+                    if pathogen.get_collision_rect().collidepoint(mouse_pos):
+                        if pathogen.type == "virus":
+                            self.running = False
+                            self.tutorial_phase = False
+                            self.manager.set_active_screen("virus_tutorial")  # Switch to virus tutorial
+                            return
+                        elif pathogen.type == "bacteria":
+                            self.running = False
+                            self.tutorial_phase = False
+                            self.manager.set_active_screen("bacteria_tutorial")  # Switch to bacteria tutorial
+                            return
+
+    def show_oracle_instructions(self):
+        instructions = {
+            0: "Click on the virus to learn about it.",
+            2: "Use WASD to move the macrophage and kill the virus.",
+            4: "Click on the bacteria to learn about it.",
+            6: "Protect the cells from enemies!",
+        }
+        if self.tutorial_step in instructions:
+            self.oracle.display_message(instructions[self.tutorial_step])
 
     def check_collisions(self):
         current_time = pygame.time.get_ticks()
@@ -365,7 +572,11 @@ class Level2(BaseScreen):
                     collision_duration = current_time - self.colliding_pathogens[enemy]
                     if collision_duration >= 1000:  # 1 second delay
                         self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
+                        self.add_points(100) 
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+                        if self.tutorial_phase:
+                            self.tutorial_step += 1
+                            self.tutorial_pathogens.remove(enemy)
             else:
                 # Remove pathogen from tracking if it is no longer colliding
                 if enemy in self.colliding_pathogens:
@@ -376,6 +587,7 @@ class Level2(BaseScreen):
                 if cell.state and enemy.get_collision_rect().colliderect(cell.get_collision_rect()):
                     cell.die()  # Infect the cell
                     self.enemies.remove(enemy)  # Remove the pathogen
+                    self.add_points(-10) 
                     if enemy in self.colliding_pathogens:
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                     break  # Stop checking other cells for this pathogen
@@ -410,6 +622,7 @@ class Level2(BaseScreen):
         # Pause the game if it's over
         if self.game_over:
             self.paused = True
+            self.leaderboard.update_leaderboard("Level2", self.points)
 
     def show_game_over_screen(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
@@ -417,15 +630,16 @@ class Level2(BaseScreen):
         game_center_x = sidebar_width + game_width // 2
         game_center_y = self.screen.get_height() // 2
 
-        modal_width, modal_height = 700, 300
+        modal_width, modal_height = 700, 600
         modal_x = game_center_x - modal_width // 2
         modal_y = game_center_y - modal_height // 2
 
+        # Draw modal background
         pygame.draw.rect(self.screen, (220, 220, 220), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 5)
 
         font_large = pygame.font.SysFont('Arial', 48)
-        font_small = pygame.font.SysFont('Arial', 24)
+        font_mid = pygame.font.SysFont('Arial', 36)
 
         current_y = modal_y + 50
 
@@ -439,6 +653,10 @@ class Level2(BaseScreen):
             line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
+
+            line3_text = font_mid.render(f"Your Score: {self.points}", True, (0, 0, 0))
+            line3_rect = line3_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+            self.screen.blit(line3_text, line3_rect)
         else:
             line1_text = font_large.render("Game Over!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
@@ -450,12 +668,111 @@ class Level2(BaseScreen):
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
 
-        restart_text = font_small.render("Press SPACE to restart", True, (0, 0, 0))
-        restart_text_rect = restart_text.get_rect(center=(modal_x + modal_width // 2, current_y))
-        self.screen.blit(restart_text, restart_text_rect)
+            line3_text = font_mid.render(f"Your Score: {self.points}", True, (0, 0, 0))
+            line3_rect = line3_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+            self.screen.blit(line3_text, line3_rect)
+
+        # Display top 3 scores
+        font_small = pygame.font.SysFont('Arial', 24)
+        leaderboard = self.leaderboard.get_leaderboard("Level2") or []
+
+        # Fill with placeholder entries if less than 3
+        while len(leaderboard) < 3:
+            leaderboard.append({"score": 0})
+
+        top_scores = leaderboard[:3]  # Get the top 3 scores
+
+        current_y += 50  # Add some space below "Your Score"
+        title_text = "Level 2 - Top 3 Scores:"
+        title_rendered = font_small.render(title_text, True, (0, 0, 0))
+        margin_left = modal_x + modal_width // 3 - 50  # Start near the center but slightly to the left
+        self.screen.blit(title_rendered, (margin_left, current_y))
+        current_y += 40  # Add some space below the title
+
+        margin_left = modal_x + modal_width // 3 - 50  # Start near the center but slightly to the left
+
+        for i, entry in enumerate(top_scores):
+            score_text = f"{i + 1}. {entry['score']}"
+            score_rendered = font_small.render(score_text, True, (0, 0, 0))
+            self.screen.blit(score_rendered, (margin_left, current_y))
+            current_y += 30  # Space between each score
+
+        if not top_scores:  # If no scores exist, show a placeholder
+            placeholder_text = "No scores available"
+            placeholder_rendered = font_small.render(placeholder_text, True, (0, 0, 0))
+            self.screen.blit(placeholder_rendered, (margin_left, current_y))
+            current_y += 30
+
+        # Button setup
+        button_radius = 50
+        button_spacing = 200
+        button_y = modal_y + modal_height - 130
+        button_centers = [
+            (game_center_x - button_spacing, button_y),  # "Home"
+            (game_center_x, button_y),  # "Leaderboards"
+            (game_center_x + button_spacing, button_y),  # "Restart"
+        ]
+
+        buttons = [
+            {"label": "Home", "action": "Home"},
+            {"label": "Leaderboards", "action": "Leaderboards"},
+            {"label": "Restart", "action": "Restart"},
+        ]
+
+        # Draw buttons and render text
+        button_font = pygame.font.SysFont("Arial", int(button_radius * 0.25), bold=True)
+        for center, button in zip(button_centers, buttons):
+            x, y = center
+            pygame.draw.circle(self.screen, (255, 255, 255), (x, y), button_radius)  # Button background
+            pygame.draw.circle(self.screen, (0, 0, 139), (x, y), button_radius, 3)  # Button border
+
+            label_text = button_font.render(button["label"], True, (0, 0, 139))
+            label_rect = label_text.get_rect(center=(x, y))
+            self.screen.blit(label_text, label_rect)
 
         pygame.display.flip()
 
+        # Event handling for buttons
+        while True:  # Event loop for the game-over screen
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+
+                    # Handle sidebar clicks first, if the sidebar is visible
+                    if self.sidebar and self.sidebar.visible:
+                        option_clicked = self.sidebar.handle_event(event)
+                        if option_clicked:
+                            self.running = False
+                            self.manager.set_active_screen(option_clicked)
+                            return  # Exit after handling sidebar click
+
+                    for center, button in zip(button_centers, buttons):
+                        x, y = center
+                        distance = ((mouse_pos[0] - x) ** 2 + (mouse_pos[1] - y) ** 2) ** 0.5
+                        if distance <= button_radius:  # Button click detection
+                            if button["action"] == "Home":
+                                self.running = False
+                                self.manager.set_active_screen("Home")
+                                return
+                            elif button["action"] == "Leaderboards":
+                                self.running = False
+                                self.manager.set_active_screen("Leaderboard Level 2")
+                                return
+                            elif button["action"] == "Restart":
+                                self.reset_game()
+                                return
+                            
+                elif event.type == pygame.K_SPACE and self.game_over:
+                    self.reset_game()
+
+    def add_points(self, amount):
+        self.points += amount
+        # Prevent score from dropping below 0
+        if self.points < 0:
+            self.points = 0
     
     def reset_game(self):
         # Reset cells
@@ -464,6 +781,7 @@ class Level2(BaseScreen):
 
         # Clear existing enemies
         self.enemies = []
+        self.points = 0
 
         # Reset quizzes for cells
         random.shuffle(quizzes)
@@ -548,19 +866,31 @@ class Level2(BaseScreen):
         center_y = self.screen.get_height() // 2
 
         # Fill the screen background
-        self.screen.fill((255, 255, 255))
+        self.screen.fill((252, 232, 240))
+
+        if self.tutorial_phase:
+            self.sidebar.draw(self.screen, "Introduction")
+        else:
+            self.sidebar.draw(self.screen, "Level 2")
 
         # Adjust body image placement
         img = self.body_image
         img = pygame.transform.scale(img, (img.get_width() * 0.7, img.get_height() * 0.7))
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
+        
+        if self.tutorial_phase:
+            """
+            for pathogen in self.tutorial_pathogens:
+                pygame.draw.rect(self.screen, (0, 255, 0), pathogen.get_collision_rect(), 2)
+            self.oracle.draw_message(self.screen)
+            """
 
         # Draw cells
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
             cell.draw(self.screen, sidebar_width, self)
-
+        
         # Draw pathogens first (behind macrophage)
         for enemy in self.enemies:
             enemy.draw(self.screen)
@@ -574,13 +904,18 @@ class Level2(BaseScreen):
                 cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
 
         # Draw timer and pause/play button
-        self.timer.draw(self.screen, self.remaining_time, self.paused)
+        if not self.tutorial_phase:
+            self.timer.draw(self.screen, self.remaining_time, self.paused)
+            button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
+            pause_button = pygame.image.load(button_icon)
+            pause_button = pygame.transform.scale(pause_button, (40, 40))
+            button_position = (self.screen.get_width() - 60, 22)
+            self.screen.blit(pause_button, button_position)
+        
+            font = pygame.font.SysFont("Arial", 24)
+            score_text = font.render(f"Score: {self.points}", True, (0, 0, 0))
+            sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+            self.screen.blit(score_text, (sidebar_width + 20, 30))
 
-        button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
-        pause_button = pygame.image.load(button_icon)
-        pause_button = pygame.transform.scale(pause_button, (40, 40))
-        button_position = (self.screen.get_width() - 60, 22)
-        self.screen.blit(pause_button, button_position)
-
-        self.sidebar.draw(self.screen, "Level 2")
         self.oracle.draw(self.screen)
+        self.oracle.draw_message(self.screen)

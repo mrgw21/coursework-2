@@ -11,7 +11,7 @@ class LeaderboardLevel3(BaseScreen):
         self.font_title_2 = pygame.font.SysFont("Arial", 30)
         self.font_text = pygame.font.SysFont("Arial", 24)
         self.sidebar = Sidebar()
-        self.leaderboard = LeaderboardManager()
+        self.leaderboard = LeaderboardManager(filepath="data/leaderboards/level3_leaderboard.json")
         self.running = True  # Track if the screen is active
 
         # Buttons for switching leaderboards
