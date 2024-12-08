@@ -65,7 +65,7 @@ class Level1(BaseScreen):
         self.win_time = 90000  # 90 seconds in milliseconds
         self.remaining_time = self.win_time // 1000
 
-        self.points = 10000  # Add points tracking
+        self.points = 0  # Add points tracking
         self.leaderboard = LeaderboardManager(filepath="data/leaderboards/level1_leaderboard.json")
 
         self.game_over = False
