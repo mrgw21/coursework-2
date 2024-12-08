@@ -1,6 +1,7 @@
 import pygame
 import random
 import platform
+from datetime import datetime
 from objects.cell import Cell
 from objects.macrophage import Macrophage
 from objects.pathogen import Pathogen
@@ -9,6 +10,7 @@ from ui.sidebar import Sidebar
 from ui.timer import Timer
 from objects.oracle import Oracle
 from screens.screen_manager import BaseScreen
+from data.leaderboard_manager import LeaderboardManager
 
 class Level1(BaseScreen):
     def __init__(self, screen, manager, tutorial_phase, tutorial_step):
@@ -62,6 +64,9 @@ class Level1(BaseScreen):
         self.total_paused_time = 0  # Total time paused
         self.win_time = 90000  # 30 seconds in milliseconds
         self.remaining_time = self.win_time // 1000
+
+        self.points = 0  # Add points tracking
+        self.leaderboard = LeaderboardManager()  
 
         self.game_over = False
         self.win = True
@@ -566,6 +571,7 @@ class Level1(BaseScreen):
                     collision_duration = current_time - self.colliding_pathogens[enemy]
                     if collision_duration >= 1000:  # 1 second delay
                         self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
+                        self.add_points(100) 
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                         if self.tutorial_phase:
                             self.tutorial_step += 1
@@ -580,6 +586,7 @@ class Level1(BaseScreen):
                 if cell.state and enemy.get_collision_rect().colliderect(cell.get_collision_rect()):
                     cell.die()  # Infect the cell
                     self.enemies.remove(enemy)  # Remove the pathogen
+                    self.add_points(-10) 
                     if enemy in self.colliding_pathogens:
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                     break  # Stop checking other cells for this pathogen
@@ -614,6 +621,7 @@ class Level1(BaseScreen):
         # Pause the game if it's over
         if self.game_over:
             self.paused = True
+            self.leaderboard.update_leaderboard("Level1", self.points)
 
     def show_game_over_screen(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
@@ -643,6 +651,11 @@ class Level1(BaseScreen):
             line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
+
+            line2_text = font_large.render("Your Score!", True, (0, 0, 0))
+            line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+            self.screen.blit(line2_text, line2_rect)
+            current_y += 80
         else:
             line1_text = font_large.render("Game Over!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
@@ -660,6 +673,11 @@ class Level1(BaseScreen):
 
         pygame.display.flip()
 
+    def add_points(self, amount):
+        self.points += amount
+        # Prevent score from dropping below 0
+        if self.points < 0:
+            self.points = 0
     
     def reset_game(self):
         # Reset cells
@@ -752,7 +770,7 @@ class Level1(BaseScreen):
         center_y = self.screen.get_height() // 2
 
         # Fill the screen background
-        self.screen.fill((255, 229, 204))
+        self.screen.fill((252, 232, 240))
 
         if self.tutorial_phase:
             self.sidebar.draw(self.screen, "Introduction")
@@ -764,10 +782,6 @@ class Level1(BaseScreen):
         img = pygame.transform.scale(img, (img.get_width() * 0.7, img.get_height() * 0.7))
         body_rect = img.get_rect(center=(center_x, center_y))
         self.screen.blit(img, body_rect)
-
-        # Draw pathogens first (behind macrophage)
-        for enemy in self.enemies:
-            enemy.draw(self.screen)
         
         if self.tutorial_phase:
             """
@@ -780,6 +794,10 @@ class Level1(BaseScreen):
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
             cell.draw(self.screen, sidebar_width, self)
+        
+        # Draw pathogens first (behind macrophage)
+        for enemy in self.enemies:
+            enemy.draw(self.screen)
 
         # Draw macrophage (in front of pathogens)
         self.macrophage.draw(self.screen)
@@ -797,6 +815,11 @@ class Level1(BaseScreen):
             pause_button = pygame.transform.scale(pause_button, (40, 40))
             button_position = (self.screen.get_width() - 60, 22)
             self.screen.blit(pause_button, button_position)
+        
+            font = pygame.font.SysFont("Arial", 24)
+            score_text = font.render(f"Score: {self.points}", True, (0, 0, 0))
+            sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+            self.screen.blit(score_text, (sidebar_width + 20, 30))
 
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)

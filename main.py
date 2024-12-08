@@ -9,6 +9,9 @@ from screens.quizzes import QuizzesScreen
 from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
+from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
+from screens.leaderboards.leaderboard_level2 import LeaderboardLevel2
+from screens.leaderboards.leaderboard_level3 import LeaderboardLevel3
 from screens.tutorials.bacteria_screen import BacteriaScreen
 from screens.tutorials.macrophage_screen import MacrophageScreen
 from screens.tutorials.virus_screen import VirusScreen
@@ -18,6 +21,10 @@ import os
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
+    icon = pygame.image.load("assets/images/insideimmuneicon2.png").convert_alpha()
+    icon = pygame.transform.smoothscale(icon, (64, 64))
+    icon = round_corners(icon, 10)
+    pygame.display.set_icon(icon)
     pygame.display.set_caption("Inside Immune")
 
     pdf_images = load_pdf_images("assets/introduction-materials/")
@@ -29,6 +36,9 @@ def main():
     manager.register_screen("Level 1", Level1, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     manager.register_screen("Statistics", StatisticsScreen, manager)
+    manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
+    manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
+    manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)
     manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
@@ -46,7 +56,7 @@ def main():
         "Level 1": "Level 1",
         "Quizzes": "Quizzes",
         "Statistics": "Statistics",
-        "Scoreboard": "Scoreboard",
+        "Leaderboards": "Leaderboards",
         "Settings": "Settings",
         "Controls": "Controls",
         "About": "About",
@@ -128,6 +138,27 @@ def load_pdf_images(folder):
             image = pygame.image.load(os.path.join(folder, filename)).convert()
             images.append(image)
     return images
+
+def round_corners(surface, radius):
+    size = surface.get_size()
+    width, height = size
+
+    # Ensure the radius is not too large
+    if radius is None:
+        radius = min(width, height) // 8  # Default: Slight rounding
+
+    mask = pygame.Surface(size, pygame.SRCALPHA)
+    rect = pygame.Rect(0, 0, *size)
+
+    # Draw rounded rectangle on the mask
+    pygame.draw.rect(mask, (0, 0, 0, 0), rect)  # Clear
+    pygame.draw.rect(mask, (255, 255, 255, 255), rect.inflate(-radius, -radius), border_radius=radius)
+
+    # Create a new surface for the rounded icon
+    rounded_surface = pygame.Surface(size, pygame.SRCALPHA)
+    rounded_surface.blit(surface, (0, 0))  # Blit the original image
+    rounded_surface.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # Apply the rounded corners mask
+    return rounded_surface
 
 
 if __name__ == "__main__":

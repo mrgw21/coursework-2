@@ -248,6 +248,7 @@ class Cell:
             self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
             self.feedback_timer = pygame.time.get_ticks()
             level.paused = True
+            level.add_points(110)
         else:
             # Incorrect answer: Show the next hint or fallback feedback
             hints = self.quiz.get("hints", [])
@@ -265,6 +266,7 @@ class Cell:
                 self.feedback_timer = current_time
                 level.paused = False
             level.paused = True
+            level.add_points(-10)
 
     def handle_hint(self, level):
         hints = self.quiz.get("hints", [])

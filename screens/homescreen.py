@@ -27,10 +27,10 @@ class HomeScreen:
                 "color": self.GRAY,
                 "options": ["Introduction", "Level 1"]
             },
-            "Scoreboard": {
+            "Leaderboards": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 100, 200, 50),
                 "color": self.GRAY,
-                "options": ["Statistics", "Scoreboard"]
+                "options": ["Statistics", "Leaderboards"]
             }
         }
 
@@ -46,7 +46,7 @@ class HomeScreen:
         self.buttons["Levels"]["rect"] = pygame.Rect(
             screen_width // 2 - 100, screen_height // 3 - 50, 200, 50
         )
-        self.buttons["Scoreboard"]["rect"] = pygame.Rect(
+        self.buttons["Leaderboards"]["rect"] = pygame.Rect(
             screen_width // 2 - 100, screen_height // 3 + 100, 200, 50
         )
 
@@ -77,7 +77,8 @@ class HomeScreen:
 
     def handle_event(self, event):
         if event.type == pygame.QUIT:
-            self.running = False
+            pygame.quit()
+            exit()
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
             mouse_pos = event.pos
             for button_text, button_data in self.buttons.items():
