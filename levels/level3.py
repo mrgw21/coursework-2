@@ -188,7 +188,8 @@ class Level3(BaseScreen):
 
             # Check if the game is over
             if not self.paused and self.game_over:
-                self.leaderboard.update_leaderboard("Level3", self.points)
+                if self.win:
+                    self.leaderboard.update_leaderboard("Level3", self.points)
                 self.check_game_over()
 
             # Timer handling
@@ -223,7 +224,7 @@ class Level3(BaseScreen):
 
                 # Update cells and pathogens
                 for cell in self.cells:
-                    cell.update_infection()
+                    cell.update_infection(self)
 
                 if not self.tutorial_phase:
                     self.spawn_enemy()
@@ -245,7 +246,11 @@ class Level3(BaseScreen):
             self.draw()
 
             if self.game_over:
-                self.leaderboard.update_leaderboard("Level3", self.points)
+                for cell in self.cells:
+                    if cell.show_modal:
+                        cell.show_modal = False
+                if self.win:
+                    self.leaderboard.update_leaderboard("Level3", self.points)
                 self.show_game_over_screen()
                 continue
 
@@ -573,8 +578,9 @@ class Level3(BaseScreen):
                     # Check if the collision duration has exceeded the kill delay
                     collision_duration = current_time - self.colliding_pathogens[enemy]
                     if collision_duration >= 1000:  # 1 second delay
-                        self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
-                        self.add_points(100) 
+                        if enemy in self.enemies:
+                            self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
+                            self.add_points(100)
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                         if self.tutorial_phase:
                             self.tutorial_step += 1
@@ -624,7 +630,8 @@ class Level3(BaseScreen):
         # Pause the game if it's over
         if self.game_over:
             self.paused = True
-            self.leaderboard.update_leaderboard("Level3", self.points)
+            if self.win:
+                self.leaderboard.update_leaderboard("Level3", self.points)
 
     def show_game_over_screen(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25

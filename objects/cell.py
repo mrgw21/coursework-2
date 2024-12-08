@@ -361,7 +361,7 @@ class Cell:
             self.quiz_locked = True
             self.feedback_timer = current_time
 
-    def infect_neighbors(self):
+    def infect_neighbors(self, level):
         # Use the actual number of neighbors to limit infection spread
         if not self.neighbors:
             return  # Skip if the cell has no neighbors
@@ -373,8 +373,9 @@ class Cell:
         for neighbor in neighbors_to_infect:
             if neighbor.health == "uninfected":
                 neighbor.die()
+                level.points -= 10
 
-    def update_infection(self):
+    def update_infection(self, level):
         if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
             return
 
@@ -382,7 +383,7 @@ class Cell:
         infection_delay = 4000  # Set delay to 5 seconds (adjust as needed)
 
         if current_time - self.infection_timer > infection_delay:
-            self.infect_neighbors()  # Spread infection to neighbors
+            self.infect_neighbors(level)  # Spread infection to neighbors
             self.infection_timer = current_time  # Reset timer
 
     def stop_infection(self):
