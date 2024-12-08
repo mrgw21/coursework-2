@@ -143,12 +143,13 @@ class Level1(BaseScreen):
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
-                    if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
-                        option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
+                    # Handle sidebar clicks first, if the sidebar is visible
+                    if self.sidebar and self.sidebar.visible:
+                        option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
                             self.manager.set_active_screen(option_clicked)
-                            return
+                            return  # Exit after handling sidebar click
 
                     modal_active = any(cell.show_modal for cell in self.cells)
                     pause_button_rect = pygame.Rect(self.screen.get_width() - 60, 20, 40, 40)
@@ -629,15 +630,16 @@ class Level1(BaseScreen):
         game_center_x = sidebar_width + game_width // 2
         game_center_y = self.screen.get_height() // 2
 
-        modal_width, modal_height = 700, 300
+        modal_width, modal_height = 700, 600
         modal_x = game_center_x - modal_width // 2
         modal_y = game_center_y - modal_height // 2
 
+        # Draw modal background
         pygame.draw.rect(self.screen, (220, 220, 220), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 5)
 
         font_large = pygame.font.SysFont('Arial', 48)
-        font_small = pygame.font.SysFont('Arial', 24)
+        font_mid = pygame.font.SysFont('Arial', 36)
 
         current_y = modal_y + 50
 
@@ -652,10 +654,9 @@ class Level1(BaseScreen):
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
 
-            line2_text = font_large.render("Your Score!", True, (0, 0, 0))
-            line2_rect = line2_text.get_rect(center=(modal_x + modal_width // 2, current_y))
-            self.screen.blit(line2_text, line2_rect)
-            current_y += 80
+            line3_text = font_mid.render(f"Your Score: {self.points}", True, (0, 0, 0))
+            line3_rect = line3_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+            self.screen.blit(line3_text, line3_rect)
         else:
             line1_text = font_large.render("Game Over!", True, (0, 0, 0))
             line1_rect = line1_text.get_rect(center=(modal_x + modal_width // 2, current_y))
@@ -667,11 +668,74 @@ class Level1(BaseScreen):
             self.screen.blit(line2_text, line2_rect)
             current_y += 80
 
-        restart_text = font_small.render("Press SPACE to restart", True, (0, 0, 0))
-        restart_text_rect = restart_text.get_rect(center=(modal_x + modal_width // 2, current_y))
-        self.screen.blit(restart_text, restart_text_rect)
+            line3_text = font_mid.render(f"Your Score: {self.points}", True, (0, 0, 0))
+            line3_rect = line3_text.get_rect(center=(modal_x + modal_width // 2, current_y))
+            self.screen.blit(line3_text, line3_rect)
+
+        # Button setup
+        button_radius = 50
+        button_spacing = 200
+        button_y = modal_y + modal_height - 150
+        button_centers = [
+            (game_center_x - button_spacing, button_y),  # "Home"
+            (game_center_x, button_y),  # "Leaderboards"
+            (game_center_x + button_spacing, button_y),  # "Restart"
+        ]
+
+        buttons = [
+            {"label": "Home", "action": "Home"},
+            {"label": "Leaderboards", "action": "Leaderboards"},
+            {"label": "Restart", "action": "Restart"},
+        ]
+
+        # Draw buttons and render text
+        button_font = pygame.font.SysFont("Arial", int(button_radius * 0.25), bold=True)
+        for center, button in zip(button_centers, buttons):
+            x, y = center
+            pygame.draw.circle(self.screen, (255, 255, 255), (x, y), button_radius)  # Button background
+            pygame.draw.circle(self.screen, (0, 0, 139), (x, y), button_radius, 3)  # Button border
+
+            label_text = button_font.render(button["label"], True, (0, 0, 139))
+            label_rect = label_text.get_rect(center=(x, y))
+            self.screen.blit(label_text, label_rect)
 
         pygame.display.flip()
+
+        # Event handling for buttons
+        while True:  # Event loop for the game-over screen
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+
+                    # Handle sidebar clicks first, if the sidebar is visible
+                    if self.sidebar and self.sidebar.visible:
+                        option_clicked = self.sidebar.handle_event(event)
+                        if option_clicked:
+                            self.running = False
+                            self.manager.set_active_screen(option_clicked)
+                            return  # Exit after handling sidebar click
+
+                    for center, button in zip(button_centers, buttons):
+                        x, y = center
+                        distance = ((mouse_pos[0] - x) ** 2 + (mouse_pos[1] - y) ** 2) ** 0.5
+                        if distance <= button_radius:  # Button click detection
+                            if button["action"] == "Home":
+                                self.running = False
+                                self.manager.set_active_screen("Home")
+                                return
+                            elif button["action"] == "Leaderboards":
+                                self.running = False
+                                self.manager.set_active_screen("Leaderboards")
+                                return
+                            elif button["action"] == "Restart":
+                                self.reset_game()
+                                return
+                            
+                elif event.type == pygame.K_SPACE and self.game_over:
+                    self.reset_game()
 
     def add_points(self, amount):
         self.points += amount
@@ -686,6 +750,7 @@ class Level1(BaseScreen):
 
         # Clear existing enemies
         self.enemies = []
+        self.points = 0
 
         # Reset quizzes for cells
         random.shuffle(quizzes)

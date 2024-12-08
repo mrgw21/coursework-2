@@ -264,21 +264,9 @@ class Cell:
                     "color": (255, 0, 0),
                 }
                 self.feedback_timer = current_time
-                level.paused = False
+                self.show_modal = False
             level.paused = True
             level.add_points(-10)
-
-    def handle_hint(self, level):
-        hints = self.quiz.get("hints", [])
-        if self.hint_index < len(hints):
-            # Show the next hint based on the current hint index
-            hint_message = hints[self.hint_index]
-            self.quiz_feedback = {"message": hint_message, "color": (255, 0, 0)}
-            self.hint_index += 1  # Move to the next hint for the next attempt
-        else:
-            # No more hints available
-            self.quiz_feedback = {"message": "Incorrect! No more hints available.", "color": (255, 0, 0)}
-        level.paused = True
 
     def reset_quiz_state(self):
         self.quiz_feedback = None  # Clear feedback
