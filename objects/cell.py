@@ -13,6 +13,9 @@ class Cell:
         self.cell_number = position + 1  # Numbering for cells
         self.quiz = None 
         self.selected_option = None
+        self.failed_attempts = 0
+        self.quiz_locked = False  # Lock the quiz after correct or 3 failed attempts
+        self.quiz_feedback = None
 
         self.hint_index = 0 # Start at first hint
         self.infection_timer = 0  # Timer for slowing infected cell attacks
@@ -237,36 +240,28 @@ class Cell:
         self.selected_option = None
         self.quiz_feedback = None
 
-    def handle_quiz_answer(self, selected_option, level):
-        current_time = pygame.time.get_ticks()
-        if selected_option["is_correct"]:
-            # Correct answer: Stop infection, show success feedback
-            self.quiz_feedback = {
-                "message": "Correct! You've saved this cell.",
-                "color": (0, 128, 128),
-            }
-            self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
-            self.feedback_timer = pygame.time.get_ticks()
-            level.paused = True
-            level.add_points(110)
-        else:
-            # Incorrect answer: Show the next hint or fallback feedback
-            hints = self.quiz.get("hints", [])
-            if self.hint_index < len(hints):
-                # Display the next hint
-                hint_message = hints[self.hint_index]
-                self.quiz_feedback = {"message": f"Hint: {hint_message}", "color": (255, 0, 0)}
-                self.hint_index += 1
-            else:
-                # No more hints available
-                self.quiz_feedback = {
-                    "message": "Incorrect! No more hints are available.",
-                    "color": (255, 0, 0),
-                }
-                self.feedback_timer = current_time
-                self.show_modal = False
-            level.paused = True
-            level.add_points(-10)
+    def handle_radio_button_click(self, screen, mouse_pos, cells, level):
+        # If the modal is not open or options are missing, return early
+        if not self.show_modal or not hasattr(self, "option_coords"):
+            return
+
+        # Prevent further interaction if locked (3 failed attempts or correct answer)
+        if hasattr(self, "quiz_locked") and self.quiz_locked:
+            return
+
+        for option_data in self.option_coords:
+            circle_x, circle_y = option_data["circle"]
+            radius = option_data["radius"]
+            distance = ((mouse_pos[0] - circle_x) ** 2 + (mouse_pos[1] - circle_y) ** 2) ** 0.5
+            if distance <= radius:
+                # Avoid re-processing the same option click
+                if self.selected_option == option_data["option"]:
+                    return  # Ignore duplicate clicks
+
+                # Process the new selected option
+                self.selected_option = option_data["option"]
+                self.handle_quiz_answer(option_data["option"], level)
+                break
 
     def reset_quiz_state(self):
         self.quiz_feedback = None  # Clear feedback
@@ -308,23 +303,63 @@ class Cell:
             self.show_modal = True
             level.paused = True
     
-    def handle_radio_button_click(self, screen, mouse_pos, cells, level):
-        if not self.show_modal or not hasattr(self, "option_coords"):
+    def handle_quiz_answer(self, selected_option, level):
+        current_time = pygame.time.get_ticks()
+
+        # Initialize failed attempts if not already present
+        if not hasattr(self, "failed_attempts"):
+            self.failed_attempts = 0
+
+        # Prevent further attempts if the quiz is locked
+        if hasattr(self, "quiz_locked") and self.quiz_locked:
+            self.quiz_feedback = {
+                "message": "The quiz is locked. No further attempts allowed.",
+                "color": (128, 0, 0),
+            }
+            self.feedback_timer = current_time
             return
 
-        for option_data in self.option_coords:
-            circle_x, circle_y = option_data["circle"]
-            radius = option_data["radius"]
-            distance = ((mouse_pos[0] - circle_x) ** 2 + (mouse_pos[1] - circle_y) ** 2) ** 0.5
-            if distance <= radius:
-                # Avoid re-processing the same option click
-                if self.selected_option == option_data["option"]:
-                    return  # Ignore duplicate clicks
+        if selected_option["is_correct"]:
+            # Correct answer: Stop infection, show success feedback
+            self.quiz_feedback = {
+                "message": "Correct! You've saved this cell.",
+                "color": (0, 128, 128),
+            }
+            self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
+            self.feedback_timer = current_time
+            level.add_points(110)
+            level.paused = False
+            # Lock the quiz after a correct answer
+            self.quiz_locked = True
+        else:
+            # Incorrect answer: Increment failed attempts counter
+            self.failed_attempts += 1
 
-                # Process the new selected option
-                self.selected_option = option_data["option"]
-                self.handle_quiz_answer(option_data["option"], level)
-                break
+            hints = self.quiz.get("hints", [])
+            if self.hint_index < len(hints):
+                # Display the next hint
+                hint_message = hints[self.hint_index]
+                self.quiz_feedback = {"message": f"Hint: {hint_message}", "color": (255, 0, 0)}
+                self.hint_index += 1
+            else:
+                # No more hints available
+                self.quiz_feedback = {
+                    "message": "Incorrect! No more hints are available.",
+                    "color": (255, 0, 0),
+                }
+                self.feedback_timer = current_time
+
+            level.paused = True
+            level.add_points(-10)
+
+        # Lock the quiz after 3 failed attempts
+        if self.failed_attempts >= 3:
+            self.quiz_feedback = {
+                "message": "You have used all 3 attempts. No more hints, and try to save the cell again.",
+                "color": (128, 0, 0),
+            }
+            self.quiz_locked = True
+            self.feedback_timer = current_time
 
     def infect_neighbors(self):
         # Use the actual number of neighbors to limit infection spread
@@ -369,3 +404,5 @@ class Cell:
         self.quiz_feedback = None
         self.selected_option = None
         self.show_modal = False
+        self.failed_attempts = 0
+        self.quiz_locked = False
