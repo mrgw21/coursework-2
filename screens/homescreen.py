@@ -7,29 +7,27 @@ class HomeScreen:
         self.running = True
 
         # Colors
-        self.WHITE = (255, 255, 255)
-        self.GRAY = (200, 200, 200)
+        self.BACKGROUND_COLOR = (255, 255, 255)  # Light Gray
+        self.PRIMARY_COLOR = (0, 0, 139)  # Dark Blue
+        self.SECONDARY_COLOR = (255, 140, 0)  # Dark Orange
+        self.TERTIARY_COLOR = (0, 128, 128)  # Teal
         self.BLACK = (0, 0, 0)
-        self.BLUE = (100, 149, 237)
+        self.WHITE = (255, 255, 255)
 
         # Fonts
         self.font = pygame.font.SysFont("Arial", 36)
         self.title_font = pygame.font.SysFont("Arial", 72, bold=True)
 
-        # Background image
-        self.background_image = pygame.image.load("assets/images/homebg2.webp").convert()
-        self.background_image = pygame.transform.scale(self.background_image, screen.get_size())
-
         # Buttons with their corresponding options mapped to registered screens
         self.buttons = {
             "Levels": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 - 50, 200, 50),
-                "color": self.GRAY,
+                "color": self.PRIMARY_COLOR,
                 "options": ["Introduction", "Level 1"]
             },
             "Leaderboards": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 100, 200, 50),
-                "color": self.GRAY,
+                "color": self.SECONDARY_COLOR,
                 "options": ["Statistics", "Leaderboards"]
             }
         }
@@ -38,9 +36,6 @@ class HomeScreen:
 
     def reposition_elements(self):
         screen_width, screen_height = self.screen.get_size()
-
-        # Rescale background
-        self.background_image = pygame.transform.scale(self.background_image, (screen_width, screen_height))
 
         # Adjust button positions dynamically
         self.buttons["Levels"]["rect"] = pygame.Rect(
@@ -52,12 +47,12 @@ class HomeScreen:
 
     def draw_button(self, button_text, rect, color):
         pygame.draw.rect(self.screen, color, rect)
-        text_surface = self.font.render(button_text, True, self.BLACK)
+        text_surface = self.font.render(button_text, True, self.WHITE)
         text_rect = text_surface.get_rect(center=rect.center)
         self.screen.blit(text_surface, text_rect)
 
     def draw_background(self):
-        self.screen.blit(self.background_image, (0, 0))
+        self.screen.fill(self.BACKGROUND_COLOR)
 
     def draw_main_buttons(self):
         for button_text, button_data in self.buttons.items():
@@ -70,7 +65,7 @@ class HomeScreen:
                 option_rect = pygame.Rect(self.screen.get_width() // 2 - 150,
                                           self.screen.get_height() // 3 + 200 + i * 50,
                                           300, 40)
-                pygame.draw.rect(self.screen, self.BLUE, option_rect)
+                pygame.draw.rect(self.screen, self.TERTIARY_COLOR, option_rect)
                 option_text = self.font.render(option, True, self.WHITE)
                 option_text_rect = option_text.get_rect(center=option_rect.center)
                 self.screen.blit(option_text, option_text_rect)
