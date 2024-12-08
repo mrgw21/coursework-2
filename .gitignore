@@ -107,3 +107,5 @@ dmypy.json
 
 # Pygame assets (if using a separate assets folder)
 # assets/
+
+data/leaderboards/*
