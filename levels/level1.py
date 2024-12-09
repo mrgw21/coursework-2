@@ -381,12 +381,21 @@ class Level1(BaseScreen):
 
         while True:
             # Generate a random spawn location within the valid game bounds
-            x = random.randint(sidebar_width + edge_padding, screen_width - edge_padding)
-            y = random.randint(edge_padding, screen_height - edge_padding)
+            x, y = self.randomize(screen_width, screen_height, edge_padding, sidebar_width)
 
             # Ensure spawn location is outside the gray center area and sidebar
             if not (gray_left <= x <= gray_right and gray_top <= y <= gray_bottom):
-                return [x, y]
+                # Ensure it's not colliding with the macrophage
+                macrophage_rect = self.macrophage.get_collision_rect()
+                pathogen_rect = pygame.Rect(x, y, 40, 40)  # Assume a 40x40 size for pathogens
+                if not macrophage_rect.colliderect(pathogen_rect):
+                    return [x, y]
+
+    def randomize(self, screen_width, screen_height, edge_padding, sidebar_width):
+        # Generate a random position while avoiding edges
+        x = random.randint(sidebar_width + edge_padding, screen_width - edge_padding)
+        y = random.randint(edge_padding, screen_height - edge_padding)
+        return x, y
 
     def spawn_enemy(self):
         if self.tutorial_phase:  # Skip spawning during tutorial phase
