@@ -907,11 +907,6 @@ class Level1(BaseScreen):
         # Draw macrophage (in front of pathogens)
         self.macrophage.draw(self.screen)
 
-        # Draw cell modals if active
-        for cell in self.cells:
-            if cell.show_modal:
-                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
-
         # Draw timer and pause/play button
         if not self.tutorial_phase:
             self.timer.draw(self.screen, self.remaining_time, self.paused)
@@ -925,6 +920,11 @@ class Level1(BaseScreen):
             score_text = font.render(f"Score: {self.points}", True, (0, 0, 0))
             sidebar_width = self.sidebar.width if self.sidebar.visible else 0
             self.screen.blit(score_text, (sidebar_width + 20, 30))
+        
+        # Draw cell modals if active
+        for cell in self.cells:
+            if cell.show_modal:
+                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
 
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)

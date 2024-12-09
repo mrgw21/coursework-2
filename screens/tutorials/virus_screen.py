@@ -17,6 +17,7 @@ class VirusScreen(BaseScreen):
         self.sidebar_width = 400
         self.font = pygame.font.SysFont("Arial", 20)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.semi_title_font = pygame.font.SysFont("Arial", 24, bold=True)
         self.oracle = Oracle(self.sidebar_width)
 
         # Load the tutorial-specific image
@@ -25,8 +26,8 @@ class VirusScreen(BaseScreen):
         # Load and scale the star icons
         self.original_star_image = pygame.image.load("assets/icons/star.png")
         self.grey_star_image = pygame.image.load("assets/icons/grey_star.png")
-        self.star_image = pygame.transform.scale(self.original_star_image, (40, 40))
-        self.grey_star_image = pygame.transform.scale(self.grey_star_image, (40, 40))
+        self.star_image = pygame.transform.scale(self.original_star_image, (50, 50))
+        self.grey_star_image = pygame.transform.scale(self.grey_star_image, (50, 50))
 
         # Load and set up the continue button
         self.continue_button_image = pygame.image.load("assets/icons/continue.png")
@@ -38,12 +39,37 @@ class VirusScreen(BaseScreen):
 
         # Define button locations and their corresponding context text
         self.buttons = [
-            {"relative_position": (600, 250), "context": "Viral genetic information is stored within a protein capsid.", "clicked": False},
-            {"relative_position": (500, 350), "context": "Viruses tend to be small ~ 20-800nm.", "clicked": False},
-            {"relative_position": (400, 200), "context": "Viruses reproduce using infected cell machinery. Either using reverse transcriptase (to turn the viral RNA into nascent DNA) or the RNA is structured similarly to host RNA so is treated as normal mRNA.", "clicked": False},
-            {"relative_position": (540, 230), "context": "Viral genetic information is stored as RNA, it makes use of the infected cells machinery (ribosomes) for protein production and replication. The virus genome tends to be very small, containing only enough information to code for the assembly of more viral particles.​ The precise nature of the RNA varies, it can be either single or double stranded. Retroviruses (such as HIV) have single stranded RNA.​", "clicked": False},
-            {"relative_position": (425, 300), "context": "Viral particles have external ‘binding proteins’ these lead to attachment and promote insertion of the contents of the virus into target cells.", "clicked": False},
+            {
+                "relative_position": (600, 250),
+                "context": "Viral genetic information is stored within a protein capsid.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (500, 350),
+                "context": "Viruses tend to be small ~ 20-800nm.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (400, 200),
+                "context": "Viruses reproduce using infected cell machinery. Either using reverse transcriptase (to turn the viral RNA into nascent DNA) or the RNA is structured similarly to host RNA so is treated as normal mRNA.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (540, 230),
+                "context": "Viral genetic information is stored as RNA. It makes use of the infected cells' machinery (ribosomes) for protein production and replication. The virus genome tends to be very small, containing only enough information to code for the assembly of more viral particles.",
+                "clicked": False,
+            },
+            {
+                "relative_position": (425, 300),
+                "context": "Viral particles have external ‘binding proteins’ that lead to attachment and promote insertion of the contents of the virus into target cells.",
+                "clicked": False,
+            },
         ]
+
+        # Prepend "Dr. Tomato:" to all contexts
+        for button in self.buttons:
+            button["context"] = f"Dr. Tomato: {button['context']}"
+
         self.clicked_button_index = None
         self.pulse_start_time = None
 
@@ -110,7 +136,7 @@ class VirusScreen(BaseScreen):
 
             # Check for star button clicks
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (40, 40))
+                button_rect = pygame.Rect(button["position"], (50, 50))
                 if button_rect.collidepoint(mouse_pos):
                     if self.clicked_button_index != i:  # New context
                         self.pulse_start_time = pygame.time.get_ticks()  # Restart pulse timer
@@ -144,12 +170,16 @@ class VirusScreen(BaseScreen):
         # Get the current button context
         context = self.buttons[self.clicked_button_index]["context"]
 
+        # Separate "Dr. Tomato:" and the rest of the context
+        speaker = "Dr. Tomato:"
+        message = context.replace(speaker, "").strip()
+
         # Set modal dimensions
         modal_width = self.image_rect.width
         base_font_size = 20
         max_font_size = 24
-        pulse_duration = 1000  # Slower pulse duration
-        total_pulses = 2  # Number of pulses
+        pulse_duration = 1000
+        total_pulses = 2
 
         # Handle pulsing effect
         if self.pulse_start_time is not None:
@@ -167,35 +197,41 @@ class VirusScreen(BaseScreen):
         else:
             pulsing_font = pygame.font.SysFont("Arial", base_font_size)
 
-        # Wrap text and calculate required height
-        wrapped_text = self.wrap_text(context, pulsing_font, modal_width - 20)
-        text_height = sum(pulsing_font.size(line)[1] + 5 for line in wrapped_text)  # Add 5 for line spacing
-        modal_height = max(100, text_height + 40)  # Ensure a minimum modal height
+        # Wrap the message text to fit within modal width
+        wrapped_message = self.wrap_text(message, pulsing_font, modal_width - 20)
+        text_height = pulsing_font.size(speaker)[1] + sum(
+            pulsing_font.size(line)[1] + 5 for line in wrapped_message
+        )
+        modal_height = max(100, text_height + 40)
 
         # Keep the modal lower on the screen
         modal_x = (self.screen.get_width() - modal_width) // 2
-        modal_y = self.screen.get_height() - modal_height - 50  # Original lower position
+        modal_y = self.screen.get_height() - modal_height - 50
 
-        # Draw modal background (white) and border
+        # Draw modal background and border
         pygame.draw.rect(self.screen, (255, 255, 255), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
 
-        # Render the wrapped text inside the modal
-        y_offset = modal_y + 20  # Padding at the top of the modal
-        for line in wrapped_text:
+        # Render the speaker
+        speaker_surface = pulsing_font.render(speaker, True, (0, 0, 0))
+        self.screen.blit(speaker_surface, (modal_x + 10, modal_y + 10))
+
+        # Render the wrapped message text
+        y_offset = modal_y + 20 + pulsing_font.size(speaker)[1]
+        for line in wrapped_message:
             text_surface = pulsing_font.render(line, True, (0, 0, 0))
             self.screen.blit(text_surface, (modal_x + 10, y_offset))
-            y_offset += pulsing_font.get_height() + 5  # Add line spacing
+            y_offset += pulsing_font.get_height() + 5
 
     def draw(self):
-        self.screen.fill((200, 200, 200))
+        self.screen.fill((252, 232, 240))
 
         # Draw the title
         title_text = self.title_font.render("Virus Information", True, (0, 0, 0))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 50))
         self.screen.blit(title_text, title_rect)
 
-        guide_text = self.font.render("Click on the stars!", True, (0, 0, 0))
+        guide_text = self.semi_title_font.render("Click on the stars!", True, (0, 0, 0))
         guide_rect = guide_text.get_rect(center=(self.screen.get_width() // 2, 100))
         self.screen.blit(guide_text, guide_rect)
 
@@ -204,8 +240,7 @@ class VirusScreen(BaseScreen):
 
         # Draw the star buttons
         for button in self.buttons:
-            star_image = self.grey_star_image if button["clicked"] else self.star_image
-            self.screen.blit(star_image, button["position"])
+            self.draw_star_with_gleaming(self.screen, button["position"], button["clicked"])
 
         # Draw the continue button if applicable
         if self.show_continue_button:
@@ -221,11 +256,24 @@ class VirusScreen(BaseScreen):
         if self.sidebar.visible:
             self.sidebar.draw(self.screen, "Virus Information")
 
+    def draw_star_with_gleaming(self, screen, position, is_clicked):
+        if not is_clicked:
+            elapsed_time = pygame.time.get_ticks() % 1000
+            scale_factor = 1 + 0.1 * math.sin((elapsed_time / 1000) * 2 * math.pi)
+            gleaming_star = pygame.transform.scale(
+                self.star_image,
+                (int(self.star_image.get_width() * scale_factor), int(self.star_image.get_height() * scale_factor)),
+            )
+            gleaming_rect = gleaming_star.get_rect(center=(position[0] + 28, position[1] + 28))
+            screen.blit(gleaming_star, gleaming_rect)
+        else:
+            screen.blit(self.grey_star_image, position)
+
     def run(self):
         while self.running:
             for event in pygame.event.get():
                 self.handle_event(event)
 
             self.draw()
-            self.manager.draw_active_screen()  # Ensure modal is drawn
+            self.manager.draw_active_screen()
             pygame.display.flip()

@@ -17,6 +17,7 @@ class MacrophageScreen(BaseScreen):
         self.sidebar_width = 400
         self.font = pygame.font.SysFont("Arial", 20)
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
+        self.semi_title_font = pygame.font.SysFont("Arial", 24, bold=True)
         self.oracle = Oracle(self.sidebar_width)
 
         # Load the tutorial-specific image
@@ -64,6 +65,11 @@ class MacrophageScreen(BaseScreen):
                 "clicked": False,
             },
         ]
+
+        # Prepend "Dr. Tomato:" to all contexts
+        for button in self.buttons:
+            button["context"] = f"Dr. Tomato: {button['context']}"
+
         self.clicked_button_index = None
         self.pulse_start_time = None
 
@@ -163,6 +169,10 @@ class MacrophageScreen(BaseScreen):
         # Get the current button context
         context = self.buttons[self.clicked_button_index]["context"]
 
+        # Separate "Dr. Tomato:" and the rest of the context
+        speaker = "Dr. Tomato:"
+        message = context.replace(speaker, "").strip()
+
         # Set modal dimensions
         modal_width = self.image_rect.width
         base_font_size = 20
@@ -186,9 +196,11 @@ class MacrophageScreen(BaseScreen):
         else:
             pulsing_font = pygame.font.SysFont("Arial", base_font_size)
 
-        # Wrap text and calculate required height
-        wrapped_text = self.wrap_text(context, pulsing_font, modal_width - 20)
-        text_height = sum(pulsing_font.size(line)[1] + 5 for line in wrapped_text)  # Add 5 for line spacing
+        # Wrap the message text to fit within modal width
+        wrapped_message = self.wrap_text(message, pulsing_font, modal_width - 20)
+        text_height = pulsing_font.size(speaker)[1] + sum(
+            pulsing_font.size(line)[1] + 5 for line in wrapped_message
+        )  # Add spacing for lines
         modal_height = max(100, text_height + 40)  # Ensure a minimum modal height
 
         # Keep the modal lower on the screen
@@ -199,15 +211,19 @@ class MacrophageScreen(BaseScreen):
         pygame.draw.rect(self.screen, (255, 255, 255), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
 
-        # Render the wrapped text inside the modal
-        y_offset = modal_y + 20  # Padding at the top of the modal
-        for line in wrapped_text:
+        # Render the speaker ("Dr. Tomato:") at the top of the modal
+        speaker_surface = pulsing_font.render(speaker, True, (0, 0, 0))
+        self.screen.blit(speaker_surface, (modal_x + 10, modal_y + 10))
+
+        # Render the wrapped message text
+        y_offset = modal_y + 20 + pulsing_font.size(speaker)[1]  # Below the speaker
+        for line in wrapped_message:
             text_surface = pulsing_font.render(line, True, (0, 0, 0))
             self.screen.blit(text_surface, (modal_x + 10, y_offset))
             y_offset += pulsing_font.get_height() + 5  # Add line spacing
 
     def draw(self):
-        self.screen.fill((200, 200, 200))
+        self.screen.fill((252, 232, 240))
 
         # Draw the title
         effective_center_x = (
@@ -218,17 +234,19 @@ class MacrophageScreen(BaseScreen):
         title_rect = title_text.get_rect(center=(effective_center_x, 50))
         self.screen.blit(title_text, title_rect)
 
-        guide_text = self.font.render("Click on the stars!", True, (0, 0, 0))
+        guide_text = self.semi_title_font.render("Click on the stars!", True, (0, 0, 0))
         guide_rect = guide_text.get_rect(center=(effective_center_x, 100))
         self.screen.blit(guide_text, guide_rect)
 
-        # Draw the macrophage tutorial image
-        self.screen.blit(self.image, self.image_rect)
+        # Draw the macrophage tutorial image with a black border
+        border_thickness = 5  # Thickness of the border
+        border_rect = self.image_rect.inflate(border_thickness * 2, border_thickness * 2)
+        pygame.draw.rect(self.screen, (0, 0, 0), border_rect)  # Draw the black border
+        self.screen.blit(self.image, self.image_rect)  # Blit the original image on top
 
         # Draw the star buttons
         for button in self.buttons:
-            star_image = self.grey_star_image if button["clicked"] else self.star_image
-            self.screen.blit(star_image, button["position"])
+            self.draw_star_with_gleaming(self.screen, button["position"], button["clicked"])
 
         # Draw the continue button if applicable
         if self.show_continue_button:
@@ -243,6 +261,22 @@ class MacrophageScreen(BaseScreen):
         # Draw the sidebar if visible
         if self.sidebar.visible:
             self.sidebar.draw(self.screen, "Macrophage Information")
+
+    def draw_star_with_gleaming(self, screen, position, is_clicked):
+        if not is_clicked:
+            # Create a pulsing effect
+            elapsed_time = pygame.time.get_ticks() % 1000  # Repeat every 1000ms
+            scale_factor = 1 + 0.1 * math.sin((elapsed_time / 1000) * 2 * math.pi)  # Sinusoidal pulsing
+            gleaming_star = pygame.transform.scale(
+                self.star_image, 
+                (int(self.star_image.get_width() * scale_factor), int(self.star_image.get_height() * scale_factor))
+            )
+            # Re-center the scaled image
+            gleaming_rect = gleaming_star.get_rect(center=(position[0] + 28, position[1] + 28))
+            screen.blit(gleaming_star, gleaming_rect)
+        else:
+            # Draw a grey star if clicked
+            screen.blit(self.grey_star_image, position)
 
     def run(self):
         while self.running:
