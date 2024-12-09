@@ -10,7 +10,8 @@ quizzes = [
         "hints": [
             "Bacteria do not have a nucleus, and their genetic material is stored differently from eukaryotes.",
             "Bacteria store their genetic material in a single, circular molecule of DNA."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What is the primary function of macrophages in the immune system?",
@@ -23,7 +24,8 @@ quizzes = [
         "hints": [
             "They are part of the innate immune system and act as first responders.",
             "Their primary role is to engulf and digest foreign invaders like pathogens."
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "What type of pathogen is known to replicate only inside host cells?",
@@ -36,7 +38,8 @@ quizzes = [
         "hints": [
             "This pathogen cannot replicate on its own.",
             "It hijacks the machinery of the host cell to produce copies of itself."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "What is the size range of viruses?",
@@ -49,7 +52,8 @@ quizzes = [
         "hints": [
             "Viruses are much smaller than most cells.",
             "Their size is in the range of light microscopy’s limits."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "Where is the viral genetic material stored?",
@@ -62,7 +66,8 @@ quizzes = [
         "hints": [
             "It’s a protective structure unique to viruses.",
             "This structure plays a role in protecting the genetic material from external damage."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "What form does viral genetic information usually take?",
@@ -75,7 +80,8 @@ quizzes = [
         "hints": [
             "Viruses are adaptable in the way they carry genetic instructions.",
             "Some viruses require reverse transcription to replicate"
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "What is the role of the external binding proteins on a virus?",
@@ -88,7 +94,8 @@ quizzes = [
         "hints": [
             "These proteins determine a virus’s host specificity.",
             "They are crucial for the initial step of infection."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "Retroviruses, such as HIV, contain what kind of genetic material?",
@@ -101,7 +108,8 @@ quizzes = [
         "hints": [
             "Retroviruses require reverse transcription to replicate.",
             "Their genetic material is often single-stranded."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "How do viruses reproduce?",
@@ -114,7 +122,8 @@ quizzes = [
         "hints": [
             "Viruses cannot replicate independently.",
             "They rely entirely on the cellular processes of their host."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "What is reverse transcriptase used for in retroviruses?",
@@ -127,7 +136,8 @@ quizzes = [
         "hints": [
             "This enzyme works against the usual flow of genetic information.",
             "It’s essential for integrating viral genetic material into the host genome."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "What is the typical size range of bacteria?",
@@ -140,7 +150,8 @@ quizzes = [
         "hints": [
             "Bacteria are larger than viruses but still microscopic.",
             "Their size can be observed under a light microscope"
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What structure is always present in bacterial cells?",
@@ -153,7 +164,8 @@ quizzes = [
         "hints": [
             "It provides structural integrity to the cell.",
             "It allows the cell to withstand osmotic pressure"
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What is the role of ribosomes in bacteria?",
@@ -166,7 +178,8 @@ quizzes = [
         "hints": [
             "Ribosomes are essential for translating genetic instructions.",
             "They are found in both prokaryotic and eukaryotic cells."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What is the function of bacterial pili?",
@@ -179,7 +192,8 @@ quizzes = [
         "hints": [
             "Pili play a role in bacterial communication or DNA exchange.",
             "They are also involved in surface attachment."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "How do bacteria contribute positively to the environment?",
@@ -192,7 +206,8 @@ quizzes = [
         "hints": [
             "Some bacteria live in the soil and form symbiotic relationships with plants.",
             "They help replenish nutrients essential for plant growth."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What process allows bacteria to pass additional DNA between each other?",
@@ -205,7 +220,8 @@ quizzes = [
         "hints": [
             "This process helps bacteria adapt to new challenges.",
             "It often involves the sharing of plasmids."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "Which structure is always present in bacterial cells?",
@@ -218,7 +234,8 @@ quizzes = [
         "hints": [
             "Even though bacteria lack membrane-bound organelles, they still need to make proteins.",
             "This structure is essential for translating genetic information into functional molecules."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What are membrane invaginations in bacteria used for?",
@@ -231,7 +248,8 @@ quizzes = [
         "hints": [
             "Even though bacteria lack membrane-bound organelles, they still need to make proteins.",
             "This structure is essential for translating genetic information into functional molecules."
-        ]
+        ],
+        "category": "Bacteria"
     },
    {
         "question": "What is the function of macrophages in the immune system?",
@@ -244,7 +262,8 @@ quizzes = [
         "hints": [
             "Macrophages are part of the body's early response to infection.",
             "Their name derives from Greek words meaning “big eaters.”"
-        ]
+        ],
+        "category": "Immune System"
     },
    {
         "question": "What forms after a macrophage engulfs a pathogen?",
@@ -257,7 +276,8 @@ quizzes = [
         "hints": [
             "This vesicle encloses the pathogen.",
             "It combines with another organelle to destroy the pathogen."
-        ]
+        ],
+        "category": "Immune System"
     },
    {
         "question": "What is the role of lysosomes in macrophages?",
@@ -270,7 +290,8 @@ quizzes = [
         "hints": [
             "Lysosomes play a key role in the immune response.",
             "They help break down complex molecules."
-        ]
+        ],
+        "category": "Immune System"
     },
    {
         "question": "Which of the following is a first line of defence against pathogens?",
@@ -283,7 +304,8 @@ quizzes = [
         "hints": [
             "This type of cell response to invaders without prior training",
             "They are part of the innate immune system"
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "What does a macrophage recognize on a pathogen's surface?",
@@ -296,7 +318,8 @@ quizzes = [
         "hints": [
             "These molecular markers are unique to pathogens.",
             "They trigger immune responses when detected."
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "What happens when a lysosome merges with a phagosome in a macrophage?",
@@ -309,7 +332,8 @@ quizzes = [
         "hints": [
             "The merging of these two structures forms a specialized vesicle.",
             "This step is essential for breaking down pathogens."
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "What is the primary purpose of phagocytosis?",
@@ -322,7 +346,8 @@ quizzes = [
         "hints": [
             "Phagocytosis is critical to defending the body against infections.",
             "It involves both engulfing and digesting foreign particles."
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "Where does degradation of the pathogen occur in the macrophage?",
@@ -335,7 +360,8 @@ quizzes = [
         "hints": [
             "This occurs in a vesicle that results from a merging process.",
             "The vesicle contains enzymes that degrade the pathogen."
-        ]
+        ],
+        "category": "Immune System"
     },
     {
         "question": "What is a major structural difference between bacteria and viruses?",
@@ -348,7 +374,8 @@ quizzes = [
         "hints": [
             "Viruses rely entirely on host cells for protein synthesis.",
             "Ribosomes are essential for producing proteins."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "How do viruses differ from bacteria in terms of reproduction?",
@@ -361,7 +388,8 @@ quizzes = [
         "hints": [
             "Viruses cannot perform independent replication.",
             "Bacteria do not need host cells to divide."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "Which of these structures is found in bacteria but not viruses?",
@@ -374,7 +402,8 @@ quizzes = [
         "hints": [
             "This structure is essential for maintaining bacterial internal organization.",
             "It surrounds the cytoplasm in bacteria but is absent in viruses."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "Which of the following best describes the size comparison between viruses and bacteria?",
@@ -387,7 +416,8 @@ quizzes = [
         "hints": [
             "Bacteria are typically visible under light microscopes.",
             "Viruses require electron microscopes for visualization."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "Which component is used by viruses to attach to host cells?",
@@ -400,7 +430,8 @@ quizzes = [
         "hints": [
             "These structures are external and bind to host cell receptors.",
             "They are found on the outer surface of viruses, not bacteria."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "What is a defining feature of bacterial genetic material?",
@@ -413,7 +444,8 @@ quizzes = [
         "hints": [
             "Bacteria lack nuclei to contain their genetic material.",
             "Their DNA is compact and often forms a ring."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "What process enables bacteria to rapidly spread antibiotic resistance within populations?",
@@ -426,7 +458,8 @@ quizzes = [
         "hints": [
             "This process spreads antibiotic resistance among bacteria.",
             "It does not involve reproduction."
-        ]
+        ],
+        "category": "Bacteria"
     },
     {
         "question": "Why are viruses not considered living organisms?",
@@ -439,7 +472,8 @@ quizzes = [
         "hints": [
             "Viruses depend entirely on the machinery of host cells.",
             "Life is generally defined by independent metabolism and reproduction."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "How do viruses deliver their genetic material into a host cell?",
@@ -452,7 +486,8 @@ quizzes = [
         "hints": [
             "Not all the components of viruses enter a cell upon infection.",
             "Some viruses use binding proteins to attach to cells and inject their genome."
-        ]
+        ],
+        "category": "Viruses"
     },
     {
         "question": "Why are bacteria essential for ecosystems, unlike viruses?",
@@ -465,7 +500,8 @@ quizzes = [
         "hints": [
             "Think about processes like nitrogen fixation.",
             "Bacteria play a key role in soil and nutrient cycles."
-        ]
+        ],
+        "category": "Comparisons"
     },
     {
         "question": "How do bacteria differ from viruses in causing infections?",
@@ -478,7 +514,64 @@ quizzes = [
         "hints": [
             "Think about which organism can multiply in nutrient-rich environments.",
             "Viruses are obligate parasites, while bacteria are not."
-        ]
+        ],
+        "category": "Comparisons"
+    },
+    {
+        "question": "How do bacteria and viruses differ in terms of their structural complexity?",
+        "options": [
+            {"text": "Bacteria are more structurally complex than viruses.", "is_correct": True},
+            {"text": "Viruses are more structurally complex than bacteria.", "is_correct": False},
+            {"text": "Bacteria and viruses have equal structural complexity.", "is_correct": False},
+            {"text": "Bacteria have fewer components than viruses.", "is_correct": False}
+        ],
+        "hints": [
+            "Bacteria have a full cellular structure, including membranes and organelles.",
+            "Viruses are composed only of a protein shell and genetic material."
+        ],
+        "category": "Comparisons"
+    },
+    {
+        "question": "What is a major difference in how bacteria and viruses interact with host cells?",
+        "options": [
+            {"text": "Bacteria inject their genetic material into host cells, while viruses do not.", "is_correct": False},
+            {"text": "Bacteria reproduce independently, while viruses need a host cell to reproduce.", "is_correct": True},
+            {"text": "Viruses can divide inside the host cell, but bacteria cannot.", "is_correct": False},
+            {"text": "Bacteria form a protective coat, while viruses do not.", "is_correct": False}
+        ],
+        "hints": [
+            "Viruses are obligate parasites and rely completely on host cells for replication.",
+            "Bacteria can divide independently in external environments."
+        ],
+        "category": "Comparisons"
+    },
+    {
+        "question": "Which of these is present in bacteria but not in viruses?",
+        "options": [
+            {"text": "Plasma membrane", "is_correct": True},
+            {"text": "Spike proteins", "is_correct": False},
+            {"text": "Capsid", "is_correct": False},
+            {"text": "RNA", "is_correct": False}
+        ],
+        "hints": [
+            "Bacteria have a membrane that separates their internal environment.",
+            "Viruses lack membranes and rely on a host for replication."
+        ],
+        "category": "Comparisons"
+    },
+    {
+        "question": "Which of the following is a major difference between bacterial and viral infection?",
+        "options": [
+            {"text": "Bacteria can reproduce independently, while viruses need host cells for reproduction.", "is_correct": True},
+            {"text": "Both bacteria and viruses replicate by binary fission.", "is_correct": False},
+            {"text": "Viruses can produce toxins, while bacteria cannot.", "is_correct": False},
+            {"text": "Bacteria cannot infect cells, but viruses can.", "is_correct": False}
+        ],
+        "hints": [
+            "Viruses need a host cell's machinery to replicate.",
+            "Bacteria can multiply outside a host in appropriate environments."
+        ],
+        "category": "Comparisons"
     }
     # Add more quizzes...
 ]
