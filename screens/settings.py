@@ -14,11 +14,16 @@ class SettingsScreen(BaseScreen):
 
         self.title_position = [screen.get_width() // 2, 100]
         self.settings_lines = [
-            "Audio: On/Off",
-            "Screen Mode: Fullscreen/Windowed",
+            "Game Sound:          ",
+            "Screen Mode: ",
         ]
         self.text_positions = []
         self.calculate_text_positions()
+
+        self.audio_on_image = pygame.image.load("assets/icons/audio_on.png")
+        self.audio_off_image = pygame.image.load("assets/icons/audio_off.png")
+        self.audio_on = True
+        self.fullscreen = False  # Default to windowed mode
 
         self.running = True
 
@@ -46,6 +51,17 @@ class SettingsScreen(BaseScreen):
 
                 elif event.type == pygame.VIDEORESIZE:
                     self.reposition_elements(event.w, event.h)
+                
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if self.is_audio_toggle_clicked(mouse_pos):
+                        self.audio_on = not self.audio_on
+                        if self.audio_on:
+                             pygame.mixer.music.unpause()  #Resume music
+                        else:
+                            pygame.mixer.music.pause()
+                    elif self.is_screen_mode_toggle_clicked(mouse_pos):
+                        self.toggle_screen_mode()
 
                 if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
                     mouse_pos = pygame.mouse.get_pos()
@@ -70,8 +86,37 @@ class SettingsScreen(BaseScreen):
             text = self.text_font.render(line, True, (0, 0, 0))
             self.screen.blit(text, text.get_rect(center=(self.text_positions[i][0], self.text_positions[i][1])))
 
+        # Draw audio toggle button
+        audio_image = self.audio_on_image if self.audio_on else self.audio_off_image
+        audio_rect = audio_image.get_rect(center=(self.text_positions[0][0] + 50, self.text_positions[0][1]))
+        self.screen.blit(audio_image, audio_rect)
+
+        # Draw screen mode toggle button
+        screen_mode_text = "Fullscreen" if self.fullscreen else "Windowed"
+        screen_mode_rendered = self.text_font.render(screen_mode_text, True, (0, 0, 255))  # Highlight in blue
+        screen_mode_rect = screen_mode_rendered.get_rect(center=(self.text_positions[1][0] + 120, self.text_positions[1][1]))
+        self.screen.blit(screen_mode_rendered, screen_mode_rect)
+
         if self.sidebar.visible:
             self.sidebar.draw(self.screen, "Settings")
+
+    def toggle_screen_mode(self):
+        self.fullscreen = not self.fullscreen
+        if self.fullscreen:
+            self.screen = pygame.display.set_mode(self.screen.get_size(), pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode(self.screen.get_size(), pygame.RESIZABLE)
+
+    def is_audio_toggle_clicked(self, mouse_pos):
+        audio_image = self.audio_on_image if self.audio_on else self.audio_off_image
+        audio_rect = audio_image.get_rect(center=(self.text_positions[0][0] + 50, self.text_positions[0][1]))
+        return audio_rect.collidepoint(mouse_pos)
+
+    def is_screen_mode_toggle_clicked(self, mouse_pos):
+        screen_mode_text = "Fullscreen" if self.fullscreen else "Windowed"
+        screen_mode_rendered = self.text_font.render(screen_mode_text, True, (0, 0, 255))
+        screen_mode_rect = screen_mode_rendered.get_rect(center=(self.text_positions[1][0] + 120, self.text_positions[1][1]))
+        return screen_mode_rect.collidepoint(mouse_pos)
 
     def handle_sidebar_toggle(self):
         self.calculate_text_positions()

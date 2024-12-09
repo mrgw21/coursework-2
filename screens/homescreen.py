@@ -30,7 +30,7 @@ class HomeScreen:
             "Scoreboard": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 100, 200, 50),
                 "color": self.GRAY,
-                "options": ["Statistics", "Scoreboard"]
+                "options": ["Scoreboard"]#Removed statistics option
             }
         }
 

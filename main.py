@@ -6,7 +6,7 @@ from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
-from screens.statistics import StatisticsScreen
+#from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
 from screens.tutorials.bacteria_screen import BacteriaScreen
@@ -28,7 +28,7 @@ def main():
     manager.register_screen("Introduction", Level1, manager, True, 0)
     manager.register_screen("Level 1", Level1, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
-    manager.register_screen("Statistics", StatisticsScreen, manager)
+    #manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)
     manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
@@ -45,7 +45,7 @@ def main():
         "Introduction": "Introduction",
         "Level 1": "Level 1",
         "Quizzes": "Quizzes",
-        "Statistics": "Statistics",
+        #"Statistics": "Statistics",
         "Scoreboard": "Scoreboard",
         "Settings": "Settings",
         "Controls": "Controls",
@@ -87,7 +87,11 @@ def main():
                                     pygame.quit()
                                     exit()
                                 elif clicked_option in sidebar_options:
+                                    if isinstance(manager.active_screen, Level1):
+                                        manager.active_screen.stop_music()
                                     manager.set_active_screen(sidebar_options[clicked_option])
+                                    if clicked_option == "Level 1" and isinstance(manager.active_screen, Level1):
+                                        manager.active_screen.start_music()
                                     break
                         else:
                             # Pass event to the active screen if no sidebar

@@ -71,8 +71,24 @@ class Level1(BaseScreen):
         # Use `pygame.display` to get screen dimensions
         self.previous_width, self.previous_height = screen.get_width(), screen.get_height()
         
+        #background music
+        self.music_file = "assets/sounds/soundfile.mp3"  # Add the correct path to your sound file
+        self.music_playing = False
+
+    def start_music(self):
+        if not self.music_playing:
+            pygame.mixer.music.load(self.music_file)
+            pygame.mixer.music.set_volume(0.5)  # Adjust volume (0.0 to 1.0)
+            pygame.mixer.music.play(-1)  # Loop indefinitely
+            self.music_playing = True
+
+    def stop_music(self):
+        if self.music_playing:
+            pygame.mixer.music.stop()
+            self.music_playing = False    
 
     def run(self):
+        self.start_music()
         while self.tutorial_phase:
             # Tutorial logic
             self.clock.tick(60)  # Ensure consistent 60 FPS for the tutorial
@@ -108,6 +124,9 @@ class Level1(BaseScreen):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_f:
                         self.toggle_fullscreen()
+                    elif event.key == pygame.K_ESCAPE:
+                        running = False
+                        self.stop_music()
                     elif event.key == pygame.K_m:  # Toggle sidebar
                         self.sidebar.toggle()
                         self.handle_sidebar_toggle()
