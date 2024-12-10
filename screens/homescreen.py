@@ -7,10 +7,9 @@ class HomeScreen:
         self.running = True
 
         # Colors
-        self.BACKGROUND_COLOR = (255, 255, 255)  # Light Gray
+        self.BACKGROUND_COLOR = (255, 255, 255)  # White
         self.PRIMARY_COLOR = (0, 0, 139)  # Dark Blue
         self.SECONDARY_COLOR = (255, 140, 0)  # Dark Orange
-        self.TERTIARY_COLOR = (0, 128, 128)  # Teal
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
 
@@ -18,17 +17,29 @@ class HomeScreen:
         self.font = pygame.font.SysFont("Arial", 36)
         self.title_font = pygame.font.SysFont("Arial", 72, bold=True)
 
-        # Buttons with their corresponding options mapped to registered screens
+        # Load the title image as a JPEG
+        self.title_image = pygame.image.load("assets/images/inside-immune-title.jpg")
+
+        # Buttons with their corresponding target screens
         self.buttons = {
-            "Levels": {
-                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 - 50, 200, 50),
+            "Introduction": {
+                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 50, 200, 50),
                 "color": self.PRIMARY_COLOR,
-                "options": ["Introduction", "Level 1"]
+                "options": ["Introduction"]
             },
-            "Leaderboards": {
-                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 100, 200, 50),
+            "Level 1": {
+                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 150, 200, 50),
+                "color": self.PRIMARY_COLOR,
+                "options": ["Level 1"]
+            },
+            "Quizzes": {
+                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 250, 200, 50),
                 "color": self.SECONDARY_COLOR,
-                "options": ["Statistics", "Leaderboards"]
+                "options": ["Quizzes"]
+            },
+            "Exit Game": {
+                "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 350, 200, 50),
+                "color": (139, 0, 0)  # Dark Red
             }
         }
 
@@ -38,11 +49,17 @@ class HomeScreen:
         screen_width, screen_height = self.screen.get_size()
 
         # Adjust button positions dynamically
-        self.buttons["Levels"]["rect"] = pygame.Rect(
-            screen_width // 2 - 100, screen_height // 3 - 50, 200, 50
+        self.buttons["Introduction"]["rect"] = pygame.Rect(
+            screen_width // 2 - 100, screen_height // 3 + 50, 200, 50
         )
-        self.buttons["Leaderboards"]["rect"] = pygame.Rect(
-            screen_width // 2 - 100, screen_height // 3 + 100, 200, 50
+        self.buttons["Level 1"]["rect"] = pygame.Rect(
+            screen_width // 2 - 100, screen_height // 3 + 150, 200, 50
+        )
+        self.buttons["Quizzes"]["rect"] = pygame.Rect(
+            screen_width // 2 - 100, screen_height // 3 + 250, 200, 50
+        )
+        self.buttons["Exit Game"]["rect"] = pygame.Rect(
+            screen_width // 2 - 100, screen_height // 3 + 350, 200, 50
         )
 
     def draw_button(self, button_text, rect, color):
@@ -58,18 +75,6 @@ class HomeScreen:
         for button_text, button_data in self.buttons.items():
             self.draw_button(button_text, button_data["rect"], button_data["color"])
 
-    def draw_sub_options(self):
-        if self.current_menu:
-            options = self.buttons[self.current_menu]["options"]
-            for i, option in enumerate(options):
-                option_rect = pygame.Rect(self.screen.get_width() // 2 - 150,
-                                          self.screen.get_height() // 3 + 200 + i * 50,
-                                          300, 40)
-                pygame.draw.rect(self.screen, self.TERTIARY_COLOR, option_rect)
-                option_text = self.font.render(option, True, self.WHITE)
-                option_text_rect = option_text.get_rect(center=option_rect.center)
-                self.screen.blit(option_text, option_text_rect)
-
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -78,19 +83,13 @@ class HomeScreen:
             mouse_pos = event.pos
             for button_text, button_data in self.buttons.items():
                 if button_data["rect"].collidepoint(mouse_pos):
-                    if self.current_menu == button_text:
-                        self.current_menu = None
+                    if button_text == "Exit Game":
+                        pygame.quit()
+                        exit()
                     else:
-                        self.current_menu = button_text
-            if self.current_menu:
-                options = self.buttons[self.current_menu]["options"]
-                for i, option in enumerate(options):
-                    option_rect = pygame.Rect(self.screen.get_width() // 2 - 150,
-                                              self.screen.get_height() // 3 + 200 + i * 50,
-                                              300, 40)
-                    if option_rect.collidepoint(mouse_pos):
-                        self.manager.set_active_screen(option)
-                        self.running = False  # Exit the loop and hand over to the next screen
+                        # Directly set the screen based on the options key
+                        self.manager.set_active_screen(button_data["options"][0])
+                        self.running = False
 
     def draw_text(self, text, font, color, x, y):
         text_surface = font.render(text, True, color)
@@ -106,9 +105,14 @@ class HomeScreen:
                 self.handle_event(event)
 
             self.draw_background()
-            self.draw_text("Welcome to Inside Immune!", self.title_font, self.BLACK, self.screen.get_width() // 2, 50)
-            self.draw_text("Choose an option below:", self.font, self.BLACK, self.screen.get_width() // 2, 120)
-            self.draw_main_buttons()
-            self.draw_sub_options()
 
+            # Draw the title image
+            resized_title_image = pygame.transform.scale(
+                self.title_image, (self.screen.get_width() // 1.5, self.screen.get_height() // 1.5)
+            )
+            title_rect = self.title_image.get_rect(center=(self.screen.get_width() // 2, 140))
+            self.screen.blit(self.title_image, title_rect)
+
+            self.draw_main_buttons()
             pygame.display.flip()
+

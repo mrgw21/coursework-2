@@ -1,5 +1,4 @@
 import pygame
-
 from screens.screen_manager import BaseScreen
 from ui.sidebar import Sidebar
 
@@ -7,29 +6,53 @@ class ControlsScreen(BaseScreen):
     def __init__(self, screen, manager):
         super().__init__(screen)
         self.manager = manager
+
+        # Fonts
         self.title_font = pygame.font.SysFont("Arial", 40, bold=True)
         self.text_font = pygame.font.SysFont("Arial", 25)
+
+        # Sidebar setup
         self.sidebar = Sidebar()
         self.sidebar.visible = True
 
-        self.title_position = [screen.get_width() // 2, 100]
+        # Load and scale WASD Image
+        self.image = pygame.image.load("assets/images/WASD.png")
+
+        # Make the WASD image smaller
+        scaled_width = self.screen.get_width() // 4  # Reduce width
+        scaled_height = self.screen.get_height() // 6  # Reduce height
+
+        self.image = pygame.transform.scale(self.image, (scaled_width, scaled_height))
+
+        # Calculate sidebar width
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+
+        # Update WASD image position
+        self.image_rect = self.image.get_rect(
+            center=(self.screen.get_width() // 2 + sidebar_width // 2, self.screen.get_height() // 3)
+        )
+
+
+
         self.control_lines = [
             "Move: W A S D keys",
             "Toggle Sidebar: M",
             "Pause: P",
         ]
+
         self.text_positions = []
         self.calculate_text_positions()
-
         self.running = True
 
     def calculate_text_positions(self):
+        # Adjust positions dynamically
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         center_x = self.screen.get_width() // 2 + (sidebar_width // 2)
 
-        self.title_position[0] = center_x
+        # Place control text below the WASD image
+        image_bottom_y = self.image_rect.bottom
         self.text_positions = [
-            [center_x, 200 + i * 40] for i in range(len(self.control_lines))
+            [center_x, image_bottom_y + 40 + i * 40] for i in range(len(self.control_lines))
         ]
 
     def run(self):
@@ -47,6 +70,7 @@ class ControlsScreen(BaseScreen):
                 elif event.type == pygame.VIDEORESIZE:
                     self.reposition_elements(event.w, event.h)
 
+                # Handle sidebar interactions
                 if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
                     mouse_pos = pygame.mouse.get_pos()
                     option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
@@ -59,49 +83,47 @@ class ControlsScreen(BaseScreen):
             pygame.display.flip()
 
     def draw(self):
-
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         center_x = self.screen.get_width() // 2 + (sidebar_width // 2)
 
         self.screen.fill((255, 255, 255))
-        #title in colour
+
+        # Draw Title Text
         title_text = self.title_font.render("Controls", True, (0, 0, 139))
-        self.screen.blit(title_text, title_text.get_rect(center=(center_x, self.title_position[1])))
+        self.screen.blit(title_text, title_text.get_rect(center=(center_x, 100)))
 
-        #draw the control lines with enhanced visuals
+        # Draw WASD Image
+        self.screen.blit(self.image, self.image_rect)
+
+        # Draw Control Information
         for i, line in enumerate(self.control_lines):
-
             if ":" in line:
                 action, key = line.split(": ", 1)
-                action_text = self.text_font.render(action + ":", True, (255, 140, 0))  # Dark Orange for action
-                key_text = self.text_font.render(key, True, (0, 0, 0))  # Black for key
-                
-                # Position the action and key texts
+                action_text = self.text_font.render(action + ":", True, (255, 140, 0))
+                key_text = self.text_font.render(key, True, (0, 0, 0))
+
+                # Draw the action and key text
                 action_rect = action_text.get_rect(center=(self.text_positions[i][0] - 100, self.text_positions[i][1]))
                 key_rect = key_text.get_rect(center=(self.text_positions[i][0] + 50, self.text_positions[i][1]))
                 
                 self.screen.blit(action_text, action_rect)
                 self.screen.blit(key_text, key_rect)
             else:
-                text = self.text_font.render(line, True, (0, 0, 0))  # Default to Black
+                text = self.text_font.render(line, True, (0, 0, 0))
                 self.screen.blit(text, text.get_rect(center=(self.text_positions[i][0], self.text_positions[i][1])))
 
-        # Draw separators for grouping (optional)
-        pygame.draw.line(self.screen, (0, 128, 128), (50, 180), (self.screen.get_width(), 180), 2)  # Teal line
-        pygame.draw.line(self.screen, (0, 128, 128), (50, 350), (self.screen.get_width(), 350), 2)  # Teal line
-
-        # Draw the sidebar
+        # Draw Sidebar
         if self.sidebar.visible:
             self.sidebar.draw(self.screen, "Controls")
 
     def handle_sidebar_toggle(self):
-        self.calculate_text_positions
-    
+        self.calculate_text_positions()
+
     def get_sidebar_option(self, mouse_pos, options):
-        y_offset = 120  # Adjust to the starting Y position of options
-        spacing = 50  # Space between each option
+        y_offset = 120
+        spacing = 50
         for i, option in enumerate(options):
-            option_rect = pygame.Rect(20, y_offset + i * spacing, 360, 40)  # Match the sidebar dimensions
+            option_rect = pygame.Rect(20, y_offset + i * spacing, 360, 40)
             if option_rect.collidepoint(mouse_pos):
                 return option
         return None
