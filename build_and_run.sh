@@ -41,9 +41,9 @@ fi
 # Zip the executable and required files
 echo "Packaging the game into InsideImmune.zip..."
 if [[ "$OS" == "Darwin" || "$OS" == "Linux" ]]; then
-    zip -r InsideImmune.zip $TEMP_BUILD_DIR/InsideImmune assets/ data/ README.md
+    zip -r InsideImmune-MacOS.zip $TEMP_BUILD_DIR/InsideImmune assets/ data/ README.md
 else
-    zip -r InsideImmune.zip $TEMP_BUILD_DIR/InsideImmune.exe assets/ data/ README.md
+    zip -r InsideImmune-MacOS.zip $TEMP_BUILD_DIR/InsideImmune.exe assets/ data/ README.md
 fi
 
 # Clean up the temporary directory

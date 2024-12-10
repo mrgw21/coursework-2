@@ -28,8 +28,8 @@ if exist "%TEMP_BUILD_DIR%\InsideImmune.exe" (
 )
 
 REM Package the executable and required files into a zip
-echo Packaging the game into InsideImmune.zip...
-powershell -Command "Compress-Archive -Path InsideImmune.exe, assets, data, README.md -DestinationPath InsideImmune.zip"
+echo Packaging the game into InsideImmune-Windows.zip...
+powershell -Command "Compress-Archive -Path InsideImmune.exe, assets, data, README.md -DestinationPath InsideImmune-Windows.zip"
 
 REM Clean up the temporary directory
 echo Cleaning up temporary files...
