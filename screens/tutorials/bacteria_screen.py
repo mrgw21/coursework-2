@@ -116,22 +116,25 @@ class BacteriaScreen(BaseScreen):
                 if not (modal_x <= mouse_pos[0] <= modal_x + modal_width and
                         modal_y <= mouse_pos[1] <= modal_y + modal_height):
                     self.clicked_button_index = None  # Close the modal
+                    self.shimmer_done = False  # Reset shimmer effect
                     return
 
             # Check for star button clicks
             for i, button in enumerate(self.buttons):
-                button_rect = pygame.Rect(button["position"], (40, 40))
+                button_rect = pygame.Rect(button["position"], (50, 50))
                 if button_rect.collidepoint(mouse_pos):
                     if self.clicked_button_index != i:  # New context
-                        self.pulse_start_time = pygame.time.get_ticks()  # Restart pulse timer
-                    self.clicked_button_index = i
-                    button["clicked"] = True
+                        self.clicked_button_index = i  # Set the clicked button index
+                        self.shimmer_done = False  # Reset shimmer
+                        self.shimmer_start_time = pygame.time.get_ticks()  # Initialize shimmer timer
+                    button["clicked"] = True  # Mark the button as clicked
 
-                    # Check if all stars are clicked to show the continue button
+                    # If all buttons are clicked, show the continue button
                     if all(b["clicked"] for b in self.buttons):
                         self.show_continue_button = True
+                    break  # Stop checking once a button is clicked
 
-            # Handle the continue button click
+            # Check if the continue button is clicked
             if self.show_continue_button and self.continue_button_rect.collidepoint(mouse_pos):
                 self.completed = True
                 self.running = False
@@ -140,14 +143,11 @@ class BacteriaScreen(BaseScreen):
             if event.key == pygame.K_RETURN:
                 self.completed = True
                 self.running = False
-            elif event.key == pygame.K_m:
-                self.sidebar.toggle()
-                self.reposition_elements()
         elif event.type == pygame.QUIT:
             pygame.quit()
             exit()
 
-    def draw_modal_with_pulsing_context(self):
+    def draw_modal_with_shimmering_context(self):
         if self.clicked_button_index is None:
             return
 
@@ -160,52 +160,114 @@ class BacteriaScreen(BaseScreen):
 
         # Set modal dimensions
         modal_width = self.image_rect.width
-        base_font_size = 20
-        max_font_size = 24
-        pulse_duration = 1000  # Slower pulse duration
-        total_pulses = 2  # Number of pulses
+        font = pygame.font.SysFont("Arial", 20)
+        wrapped_message = self.wrap_text(message, font, modal_width - 20)
+        text_height = font.size(speaker)[1] + sum(
+            font.size(line)[1] + 5 for line in wrapped_message
+        )
+        modal_height = max(100, text_height + 40)
 
-        # Handle pulsing effect
-        if self.pulse_start_time is not None:
-            elapsed_time = pygame.time.get_ticks() - self.pulse_start_time
-            current_pulse = elapsed_time // pulse_duration
-
-            if current_pulse < total_pulses:
-                pulse_progress = (elapsed_time % pulse_duration) / pulse_duration
-                scale_factor = 1 + 0.2 * math.sin(pulse_progress * math.pi)
-                font_size = min(int(base_font_size * scale_factor), max_font_size)
-                pulsing_font = pygame.font.SysFont("Arial", font_size)
-            else:
-                pulsing_font = pygame.font.SysFont("Arial", base_font_size)
-                self.pulse_start_time = None
-        else:
-            pulsing_font = pygame.font.SysFont("Arial", base_font_size)
-
-        # Wrap the message text to fit within modal width
-        wrapped_message = self.wrap_text(message, pulsing_font, modal_width - 20)
-        text_height = pulsing_font.size(speaker)[1] + sum(
-            pulsing_font.size(line)[1] + 5 for line in wrapped_message
-        )  # Add spacing for lines
-        modal_height = max(100, text_height + 40)  # Ensure a minimum modal height
-
-        # Keep the modal lower on the screen
+        # Position modal on screen
         modal_x = (self.screen.get_width() - modal_width) // 2
-        modal_y = self.screen.get_height() - modal_height - 50  # Original lower position
+        modal_y = self.screen.get_height() - modal_height - 50
 
-        # Draw modal background (white) and border
+        # Draw modal background and border
         pygame.draw.rect(self.screen, (255, 255, 255), (modal_x, modal_y, modal_width, modal_height))
         pygame.draw.rect(self.screen, (0, 0, 0), (modal_x, modal_y, modal_width, modal_height), 3)
 
-        # Render the speaker ("Dr. Tomato:") at the top of the modal
-        speaker_surface = pulsing_font.render(speaker, True, (0, 0, 0))
+        # Render speaker
+        speaker_surface = font.render(speaker, True, (0, 0, 0))
         self.screen.blit(speaker_surface, (modal_x + 10, modal_y + 10))
 
-        # Render the wrapped message text
-        y_offset = modal_y + 20 + pulsing_font.size(speaker)[1]  # Below the speaker
-        for line in wrapped_message:
-            text_surface = pulsing_font.render(line, True, (0, 0, 0))
-            self.screen.blit(text_surface, (modal_x + 10, y_offset))
-            y_offset += pulsing_font.get_height() + 5  # Add line spacing
+        # Shimmering effect variables
+        max_highlight_length = 45  # Characters highlighted at once
+        shimmer_speed = 0.15  # Speed of shimmer
+        total_characters = sum(len(line) for line in wrapped_message)
+
+        # Initialize shimmer tracking
+        if not hasattr(self, "shimmer_start_time") or getattr(self, "clicked_button_index_changed", False):
+            self.shimmer_start_time = pygame.time.get_ticks()
+            self.shimmer_done = False
+            self.clicked_button_index_changed = False
+
+        elapsed_time = pygame.time.get_ticks() - self.shimmer_start_time
+        shimmer_position = int(elapsed_time * shimmer_speed)
+
+        # If shimmer is done, render static modal
+        if shimmer_position >= total_characters + max_highlight_length:
+            self.shimmer_done = True
+
+        if not self.shimmer_done:
+            # Render wrapped context text with shimmer
+            full_text = " ".join(wrapped_message)  # Combine wrapped lines into a single block
+            y_offset = modal_y + 20 + font.size(speaker)[1]
+            shimmer_start = max(0, shimmer_position - max_highlight_length)
+            shimmer_end = shimmer_position
+
+            char_index = 0  # Global character index for shimmer effect
+
+            for line in wrapped_message:
+                modal_x = (self.screen.get_width() - modal_width) // 2  # Reset modal_x for each line
+
+                for char in line:
+                    if not char.strip():  # Skip whitespace
+                        try:
+                            modal_x += font.size(char)[0]
+                        except pygame.error:
+                            modal_x += 5  # Handle width calculation issues gracefully
+                        char_index += 1
+                        continue
+
+                    # Determine color for shimmer effect
+                    if shimmer_start <= char_index < shimmer_end:
+                        color = (255, 140, 0)  # Shimmer color
+                    else:
+                        color = (0, 0, 0)  # Default black text
+
+                    try:
+                        char_surface = font.render(char, True, color)
+                        if char_surface.get_width() > 0:  # Avoid blitting zero-width surfaces
+                            self.screen.blit(char_surface, (modal_x + 10, y_offset))
+                            modal_x += char_surface.get_width()
+                    except pygame.error:
+                        continue
+
+                    char_index += 1  # Increment global character index
+
+                try:
+                    y_offset += font.get_height() + 5
+                except pygame.error:
+                    y_offset += 5
+
+            # Stop shimmering once the entire text block is processed
+            if shimmer_position >= len(full_text) + max_highlight_length:
+                self.shimmer_done = True
+        else:
+            # Render static black text
+            y_offset = modal_y + 20 + font.size(speaker)[1]
+            for line in wrapped_message:
+                modal_x = (self.screen.get_width() - modal_width) // 2  # Reset modal_x for each line
+                for char in line:
+                    if not char.strip():  # Skip whitespace
+                        try:
+                            modal_x += font.size(char)[0]
+                        except pygame.error:
+                            modal_x += 5
+                        continue
+
+                    try:
+                        # Render character in black
+                        char_surface = font.render(char, True, (0, 0, 0))
+                        if char_surface.get_width() > 0:
+                            self.screen.blit(char_surface, (modal_x + 10, y_offset))
+                            modal_x += char_surface.get_width()
+                    except pygame.error:
+                        continue
+
+                try:
+                    y_offset += font.get_height() + 5
+                except pygame.error:
+                    y_offset += 5
 
     def draw(self):
         self.screen.fill((252, 232, 240))
@@ -234,7 +296,7 @@ class BacteriaScreen(BaseScreen):
             self.screen.blit(self.continue_button_image, self.continue_button_rect)
 
         # Draw the modal with pulsing context
-        self.draw_modal_with_pulsing_context()
+        self.draw_modal_with_shimmering_context()
 
         # Draw the Oracle
         self.oracle.draw(self.screen)
