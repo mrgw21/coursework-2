@@ -213,9 +213,6 @@ class Level2(BaseScreen):
                 if self.remaining_time <= 0:
                     self.game_over = True
                     self.paused = True
-                
-                if elapsed_time >= 5000:
-                    self.oracle.display_message("Click me for help!", self.screen)
 
             if not self.paused and not self.game_over:
                 # Dynamically calculate the center of the screen

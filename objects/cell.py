@@ -84,20 +84,15 @@ class Cell:
             self.draw_modal(screen, sidebar_width, level)
 
     def draw_modal(self, screen, sidebar_width, level):
-        screen_width = screen.get_width()
+        # Define modal dimensions
+        modal_width = 500
+        modal_height = 700
 
-        # Determine modal dimensions based on screen size
-        if screen_width > 1200:  # Fullscreen mode
-            modal_width = 500
-            modal_height = 700
-        else:
-            modal_width = 300
-            modal_height = 500
-
-        # Calculate modal position dynamically, respecting the sidebar
-        game_width = screen_width - sidebar_width
-        modal_x = sidebar_width + (game_width - modal_width) // 2 - 350
-        modal_y = (screen.get_height() - modal_height) // 2
+        # Position the modal to the left, always to the right of the sidebar
+        screen_height = screen.get_height()
+        padding = 20  # Add some padding between the modal and the sidebar
+        modal_x = sidebar_width + padding
+        modal_y = (screen_height - modal_height) // 2  # Vertically center the modal
 
         # Draw modal background and border
         pygame.draw.rect(screen, (220, 220, 220), (modal_x, modal_y, modal_width, modal_height))
@@ -115,10 +110,10 @@ class Cell:
         # Draw the button background (same as modal color)
         pygame.draw.rect(screen, (220, 220, 220), (close_button_x, close_button_y, close_button_width, close_button_height))
         # Draw button border in red
-        pygame.draw.rect(screen, (255, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
+        pygame.draw.rect(screen, (204, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
 
         # Render the button text in red
-        close_button_text = font.render("X (ESC)", True, (255, 0, 0))
+        close_button_text = font.render("X (ESC)", True, (204, 0, 0))
         text_rect = close_button_text.get_rect(
             center=(close_button_x + close_button_width // 2, close_button_y + close_button_height // 2)
         )
@@ -129,7 +124,7 @@ class Cell:
         mouse_pressed = pygame.mouse.get_pressed()
 
         if (close_button_x <= mouse_pos[0] <= close_button_x + close_button_width and
-            close_button_y <= mouse_pos[1] <= close_button_y + close_button_height):
+                close_button_y <= mouse_pos[1] <= close_button_y + close_button_height):
             if mouse_pressed[0]:  # Left mouse button pressed
                 self.reset_quiz_state()
                 self.show_modal = False  # Close the modal
@@ -146,18 +141,11 @@ class Cell:
         screen.blit(font.render(cell_number_text, True, (0, 0, 0)), (modal_x + 10, content_start_y))
         screen.blit(font.render(health_text, True, (0, 0, 0)), (modal_x + 10, content_start_y + 30))
 
-        # Draw cell information with text wrapping
-        self.draw_wrapped_text(screen, info_text, font, modal_x + 10, content_start_y + 60, modal_width - 20)
-
         # Draw cell image
-        if self.health == "dead":
-            cell_image = pygame.image.load(self.resource_path("assets/images/final/dead_cell.png"))
-            cell_image = pygame.transform.scale(cell_image, (300, 300))
-            screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
-        else:
-            cell_image = pygame.image.load(self.resource_path("assets/images/final/infected_cell.png"))
-            cell_image = pygame.transform.scale(cell_image, (300, 300))
-            screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
+        cell_image_path = "assets/images/final/dead_cell.png" if self.health == "dead" else "assets/images/final/infected_cell.png"
+        cell_image = pygame.image.load(self.resource_path(cell_image_path))
+        cell_image = pygame.transform.scale(cell_image, (300, 300))
+        screen.blit(cell_image, (modal_x + (modal_width // 2) - 150, content_start_y))
 
         # Draw quiz if applicable
         if self.quiz:
@@ -165,16 +153,31 @@ class Cell:
 
         # Draw feedback (including hints)
         if hasattr(self, "quiz_feedback") and self.quiz_feedback:
+            # Create white box for feedback
+            feedback_box_width = modal_width - 20
+            feedback_box_height = 100
+            feedback_box_x = modal_x + 10
+            feedback_box_y = modal_y + modal_height - 150
+
+            pygame.draw.rect(screen, (255, 255, 255), (feedback_box_x, feedback_box_y, feedback_box_width, feedback_box_height))
+            pygame.draw.rect(screen, (0, 0, 0), (feedback_box_x, feedback_box_y, feedback_box_width, feedback_box_height), 2)
+
+            # Add "Dr. Tomato:" at the top of the hint box
+            speaker_text = "Dr. Tomato:"
+            speaker_surface = font.render(speaker_text, True, (0, 0, 0))
+            screen.blit(speaker_surface, (feedback_box_x + 10, feedback_box_y + 10))
+
+            # Render the hint text inside the box
             feedback_text = self.quiz_feedback["message"]
             feedback_color = self.quiz_feedback["color"]
 
-            # Adjust feedback position below the quiz or image
-            feedback_start_y = modal_y + modal_height - 150  # Reserve space near the bottom
-            feedback_lines = self.wrap_text(feedback_text, font, modal_width - 20)
+            # Wrap and draw feedback text
+            feedback_lines = self.wrap_text(feedback_text, font, feedback_box_width - 20)
+            current_y = feedback_box_y + 40  # Start below "Dr. Tomato:"
             for line in feedback_lines:
                 rendered_line = font.render(line, True, feedback_color)
-                screen.blit(rendered_line, (modal_x + 10, feedback_start_y))
-                feedback_start_y += 25  # Line spacing
+                screen.blit(rendered_line, (feedback_box_x + 10, current_y))
+                current_y += 25  # Line spacing
     
     def draw_quiz(self, screen, modal_x, modal_y, start_y, modal_width):
         font = pygame.font.SysFont('Arial', 18)
@@ -188,12 +191,15 @@ class Cell:
         for line in question_text:
             rendered_text = font.render(line, True, (0, 0, 0))
             screen.blit(rendered_text, (modal_x + 10, current_y))
-            current_y += 25  # Line spacing
+            current_y += 25  # Line spacing for wrapped lines
 
-        # Options (radio buttons with text)
+        # Add spacing between the question and the first option
+        current_y += 20
+
         new_option_coords = []  # Temporary list to store new coordinates
         for i, option in enumerate(quiz["options"]):
-            option_y = current_y + 20 + i * 40  # Adjust spacing between options
+            # Vertical position for this option's radio button
+            option_y = current_y  # Align the radio button with the first line of option text
 
             # Determine the color based on selection
             if hasattr(self, "selected_option") and self.selected_option == option:
@@ -201,27 +207,33 @@ class Cell:
                     circle_color = (0, 128, 128)  # Green for correct
                     text_color = (0, 128, 128)
                 else:
-                    circle_color = (255, 0, 0)  # Red for incorrect
-                    text_color = (255, 0, 0)
+                    circle_color = (204, 0, 0)  # Red for incorrect
+                    text_color = (204, 0, 0)
             else:
                 circle_color = (220, 220, 220)  # Modal background color (default filling)
                 text_color = (0, 0, 0)
 
-            # Draw filled circle for radio button
-            circle_x = modal_x + 20  # Left margin for radio button
-            pygame.draw.circle(screen, circle_color, (circle_x, option_y), 10, 0)  # Filled circle
-            pygame.draw.circle(screen, (0, 0, 0), (circle_x, option_y), 10, 1)  # Outline circle
+            # Draw filled circle for the radio button
+            circle_x = modal_x + 20  # Left margin for the radio button
+            pygame.draw.circle(screen, circle_color, (circle_x, option_y + 10), 10, 0)  # Filled circle
+            pygame.draw.circle(screen, (0, 0, 0), (circle_x, option_y + 10), 10, 1)  # Outline circle
 
-            # Render option text
-            rendered_text = font.render(option["text"], True, text_color)
-            screen.blit(rendered_text, (circle_x + 20, option_y - 10))  # Adjust text placement
+            # Wrap and render the option text
+            wrapped_text = self.wrap_text(option["text"], font, modal_width - 60)  # Account for left margin
+            text_x = circle_x + 20  # Offset the text to the right of the radio button
+            for line in wrapped_text:
+                rendered_text = font.render(line, True, text_color)
+                screen.blit(rendered_text, (text_x, current_y))
+                current_y += 25  # Line spacing for wrapped lines
 
-            # Add this option to the clickable areas list
-            new_option_coords.append({"circle": (circle_x, option_y), "radius": 10, "option": option})
+            # Update the Y-position for the next option
+            current_y += 10  # Add extra spacing between options
 
-        # Update `option_coords` only if there's a change
-        if not hasattr(self, "option_coords") or self.option_coords != new_option_coords:
-            self.option_coords = new_option_coords
+            # Store the clickable area for this option
+            new_option_coords.append({"circle": (circle_x, option_y + 10), "radius": 10, "option": option})
+
+        # Update `option_coords` to reflect new positions
+        self.option_coords = new_option_coords
 
     def wrap_text(self, text, font, max_width):
         words = text.split(' ')
@@ -316,7 +328,7 @@ class Cell:
         if hasattr(self, "quiz_locked") and self.quiz_locked:
             self.quiz_feedback = {
                 "message": "The quiz is locked. No further attempts allowed.",
-                "color": (128, 0, 0),
+                "color": (204, 0, 0),
             }
             self.feedback_timer = current_time
             return
@@ -341,13 +353,13 @@ class Cell:
             if self.hint_index < len(hints):
                 # Display the next hint
                 hint_message = hints[self.hint_index]
-                self.quiz_feedback = {"message": f"Hint: {hint_message}", "color": (255, 0, 0)}
+                self.quiz_feedback = {"message": f"{hint_message}", "color": (204, 0, 0)}
                 self.hint_index += 1
             else:
                 # No more hints available
                 self.quiz_feedback = {
                     "message": "Incorrect! No more hints are available.",
-                    "color": (255, 0, 0),
+                    "color": (204, 0, 0),
                 }
                 self.feedback_timer = current_time
 
@@ -358,7 +370,7 @@ class Cell:
         if self.failed_attempts >= 3:
             self.quiz_feedback = {
                 "message": "You have used all 3 attempts. No more hints, and try to save the cell again.",
-                "color": (128, 0, 0),
+                "color": (204, 0, 0),
             }
             self.quiz_locked = True
             self.feedback_timer = current_time
