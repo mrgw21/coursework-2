@@ -19,6 +19,8 @@ class BacteriaScreen(BaseScreen):
         self.title_font = pygame.font.SysFont("Arial", 36, bold=True)
         self.oracle = Oracle(self.sidebar_width)
 
+        self.oracle.display_message("Click on the stars!", self.screen)
+
         # Load the tutorial-specific image
         self.original_image = pygame.image.load("assets/tutorials/bacteria.png")
         self.image = self.original_image
@@ -209,11 +211,11 @@ class BacteriaScreen(BaseScreen):
         self.screen.fill((252, 232, 240))
 
         # Draw the title
-        title_text = self.title_font.render("Bacteria Information", True, (0, 0, 0))
+        title_text = self.title_font.render("Bacteria Information", True, (0, 0, 139))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2, 50))
         self.screen.blit(title_text, title_rect)
 
-        guide_text = self.font.render("Click on the stars!", True, (0, 0, 0))
+        guide_text = self.font.render("Click on the stars!", True, (0, 0, 139))
         guide_rect = guide_text.get_rect(center=(self.screen.get_width() // 2, 100))
         self.screen.blit(guide_text, guide_rect)
 
@@ -236,6 +238,7 @@ class BacteriaScreen(BaseScreen):
 
         # Draw the Oracle
         self.oracle.draw(self.screen)
+        self.oracle.draw_message(self.screen)
 
         # Draw the sidebar if visible
         if self.sidebar.visible:
