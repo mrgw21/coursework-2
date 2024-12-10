@@ -28,11 +28,11 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Make build_and_run.sh executable
-        run: chmod +x build_and_run.sh
+      - name: Make build_and_package.sh executable
+        run: chmod +x build_and_package.sh
 
       - name: Build and Package for macOS/Linux
-        run: ./build_and_run.sh
+        run: ./build_and_package.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -59,8 +59,9 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Run Windows build_and_run.bat
-        run: build_and_run.bat
+      - name: Run Windows build_and_package.bat
+        run: |
+          call build_and_package.bat
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
