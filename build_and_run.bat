@@ -35,5 +35,5 @@ REM Clean up the temporary directory
 echo Cleaning up temporary files...
 rmdir /s /q %TEMP_BUILD_DIR%
 
-echo Packaging complete. InsideImmune.zip is ready for distribution!
+echo Packaging complete. InsideImmune-Windows.zip is ready for distribution!
 pause
