@@ -3,9 +3,9 @@ from screens.screen_manager import BaseScreen
 from ui.sidebar import Sidebar 
 
 class Intro1(BaseScreen):
-    def __init__(self, screen, pdf_images, manager):
+    def __init__(self, screen, manager): #pdf_images, 
         super().__init__(screen)  # Initialize BaseScreen
-        self.pdf_images = pdf_images
+        #self.pdf_images = pdf_images
         self.current_page = 0
         self.running = True
         self.manager = manager
@@ -56,7 +56,7 @@ class Intro1(BaseScreen):
                     height_ratio = event.h / self.previous_height
                     self.update_positions(width_ratio, height_ratio)
 
-                if event.type == pygame.KEYDOWN:
+                '''if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
                         if self.current_page < len(self.pdf_images) - 1:
                             self.current_page += 1
@@ -69,7 +69,7 @@ class Intro1(BaseScreen):
                     
                     if event.key == pygame.K_m:
                         if self.sidebar:
-                            self.sidebar.toggle()
+                            self.sidebar.toggle()'''
 
                 # Pass individual events to the sidebar handler
                 if self.sidebar and self.sidebar.visible and self.sidebar.handle_event(event):
@@ -126,18 +126,18 @@ class Intro1(BaseScreen):
         screen_height = self.screen.get_height()
         sidebar_width = self.sidebar.width if self.sidebar and self.sidebar.visible else 0
 
-        # Scale the current image to fit the available screen space
+        '''# Scale the current image to fit the available screen space
         scaled_image = pygame.transform.scale(
             self.pdf_images[self.current_page],
             (screen_width - sidebar_width, screen_height)
         )
-        self.screen.blit(scaled_image, (sidebar_width, 0))
+        self.screen.blit(scaled_image, (sidebar_width, 0))'''
 
         # Set the y-position for the guidance text and icons
         text_y_position = screen_height - 20  # Adjust this value for spacing from the bottom
         center_x = (screen_width + sidebar_width) // 2  # Center horizontally, accounting for sidebar
 
-        # Draw guidance arrows and text based on the current page
+        '''# Draw guidance arrows and text based on the current page
         if self.current_page == len(self.pdf_images) - 1:  # Last page
             self.draw_text_with_two_texts_and_icons(
                 "Press",
@@ -169,7 +169,7 @@ class Intro1(BaseScreen):
                 center_x,
                 text_y_position,
                 spacing=10
-            )
+            )'''
 
         if self.sidebar and self.sidebar.visible:
             self.sidebar.draw(self.screen, "Introduction")

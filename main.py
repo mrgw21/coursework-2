@@ -20,7 +20,7 @@ def main():
     screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
     pygame.display.set_caption("Inside Immune")
 
-    pdf_images = load_pdf_images("assets/introduction-materials/")
+    #pdf_images = load_pdf_images("assets/introduction-materials/")
 
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
@@ -125,13 +125,13 @@ def get_sidebar_option(mouse_pos, options_mapping):
     return None  # Return None if no option was clicked
 
 
-def load_pdf_images(folder):
+'''def load_pdf_images(folder):
     images = []
     for filename in sorted(os.listdir(folder)):
         if filename.endswith(".jpg"):
             image = pygame.image.load(os.path.join(folder, filename)).convert()
             images.append(image)
-    return images
+    return images'''
 
 
 if __name__ == "__main__":
