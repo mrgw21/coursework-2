@@ -1,5 +1,7 @@
 import pygame
 import math
+import os
+import sys
 from ui.sidebar import Sidebar
 from screens.screen_manager import BaseScreen
 from objects.oracle import Oracle
@@ -22,16 +24,16 @@ class VirusScreen(BaseScreen):
         self.oracle.display_message("Click on the stars!", self.screen)
 
         # Load the tutorial-specific image
-        self.original_image = pygame.image.load("assets/tutorials/virus.png")
+        self.original_image = pygame.image.load(self.resource_path("assets/tutorials/virus.png"))
 
         # Load and scale the star icons
-        self.original_star_image = pygame.image.load("assets/icons/star.png")
-        self.grey_star_image = pygame.image.load("assets/icons/grey_star.png")
+        self.original_star_image = pygame.image.load(self.resource_path("assets/icons/star.png"))
+        self.grey_star_image = pygame.image.load(self.resource_path("assets/icons/grey_star.png"))
         self.star_image = pygame.transform.scale(self.original_star_image, (50, 50))
         self.grey_star_image = pygame.transform.scale(self.grey_star_image, (50, 50))
 
         # Load and set up the continue button
-        self.continue_button_image = pygame.image.load("assets/icons/continue.png")
+        self.continue_button_image = pygame.image.load(self.resource_path("assets/icons/continue.png"))
         self.continue_button_image = pygame.transform.scale(self.continue_button_image, (100, 50))
         self.continue_button_rect = self.continue_button_image.get_rect(
             topright=(self.screen.get_width() - 20, 20)
@@ -341,3 +343,11 @@ class VirusScreen(BaseScreen):
             self.draw()
             self.manager.draw_active_screen()
             pygame.display.flip()
+
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

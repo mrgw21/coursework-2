@@ -1,9 +1,11 @@
+import os
+import sys
 import pygame
 
 class Macrophage:
     
     def __init__(self, screen_width, screen_height, sidebar_width=400):
-        self.image = pygame.image.load("assets/images/final/macrophage.png")
+        self.image = pygame.image.load(self.resource_path("assets/images/final/macrophage.png"))
         img = self.image
         self.image = pygame.transform.scale(img, (img.get_width() * 0.2, img.get_height() * 0.2))
         self.speed = 5
@@ -48,4 +50,12 @@ class Macrophage:
         # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
     def get_collision_rect(self):
-        return self.rect.inflate(0, 0) 
+        return self.rect.inflate(0, 0)
+    
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

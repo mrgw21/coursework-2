@@ -1,9 +1,11 @@
+import os
+import sys
 import pygame
 import random
 
 class Cell:
     def __init__(self, position, center_pos=(0, 0)):
-        self.image = pygame.image.load("assets/images/final/uninfected_cell.png")
+        self.image = pygame.image.load(self.resource_path("assets/images/final/uninfected_cell.png"))
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.rect = self.image.get_rect()
         self.position = position
@@ -70,7 +72,7 @@ class Cell:
     def die(self):
         self.state = False
         self.health = "infected"
-        self.image = pygame.image.load("assets/images/final/infected_cell.png")
+        self.image = pygame.image.load(self.resource_path("assets/images/final/infected_cell.png"))
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = pygame.time.get_ticks()
     
@@ -149,11 +151,11 @@ class Cell:
 
         # Draw cell image
         if self.health == "dead":
-            cell_image = pygame.image.load("assets/images/final/dead_cell.png")
+            cell_image = pygame.image.load(self.resource_path("assets/images/final/dead_cell.png"))
             cell_image = pygame.transform.scale(cell_image, (300, 300))
             screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
         else:
-            cell_image = pygame.image.load("assets/images/final/infected_cell.png")
+            cell_image = pygame.image.load(self.resource_path("assets/images/final/infected_cell.png"))
             cell_image = pygame.transform.scale(cell_image, (300, 300))
             screen.blit(cell_image, (modal_x + (modal_width // 2) - 140, content_start_y + 30))
 
@@ -389,7 +391,7 @@ class Cell:
     def stop_infection(self):
         self.state = False  # Ensure the cell is marked as no longer infectious
         self.health = "dead"  # Update health status
-        self.image = pygame.image.load("assets/images/final/dead_cell.png")
+        self.image = pygame.image.load(self.resource_path("assets/images/final/dead_cell.png"))
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = None  # Disable infection spread
 
@@ -407,3 +409,11 @@ class Cell:
         self.show_modal = False
         self.failed_attempts = 0
         self.quiz_locked = False
+    
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

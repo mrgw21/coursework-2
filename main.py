@@ -18,18 +18,17 @@ from screens.tutorials.bacteria_screen import BacteriaScreen
 from screens.tutorials.macrophage_screen import MacrophageScreen
 from screens.tutorials.virus_screen import VirusScreen
 import os
+import sys
 
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
-    icon = pygame.image.load("assets/images/insideimmuneicon2.png").convert_alpha()
+    icon = pygame.image.load(resource_path("assets/images/insideimmuneicon2.png")).convert_alpha()
     icon = pygame.transform.smoothscale(icon, (64, 64))
     icon = round_corners(icon, 10)
     pygame.display.set_icon(icon)
     pygame.display.set_caption("Inside Immune")
-
-    pdf_images = load_pdf_images("assets/introduction-materials/")
 
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
@@ -166,6 +165,14 @@ def round_corners(surface, radius):
     rounded_surface.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # Apply the rounded corners mask
     return rounded_surface
 
+def resource_path(relative_path):
+    try:
+        # If running as a PyInstaller bundle, use _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Otherwise, use the current directory
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 if __name__ == "__main__":
     main()

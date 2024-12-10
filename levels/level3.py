@@ -1,6 +1,8 @@
 import pygame
 import random
 import platform
+import os
+import sys
 from datetime import datetime
 from objects.cell import Cell
 from objects.macrophage import Macrophage
@@ -26,7 +28,7 @@ class Level3(BaseScreen):
         self.sidebar = Sidebar()
         self.sidebar.visible = True
 
-        self.body_image = pygame.image.load('assets/images/final/body.png')
+        self.body_image = pygame.image.load(self.resource_path('assets/images/final/body.png'))
         screen_width, screen_height = pygame.display.Info().current_w, pygame.display.Info().current_h
         self.macrophage = Macrophage(screen_width, screen_height, sidebar_width=self.sidebar_width)
         self.colliding_pathogens = {}
@@ -805,7 +807,7 @@ class Level3(BaseScreen):
         for cell in self.cells:
             cell.state = True
             cell.health = "uninfected"
-            cell.image = pygame.image.load("assets/images/final/uninfected_cell.png")
+            cell.image = pygame.image.load(self.resource_path("assets/images/final/uninfected_cell.png"))
             cell.image = pygame.transform.scale(cell.image, (cell.image.get_width() // 20, cell.image.get_height() // 20))
             cell.infection_timer = 0  # Reset infection timer
 
@@ -916,7 +918,7 @@ class Level3(BaseScreen):
         if not self.tutorial_phase:
             self.timer.draw(self.screen, self.remaining_time, self.paused)
             button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
-            pause_button = pygame.image.load(button_icon)
+            pause_button = pygame.image.load(self.resource_path((button_icon)))
             pause_button = pygame.transform.scale(pause_button, (40, 40))
             button_position = (self.screen.get_width() - 60, 22)
             self.screen.blit(pause_button, button_position)

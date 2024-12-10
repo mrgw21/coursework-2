@@ -109,3 +109,5 @@ dmypy.json
 # assets/
 
 data/leaderboards/*
+
+temp_build/
