@@ -1,5 +1,7 @@
 import pygame
 import math
+import os
+import sys
 
 class Pathogen:
     def __init__(self, x, y, type, screen_width=None, screen_height=None):
@@ -14,11 +16,11 @@ class Pathogen:
         self.attack_timer = 0  # For delayed attacks
 
         if self.type == "bacteria":
-            self.original_image = pygame.image.load("assets/images/final/bacteria.png")
+            self.original_image = pygame.image.load(self.resource_path("assets/images/final/bacteria.png"))
             self.original_image = pygame.transform.scale(self.original_image, (80, 80))
             self.collision_shrink = -35  # Collision box shrink for bacteria
         else:
-            self.original_image = pygame.image.load("assets/images/final/virus.png")
+            self.original_image = pygame.image.load(self.resource_path("assets/images/final/virus.png"))
             self.original_image = pygame.transform.scale(self.original_image, (180, 180))
             self.collision_shrink = -140  # Collision box shrink for virus
 
@@ -119,3 +121,11 @@ class Pathogen:
         # Inflate the base rect dynamically to create the collision rect
         collision_rect = base_rect.inflate(self.collision_shrink, self.collision_shrink)
         return collision_rect
+    
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

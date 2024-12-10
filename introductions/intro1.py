@@ -1,6 +1,8 @@
 import pygame
+import os
+import sys
 from screens.screen_manager import BaseScreen
-from ui.sidebar import Sidebar 
+from ui.sidebar import Sidebar
 
 class Intro1(BaseScreen):
     def __init__(self, screen, manager): #pdf_images, 
@@ -20,19 +22,19 @@ class Intro1(BaseScreen):
 
         # Load and resize icons (15x smaller)
         self.left_arrow = pygame.transform.scale(
-            pygame.image.load("assets/icons/arrow-left.png"), 
-            (pygame.image.load("assets/icons/arrow-left.png").get_width() // 15, 
-            pygame.image.load("assets/icons/arrow-left.png").get_height() // 15)
+            pygame.image.load(self.resource_path("assets/icons/arrow-left.png")), 
+            (pygame.image.load(self.resource_path("assets/icons/arrow-left.png")).get_width() // 15, 
+            pygame.image.load(self.resource_path("assets/icons/arrow-left.png")).get_height() // 15)
         )
         self.right_arrow = pygame.transform.scale(
-            pygame.image.load("assets/icons/arrow-right.png"), 
-            (pygame.image.load("assets/icons/arrow-right.png").get_width() // 15, 
-            pygame.image.load("assets/icons/arrow-right.png").get_height() // 15)
+            pygame.image.load(self.resource_path("assets/icons/arrow-right.png")), 
+            (pygame.image.load(self.resource_path("assets/icons/arrow-right.png")).get_width() // 15, 
+            pygame.image.load(self.resource_path("assets/icons/arrow-right.png")).get_height() // 15)
         )
         self.enter_icon = pygame.transform.scale(
-            pygame.image.load("assets/icons/computer.png"), 
-            (pygame.image.load("assets/icons/computer.png").get_width() // 15, 
-            pygame.image.load("assets/icons/computer.png").get_height() // 15)
+            pygame.image.load(self.resource_path("assets/icons/computer.png")), 
+            (pygame.image.load(self.resource_path("assets/icons/computer.png")).get_width() // 15, 
+            pygame.image.load(self.resource_path("assets/icons/computer.png")).get_height() // 15)
         )
 
         # Placeholder sidebar for compatibility
@@ -281,6 +283,14 @@ class Intro1(BaseScreen):
         # Handle transition
         if next_screen == "game":
             Intro1.run_game_screen()
+    
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 
     @staticmethod
     def run_game_screen():

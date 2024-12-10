@@ -4,7 +4,7 @@ class Sidebar:
     def __init__(self):
         self.width = 400
         #Removed statistics option
-        self.options = ["Home", "Introduction", "Level 1", "Quizzes", "Scoreboard", "Settings", "Controls", "About", "Exit Game"]
+        self.options = ["Home", "Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Leaderboards", "Settings", "Controls", "About", "Exit Game"]
         self.visible = True
         self.title_font = pygame.font.SysFont("Arial", 40, bold=True)
         self.menu_font = pygame.font.SysFont("Arial", 25, bold=True)
@@ -15,7 +15,7 @@ class Sidebar:
             return
 
         # Background
-        pygame.draw.rect(screen, (0, 153, 153), (0, 0, self.width, screen.get_height()))
+        pygame.draw.rect(screen, (0, 128, 128), (0, 0, self.width, screen.get_height()))
 
         # Title
         title = self.title_font.render("Inside Immune", True, (255, 255, 255))
@@ -30,10 +30,10 @@ class Sidebar:
         for i, option in enumerate(self.options):
             if option == clicked_option:
                 font = self.menu_font  # Use bold font for clicked option
-                color = (255, 215, 0)  # Golden yellow for clicked option
+                color = (255, 140, 0)  # Golden yellow for clicked option
             elif option == current_screen:
                 font = self.menu_font  # Bold the current screen
-                color = (0, 0, 0)  # Black for current screen
+                color = (255, 140, 0)  # Black for current screen
             else:
                 font = self.font  # Regular font for others
                 color = (255, 255, 255)  # White for others

@@ -1,11 +1,13 @@
 import pygame
+import os
+import sys
 
 class Oracle:
     def __init__(self, sidebar_width):
         # Load Oracle images
-        self.image_default = pygame.image.load("assets/images/dr_tomato.png")  # Default image
-        self.image_hover = pygame.image.load("assets/images/dr_tomato.png")  # Hover image
-        self.image_click = pygame.image.load("assets/images/dr_tomato.png")  # Click image
+        self.image_default = pygame.image.load(self.resource_path("assets/images/dr_tomato.png"))  # Default image
+        self.image_hover = pygame.image.load(self.resource_path("assets/images/dr_tomato.png"))  # Hover image
+        self.image_click = pygame.image.load(self.resource_path("assets/images/dr_tomato.png"))  # Click image
         self.image = pygame.transform.scale(self.image_default, (250, 200))  # Adjusted size
         self.rect = self.image.get_rect()
 
@@ -140,3 +142,11 @@ class Oracle:
 
             # Draw the message text
             screen.blit(self.message_surface, self.message_rect)
+    
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

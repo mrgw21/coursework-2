@@ -14,7 +14,7 @@ from objects.oracle import Oracle
 from screens.screen_manager import BaseScreen
 from data.leaderboard_manager import LeaderboardManager
 
-class Level2(BaseScreen):
+class Level3(BaseScreen):
     def __init__(self, screen, manager, tutorial_phase, tutorial_step):
         super().__init__(screen)  # Initialize BaseScreen
         self.manager = manager    # Add this line
@@ -68,7 +68,7 @@ class Level2(BaseScreen):
         self.remaining_time = self.win_time // 1000
 
         self.points = 0  # Add points tracking
-        self.leaderboard = LeaderboardManager(filepath="data/leaderboards/level2_leaderboard.json")
+        self.leaderboard = LeaderboardManager(filepath="data/leaderboards/level3_leaderboard.json")
 
         self.game_over = False
         self.win = True
@@ -191,7 +191,7 @@ class Level2(BaseScreen):
             # Check if the game is over
             if not self.paused and self.game_over:
                 if self.win:
-                    self.leaderboard.update_leaderboard("Level2", self.points)
+                    self.leaderboard.update_leaderboard("Level3", self.points)
                 self.check_game_over()
 
             # Timer handling
@@ -249,8 +249,9 @@ class Level2(BaseScreen):
                     if cell.show_modal:
                         cell.show_modal = False
                 if self.win:
-                    self.leaderboard.update_leaderboard("Level2", self.points)
+                    self.leaderboard.update_leaderboard("Level3", self.points)
                 self.show_game_over_screen()
+                continue
 
             # Update the screen
             pygame.display.flip()
@@ -578,7 +579,7 @@ class Level2(BaseScreen):
                     if collision_duration >= 1000:  # 1 second delay
                         if enemy in self.enemies:
                             self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
-                            self.add_points(100)   # Remove pathogen after 1 second of collision
+                            self.add_points(100)
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                         if self.tutorial_phase:
                             self.tutorial_step += 1
@@ -629,7 +630,7 @@ class Level2(BaseScreen):
         if self.game_over:
             self.paused = True
             if self.win:
-                self.leaderboard.update_leaderboard("Level2", self.points)
+                self.leaderboard.update_leaderboard("Level3", self.points)
 
     def show_game_over_screen(self):
         sidebar_width = self.sidebar.width if self.sidebar.visible else 25
@@ -681,7 +682,7 @@ class Level2(BaseScreen):
 
         # Display top 3 scores
         font_small = pygame.font.SysFont('Arial', 24)
-        leaderboard = self.leaderboard.get_leaderboard("Level2") or []
+        leaderboard = self.leaderboard.get_leaderboard("Level3") or []
 
         # Fill with placeholder entries if less than 3
         while len(leaderboard) < 3:
@@ -690,7 +691,7 @@ class Level2(BaseScreen):
         top_scores = leaderboard[:3]  # Get the top 3 scores
 
         current_y += 50  # Add some space below "Your Score"
-        title_text = "Level 2 - Top 3 Scores:"
+        title_text = "Level 3 - Top 3 Scores:"
         title_rendered = font_small.render(title_text, True, (0, 0, 0))
         margin_left = modal_x + modal_width // 3 - 50  # Start near the center but slightly to the left
         self.screen.blit(title_rendered, (margin_left, current_y))
@@ -766,7 +767,7 @@ class Level2(BaseScreen):
                                 return
                             elif button["action"] == "Leaderboards":
                                 self.running = False
-                                self.manager.set_active_screen("Leaderboard Level 2")
+                                self.manager.set_active_screen("Leaderboard Level 3")
                                 return
                             elif button["action"] == "Restart":
                                 self.reset_game()
@@ -878,7 +879,7 @@ class Level2(BaseScreen):
         if self.tutorial_phase:
             self.sidebar.draw(self.screen, "Introduction")
         else:
-            self.sidebar.draw(self.screen, "Level 2")
+            self.sidebar.draw(self.screen, "Level 3")
 
         # Adjust body image placement
         img = self.body_image
@@ -914,7 +915,7 @@ class Level2(BaseScreen):
         if not self.tutorial_phase:
             self.timer.draw(self.screen, self.remaining_time, self.paused)
             button_icon = "assets/icons/pause.png" if not self.paused else "assets/icons/play.png"
-            pause_button = pygame.image.load(self.resource_path(button_icon))
+            pause_button = pygame.image.load(self.resource_path((button_icon)))
             pause_button = pygame.transform.scale(pause_button, (40, 40))
             button_position = (self.screen.get_width() - 60, 22)
             self.screen.blit(pause_button, button_position)
@@ -926,11 +927,3 @@ class Level2(BaseScreen):
 
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)
-    
-    @staticmethod
-    def resource_path(relative_path):
-        try:
-            base_path = sys._MEIPASS
-        except AttributeError:
-            base_path = os.path.abspath(".")
-        return os.path.join(base_path, relative_path)

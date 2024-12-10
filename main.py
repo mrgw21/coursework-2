@@ -2,6 +2,8 @@ import pygame
 from screens.screen_manager import ScreenManager
 from introductions.intro1 import Intro1
 from levels.level1 import Level1
+from levels.level2 import Level2
+from levels.level3 import Level3
 from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
@@ -9,26 +11,37 @@ from screens.quizzes import QuizzesScreen
 #from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
+from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
+from screens.leaderboards.leaderboard_level2 import LeaderboardLevel2
+from screens.leaderboards.leaderboard_level3 import LeaderboardLevel3
 from screens.tutorials.bacteria_screen import BacteriaScreen
 from screens.tutorials.macrophage_screen import MacrophageScreen
 from screens.tutorials.virus_screen import VirusScreen
 import os
+import sys
 
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((0, 0), pygame.RESIZABLE)
+    icon = pygame.image.load(resource_path("assets/images/insideimmuneicon2.png")).convert_alpha()
+    icon = pygame.transform.smoothscale(icon, (64, 64))
+    icon = round_corners(icon, 10)
+    pygame.display.set_icon(icon)
     pygame.display.set_caption("Inside Immune")
-
-    #pdf_images = load_pdf_images("assets/introduction-materials/")
 
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
     manager.register_screen("Home", HomeScreen, manager)
     manager.register_screen("Introduction", Level1, manager, True, 0)
     manager.register_screen("Level 1", Level1, manager, False, 7)
+    manager.register_screen("Level 2", Level2, manager, False, 7)
+    manager.register_screen("Level 3", Level3, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
     #manager.register_screen("Statistics", StatisticsScreen, manager)
+    manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
+    manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
+    manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
     manager.register_screen("Scoreboard", ScoreboardScreen, manager)
     manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
@@ -44,9 +57,11 @@ def main():
         "Home": "Home",
         "Introduction": "Introduction",
         "Level 1": "Level 1",
+        "Level 2": "Level 2",
+        "Level 3": "Level 3",
         "Quizzes": "Quizzes",
         #"Statistics": "Statistics",
-        "Scoreboard": "Scoreboard",
+        "Leaderboards": "Leaderboards",
         "Settings": "Settings",
         "Controls": "Controls",
         "About": "About",
@@ -133,6 +148,35 @@ def get_sidebar_option(mouse_pos, options_mapping):
             images.append(image)
     return images'''
 
+def round_corners(surface, radius):
+    size = surface.get_size()
+    width, height = size
+
+    # Ensure the radius is not too large
+    if radius is None:
+        radius = min(width, height) // 8  # Default: Slight rounding
+
+    mask = pygame.Surface(size, pygame.SRCALPHA)
+    rect = pygame.Rect(0, 0, *size)
+
+    # Draw rounded rectangle on the mask
+    pygame.draw.rect(mask, (0, 0, 0, 0), rect)  # Clear
+    pygame.draw.rect(mask, (255, 255, 255, 255), rect.inflate(-radius, -radius), border_radius=radius)
+
+    # Create a new surface for the rounded icon
+    rounded_surface = pygame.Surface(size, pygame.SRCALPHA)
+    rounded_surface.blit(surface, (0, 0))  # Blit the original image
+    rounded_surface.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)  # Apply the rounded corners mask
+    return rounded_surface
+
+def resource_path(relative_path):
+    try:
+        # If running as a PyInstaller bundle, use _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Otherwise, use the current directory
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 if __name__ == "__main__":
     main()
