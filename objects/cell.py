@@ -80,7 +80,7 @@ class Cell:
         screen.blit(self.image, (image_x, image_y))
 
         # Optionally draw the collision rect for debugging
-        pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
+        # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
         # If the modal is active, draw it
         if self.show_modal:
