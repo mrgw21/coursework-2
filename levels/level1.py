@@ -96,6 +96,7 @@ class Level1(BaseScreen):
                 for enemy in self.enemies:
                     if enemy.move_towards_target(self.cells):
                         self.counter += 1
+            self.handle_feedback_closure()
             self.draw()  # Draw the updated state for the tutorial
             pygame.display.flip()  # Update the screen
                 
@@ -507,16 +508,86 @@ class Level1(BaseScreen):
                 self.tutorial_pathogens[0].speed = 0
 
         elif self.tutorial_step == 5 and not self.enemies:
-            # Tutorial is over
-            self.tutorial_phase = False
-            self.tutorial_completed = True  # Mark tutorial as completed
-            self.oracle.display_message("Tutorial completed! Protect the cells!", self.screen)
+            self.oracle.display_message("Watch out!", self.screen)
+            x, y = self.generate_spawn_location()
+            virus = Pathogen(x, y, "virus")
+            virus.speed = 1.5
+            self.enemies.append(virus)
+            self.tutorial_virus = virus  # Keep track of this virus
+            self.tutorial_step += 1
 
-            # Reset game timer
-            if self.tutorial_completed:
-                self.start_time = pygame.time.get_ticks()  # Reset start time
-                self.total_paused_time = 0  # Reset paused time
-                self.tutorial_completed = False  # Ensure this logic runs only once
+        elif self.tutorial_step == 6:
+            # Initialize the timing variables
+            current_time = pygame.time.get_ticks()
+            if not hasattr(self, "tutorial_6_start_time"):
+                self.tutorial_6_start_time = current_time
+                self.oracle_message_index = 0
+                self.oracle_messages = [
+                    "If a pathogen infects a cell...",
+                    "We must kill the infected cell.",
+                    "Or the cell will spread its infection.",
+                    "Click on an infected cell!"
+                ]
+
+            # Determine the elapsed time
+            elapsed_time = current_time - self.tutorial_6_start_time
+            message_duration = 2000  # Display each message for 2 seconds
+            total_duration = len(self.oracle_messages) * message_duration
+
+            # Display the current Oracle message based on elapsed time
+            if elapsed_time < total_duration:
+                # Determine which message to display
+                self.oracle_message_index = elapsed_time // message_duration
+                self.oracle.display_message(self.oracle_messages[self.oracle_message_index], self.screen)
+            else:
+                # End of the timed sequence, proceed to the next tutorial step
+                self.tutorial_step += 1
+                del self.tutorial_6_start_time  # Cleanup timing variables
+                del self.oracle_message_index
+                del self.oracle_messages
+
+        elif self.tutorial_step == 7:
+            # Initialize timing variables for this step
+            current_time = pygame.time.get_ticks()
+            if not hasattr(self, "tutorial_7_start_time"):
+                self.tutorial_7_start_time = current_time
+                self.oracle_message_index = 0
+                self.oracle_messages = [
+                    "Answer correctly to kill the infected cell!",
+                    "If you answer wrongly, you will get penalized!",
+                    "You have 3 attempts!",
+                ]
+                self.modal_opened = False  # Track whether the modal has been opened
+
+            # Determine the elapsed time
+            elapsed_time = current_time - self.tutorial_7_start_time
+            message_duration = 1500  # Display each message for 1.5 seconds
+            total_duration = len(self.oracle_messages) * message_duration
+
+            # Display Oracle messages based on elapsed time
+            if elapsed_time < total_duration:
+                # Determine which message to display
+                self.oracle_message_index = elapsed_time // message_duration
+                self.oracle.display_message(self.oracle_messages[self.oracle_message_index], self.screen)
+
+            # Allow the player to interact with infected cells immediately
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+
+                    # Check if the player clicked on an infected cell
+                    for cell in self.cells:
+                        if cell.rect.collidepoint(mouse_pos) and cell.health == "infected":
+                            # Open the modal for the clicked cell
+                            cell.show_modal = True
+                            self.paused = True  # Pause the game while modal is open
+                            self.modal_opened = True  # Prevent re-triggering modal logic
+                            break
+
+                    # If a modal is already open, handle option selection
+                    for cell in self.cells:
+                        if cell.show_modal:
+                            cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
 
     def handle_tutorial_clicks(self):
         for event in pygame.event.get():
@@ -875,18 +946,66 @@ class Level1(BaseScreen):
         self.paused = False
 
     def handle_feedback_closure(self):
-        current_time = pygame.time.get_ticks()  # Get the current time
+        current_time = pygame.time.get_ticks()
+
+        # Handle feedback closure for all cells
         for cell in self.cells:
             if cell.show_modal and hasattr(cell, "feedback_timer") and cell.feedback_timer:
-                if current_time - cell.feedback_timer > 1200:
-                    cell.show_modal = False  # Close modal
-                    cell.feedback_timer = None  # Reset the timer
+                elapsed_time = current_time - cell.feedback_timer
+
+                # Close modal after 1.2 seconds
+                if elapsed_time > 1200:
+                    cell.show_modal = False
+                    cell.reset_quiz_state()
+
                     # Update paused state
                     if self.pause_start is not None:
-                        self.total_paused_time += pygame.time.get_ticks() - self.pause_start
+                        self.total_paused_time += current_time - self.pause_start
                         self.pause_start = None
-                    self.paused = False  # Unpause the game
-    
+                    self.paused = False
+
+        # Check if all cells are saved and handle the tutorial completion sequence
+        if self.tutorial_phase and self.tutorial_step == 7:
+            if all(c.health != "infected" for c in self.cells):  # All cells are saved
+                # Start the congratulatory sequence if not already started
+                if not hasattr(self, "tutorial_7_congrats_start"):
+                    self.tutorial_7_congrats_start = current_time  # Start timing
+                    self.congrats_step = 0  # Track the step in the message sequence
+
+                # Determine elapsed time since the sequence started
+                time_since_congrats_start = current_time - self.tutorial_7_congrats_start
+
+                # Display the messages in sequence
+                if self.congrats_step == 0 and time_since_congrats_start >= 0:
+                    self.oracle.display_message("Congratulations, you have saved all the cells!", self.screen)
+                    self.congrats_step += 1
+                elif self.congrats_step == 1 and time_since_congrats_start >= 1500:
+                    self.oracle.display_message("Tutorial completed!", self.screen)
+                    self.congrats_step += 1
+                elif self.congrats_step == 2 and time_since_congrats_start >= 3000:
+                    self.oracle.display_message("Protect the cells!", self.screen)
+                    self.congrats_step += 1
+                elif self.congrats_step == 3 and time_since_congrats_start >= 4500:
+                    # Reset the tutorial and prepare gameplay
+                    for c in self.cells:
+                        c.state = True
+                        c.health = "uninfected"
+                        c.image = pygame.image.load(self.resource_path("assets/images/final/uninfected_cell.png"))
+                        c.image = pygame.transform.scale(c.image, (c.image.get_width() // 20, c.image.get_height() // 20))
+                        c.infection_timer = None
+
+                    # Reset gameplay timer
+                    self.start_time = pygame.time.get_ticks()  # Reset start time
+                    self.total_paused_time = 0  # Reset paused duration
+                    self.remaining_time = 90  # Reset remaining time to 90 seconds
+
+                    self.tutorial_phase = False
+                    self.tutorial_completed = True
+
+                    # Clean up tutorial-specific variables
+                    del self.tutorial_7_congrats_start
+                    del self.congrats_step
+        
     def get_sidebar_option(self, mouse_pos, options_mapping):
         x, y = mouse_pos
         sidebar_width = 400  # Ensure this matches your actual sidebar width

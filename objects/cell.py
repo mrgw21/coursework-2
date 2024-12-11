@@ -376,6 +376,24 @@ class Cell:
                 neighbor.die()
                 level.add_points(-10)
 
+    def infect_neighbors_tutorial(self):
+        if not self.neighbors:
+            return  # Skip if the cell has no neighbors
+
+        # Filter uninfected neighbors
+        uninfected_neighbors = [neighbor for neighbor in self.neighbors if neighbor.health == "uninfected"]
+
+        # Ensure exactly 2 infections or as many as possible if fewer than 2 neighbors are uninfected
+        if len(uninfected_neighbors) >= 2:
+            neighbors_to_infect = random.sample(uninfected_neighbors, 2)
+        else:
+            neighbors_to_infect = uninfected_neighbors  # Infect all available uninfected neighbors
+
+        # Spread infection to the selected neighbors
+        for neighbor in neighbors_to_infect:
+            neighbor.die()  # Infect the neighbor
+
+
     def update_infection(self, level):
         if self.health != "infected" or self.infection_timer is None:  # Check if infection spread is stopped
             return
