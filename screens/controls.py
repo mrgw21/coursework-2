@@ -1,4 +1,6 @@
 import pygame
+import os
+import sys
 from screens.screen_manager import BaseScreen
 from ui.sidebar import Sidebar
 
@@ -16,7 +18,7 @@ class ControlsScreen(BaseScreen):
         self.sidebar.visible = True
 
         # Load and scale WASD Image
-        self.image = pygame.image.load("assets/images/WASD.png")
+        self.image = pygame.image.load(self.resource_path("assets/images/WASD.png"))
 
         # Make the WASD image smaller
         scaled_width = self.screen.get_width() // 4  # Reduce width
@@ -74,6 +76,8 @@ class ControlsScreen(BaseScreen):
                     option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
                     if option_clicked:
                         self.running = False
+                        if option_clicked == "Introduction":
+                            option_clicked = "Preliminary"
                         self.manager.set_active_screen(option_clicked)
                         return
 
@@ -135,3 +139,11 @@ class ControlsScreen(BaseScreen):
             if option_rect.collidepoint(mouse_pos):
                 return option
         return None
+
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)

@@ -1,4 +1,6 @@
+import os
 import pygame
+import sys
 
 class HomeScreen:
     def __init__(self, screen, manager):
@@ -18,14 +20,14 @@ class HomeScreen:
         self.title_font = pygame.font.SysFont("Arial", 72, bold=True)
 
         # Load the title image as a JPEG
-        self.title_image = pygame.image.load("assets/images/inside-immune-title.jpg")
+        self.title_image = pygame.image.load(self.resource_path("assets/images/inside-immune-title.jpg"))
 
         # Buttons with their corresponding target screens
         self.buttons = {
             "Introduction": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 50, 200, 50),
                 "color": self.PRIMARY_COLOR,
-                "options": ["Introduction"]
+                "options": ["Preliminary"]
             },
             "Level 1": {
                 "rect": pygame.Rect(screen.get_width() // 2 - 100, screen.get_height() // 3 + 150, 200, 50),
@@ -115,4 +117,12 @@ class HomeScreen:
 
             self.draw_main_buttons()
             pygame.display.flip()
+        
+    @staticmethod
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
 

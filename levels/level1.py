@@ -1,4 +1,5 @@
 import pygame
+import math
 import random
 import platform
 import os
@@ -148,6 +149,8 @@ class Level1(BaseScreen):
                         option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
+                            if option_clicked == "Introduction":
+                                option_clicked = "Preliminary"
                             self.manager.set_active_screen(option_clicked)
                             return  # Exit after handling sidebar click
 
@@ -410,6 +413,28 @@ class Level1(BaseScreen):
                 # Virus
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "virus"))
             self.spawn_timer = pygame.time.get_ticks()
+    
+    def macrophage_pulsing(self, screen):
+        # Get the current elapsed time in milliseconds
+        elapsed_time = pygame.time.get_ticks()
+
+        # Use a sine wave for smooth pulsing, scaled between 0.9x and 1.1x
+        scale_factor = 1 + 0.1 * math.sin((elapsed_time / 500) * math.pi)  # Faster pulsing (500ms for a full cycle)
+
+        # Scale the macrophage image dynamically
+        scaled_width = int(self.macrophage.image.get_width() * scale_factor)
+        scaled_height = int(self.macrophage.image.get_height() * scale_factor)
+
+        pulsing_macrophage = pygame.transform.scale(
+            self.macrophage.image, 
+            (scaled_width, scaled_height)
+        )
+
+        # Center the scaled image on the macrophage's original position
+        pulsing_rect = pulsing_macrophage.get_rect(center=self.macrophage.rect.center)
+
+        # Draw the pulsing macrophage
+        screen.blit(pulsing_macrophage, pulsing_rect)
 
     def spawn_tutorial_pathogens(self):
         current_time = pygame.time.get_ticks()
@@ -545,6 +570,8 @@ class Level1(BaseScreen):
                     if option_clicked:
                         self.running = False
                         self.tutorial_phase = False
+                        if option_clicked == "Introduction":
+                            option_clicked = "Preliminary"
                         self.manager.set_active_screen(option_clicked)
                         return
 
@@ -764,6 +791,8 @@ class Level1(BaseScreen):
                         option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
+                            if option_clicked == "Introduction":
+                                option_clicked = "Preliminary"
                             self.manager.set_active_screen(option_clicked)
                             return  # Exit after handling sidebar click
 
@@ -913,6 +942,9 @@ class Level1(BaseScreen):
 
         # Draw macrophage (in front of pathogens)
         self.macrophage.draw(self.screen)
+
+        if self.tutorial_step == 0:
+            self.macrophage_pulsing(self.screen)
 
         # Draw timer and pause/play button
         if not self.tutorial_phase:

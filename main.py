@@ -9,7 +9,7 @@ from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
 from screens.settings import SettingsScreen
-from screens.scoreboard import ScoreboardScreen
+from screens.preliminary import PreliminaryScreen
 from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
 from screens.leaderboards.leaderboard_level2 import LeaderboardLevel2
 from screens.leaderboards.leaderboard_level3 import LeaderboardLevel3
@@ -32,6 +32,7 @@ def main():
     # Create ScreenManager and register all screens
     manager = ScreenManager(screen)
     manager.register_screen("Home", HomeScreen, manager)
+    manager.register_screen("Preliminary", PreliminaryScreen, manager)
     manager.register_screen("Introduction", Level1, manager, True, 0)
     manager.register_screen("Level 1", Level1, manager, False, 7)
     manager.register_screen("Level 2", Level2, manager, False, 7)
@@ -40,7 +41,6 @@ def main():
     manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
     manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
     manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
-    manager.register_screen("Scoreboard", ScoreboardScreen, manager)
     manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
     manager.register_screen("About", AboutScreen, manager)
@@ -53,7 +53,7 @@ def main():
 
     sidebar_options = {
         "Home": "Home",
-        "Introduction": "Introduction",
+        "Introduction": "Preliminary",
         "Level 1": "Level 1",
         "Level 2": "Level 2",
         "Level 3": "Level 3",

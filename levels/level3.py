@@ -151,6 +151,8 @@ class Level3(BaseScreen):
                         option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
+                            if option_clicked == "Introduction":
+                                option_clicked = "Preliminary"
                             self.manager.set_active_screen(option_clicked)
                             return  # Exit after handling sidebar click
 
@@ -539,6 +541,8 @@ class Level3(BaseScreen):
                     if option_clicked:
                         self.running = False
                         self.tutorial_phase = False
+                        if option_clicked == "Introduction":
+                            option_clicked = "Preliminary"
                         self.manager.set_active_screen(option_clicked)
                         return
 
@@ -756,6 +760,8 @@ class Level3(BaseScreen):
                         option_clicked = self.sidebar.handle_event(event)
                         if option_clicked:
                             self.running = False
+                            if option_clicked == "Introduction":
+                                option_clicked = "Preliminary"
                             self.manager.set_active_screen(option_clicked)
                             return  # Exit after handling sidebar click
 

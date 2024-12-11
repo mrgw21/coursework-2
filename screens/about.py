@@ -58,6 +58,8 @@ class AboutScreen(BaseScreen):
                     option_clicked = self.get_sidebar_option(mouse_pos, self.sidebar.options)
                     if option_clicked:
                         self.running = False
+                        if option_clicked == "Introduction":
+                            option_clicked = "Preliminary"
                         self.manager.set_active_screen(option_clicked)
                         return
 

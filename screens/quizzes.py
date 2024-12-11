@@ -170,6 +170,8 @@ class QuizzesScreen(BaseScreen):
                     # Handle sidebar option clicks
                     option_clicked = self.sidebar.handle_event(event)
                     if option_clicked:
+                        if option_clicked == "Introduction":
+                            option_clicked = "Preliminary"
                         self.manager.set_active_screen(option_clicked)
                         return  # Exit after handling sidebar click
 
