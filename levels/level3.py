@@ -882,7 +882,7 @@ class Level3(BaseScreen):
         center_y = self.screen.get_height() // 2
 
         # Fill the screen background
-        self.screen.fill((252, 232, 240))
+        self.screen.fill((255, 255, 255))
 
         if self.tutorial_phase:
             self.sidebar.draw(self.screen, "Introduction")

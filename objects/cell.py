@@ -339,7 +339,7 @@ class Cell:
             else:
                 level.add_points(110)
             self.show_modal = True
-            self.quiz_locked = True
+            self.quiz_locked = True  # Lock only after a correct answer
         else:
             # Wrong answer: Increment attempts
             self.failed_attempts += 1
@@ -349,14 +349,15 @@ class Cell:
                 self.quiz_feedback = {"message": f"{hint_message}", "color": (204, 0, 0)}
                 self.hint_index += 1
             else:
-                # No more hints, lock after 3 attempts
-                self.quiz_feedback = {
-                    "message": "You have used all 3 attempts. No more hints.",
-                    "color": (204, 0, 0),
-                }
-                self.quiz_locked = True
-                self.show_modal = True
-                self.feedback_timer = current_time  # Start feedback timer
+                # Lock only after 3 failed attempts
+                if self.failed_attempts >= 3:
+                    self.quiz_feedback = {
+                        "message": "You have used all 3 attempts. No more hints.",
+                        "color": (204, 0, 0),
+                    }
+                    self.quiz_locked = True
+                    self.show_modal = True
+                    self.feedback_timer = current_time  # Start feedback timer
             level.add_points(-10)
 
         # Ensure the modal remains open during feedback

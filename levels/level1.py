@@ -174,7 +174,7 @@ class Level1(BaseScreen):
                             if cell.show_modal:
                                 cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
                                 break  # Stop further processing for this click
-                        continue  # Skip further processing for this click
+                        continue  # Allow subsequent clicks on infected cells
 
                     # Allow Oracle interaction when not paused
                     if not self.paused:
@@ -184,11 +184,14 @@ class Level1(BaseScreen):
                     for cell in self.cells:
                         if cell.rect.collidepoint(mouse_pos):
                             # Open the modal only for infected cells
-                            if not self.paused:
-                                if cell.health == "infected":
-                                    cell.show_modal = True
-                                    self.paused = True  # Pause the game when a modal is active
+                            if not self.paused and cell.health == "infected":
+                                cell.show_modal = True
+                                self.paused = True  # Pause the game when a modal is active
                             break
+
+                    # Ensure unpausing when no modals are active
+                    if not any(cell.show_modal for cell in self.cells):
+                        self.paused = False
 
             # Check if the game is over
             if not self.paused and self.game_over:
@@ -557,37 +560,39 @@ class Level1(BaseScreen):
                     "If you answer wrongly, you will get penalized!",
                     "You have 3 attempts!",
                 ]
-                self.modal_opened = False  # Track whether the modal has been opened
 
-            # Determine the elapsed time
+            # Determine elapsed time for Oracle messages
             elapsed_time = current_time - self.tutorial_7_start_time
             message_duration = 1500  # Display each message for 1.5 seconds
             total_duration = len(self.oracle_messages) * message_duration
 
-            # Display Oracle messages based on elapsed time
             if elapsed_time < total_duration:
-                # Determine which message to display
+                # Display the current Oracle message based on elapsed time
                 self.oracle_message_index = elapsed_time // message_duration
                 self.oracle.display_message(self.oracle_messages[self.oracle_message_index], self.screen)
 
-            # Allow the player to interact with infected cells immediately
+            # Handle infected cell interactions
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
 
                     # Check if the player clicked on an infected cell
                     for cell in self.cells:
+                        # Allow interaction only if the cell is infected
                         if cell.rect.collidepoint(mouse_pos) and cell.health == "infected":
-                            # Open the modal for the clicked cell
-                            cell.show_modal = True
-                            self.paused = True  # Pause the game while modal is open
-                            self.modal_opened = True  # Prevent re-triggering modal logic
-                            break
+                            if not self.paused:
+                                cell.show_modal = True
+                                self.paused = True  # Pause the game while modal is open
+                                break  # Exit after opening the modal
 
-                    # If a modal is already open, handle option selection
+                    # Handle quiz interactions for open modals
                     for cell in self.cells:
                         if cell.show_modal:
                             cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+
+            # Ensure the game resumes if all modals are closed
+            if not any(cell.show_modal for cell in self.cells):
+                self.paused = False
 
     def handle_tutorial_clicks(self):
         for event in pygame.event.get():
@@ -1031,7 +1036,7 @@ class Level1(BaseScreen):
         center_y = self.screen.get_height() // 2
 
         # Fill the screen background
-        self.screen.fill((252, 232, 240))
+        self.screen.fill((255, 255, 255))
 
         if self.tutorial_phase:
             self.sidebar.draw(self.screen, "Introduction")

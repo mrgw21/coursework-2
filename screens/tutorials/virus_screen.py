@@ -289,7 +289,7 @@ class VirusScreen(BaseScreen):
                     y_offset += 5
 
     def draw(self):
-        self.screen.fill((252, 232, 240))
+        self.screen.fill((255, 255, 255))
 
         # Draw the title
         title_text = self.title_font.render("Virus Information", True, (0, 0, 139))
