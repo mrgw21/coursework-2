@@ -998,6 +998,7 @@ class Level1(BaseScreen):
                     self.start_time = pygame.time.get_ticks()  # Reset start time
                     self.total_paused_time = 0  # Reset paused duration
                     self.remaining_time = 90  # Reset remaining time to 90 seconds
+                    self.points = 0
 
                     self.tutorial_phase = False
                     self.tutorial_completed = True
