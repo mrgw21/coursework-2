@@ -1,4 +1,6 @@
 import pygame
+import os
+import sys
 from screens.screen_manager import ScreenManager
 from introductions.intro1 import Intro1
 from levels.level1 import Level1
@@ -8,7 +10,6 @@ from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
-#from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
 from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
@@ -17,8 +18,6 @@ from screens.leaderboards.leaderboard_level3 import LeaderboardLevel3
 from screens.tutorials.bacteria_screen import BacteriaScreen
 from screens.tutorials.macrophage_screen import MacrophageScreen
 from screens.tutorials.virus_screen import VirusScreen
-import os
-import sys
 
 
 def main():
@@ -38,7 +37,6 @@ def main():
     manager.register_screen("Level 2", Level2, manager, False, 7)
     manager.register_screen("Level 3", Level3, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
-    #manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
     manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
     manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
@@ -60,7 +58,6 @@ def main():
         "Level 2": "Level 2",
         "Level 3": "Level 3",
         "Quizzes": "Quizzes",
-        #"Statistics": "Statistics",
         "Leaderboards": "Leaderboards",
         "Settings": "Settings",
         "Controls": "Controls",
@@ -102,11 +99,7 @@ def main():
                                     pygame.quit()
                                     exit()
                                 elif clicked_option in sidebar_options:
-                                    if isinstance(manager.active_screen, Level1):
-                                        manager.active_screen.stop_music()
                                     manager.set_active_screen(sidebar_options[clicked_option])
-                                    if clicked_option == "Level 1" and isinstance(manager.active_screen, Level1):
-                                        manager.active_screen.start_music()
                                     break
                         else:
                             # Pass event to the active screen if no sidebar
@@ -138,15 +131,6 @@ def get_sidebar_option(mouse_pos, options_mapping):
             if option_rect.collidepoint(x, y):  # Check if the mouse is within this option's rectangle
                 return screen_name
     return None  # Return None if no option was clicked
-
-
-'''def load_pdf_images(folder):
-    images = []
-    for filename in sorted(os.listdir(folder)):
-        if filename.endswith(".jpg"):
-            image = pygame.image.load(os.path.join(folder, filename)).convert()
-            images.append(image)
-    return images'''
 
 def round_corners(surface, radius):
     size = surface.get_size()
