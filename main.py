@@ -10,8 +10,6 @@ from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
-from screens.settings import SettingsScreen
-from screens.scoreboard import ScoreboardScreen
 from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
 from screens.leaderboards.leaderboard_level2 import LeaderboardLevel2
 from screens.leaderboards.leaderboard_level3 import LeaderboardLevel3
@@ -40,8 +38,6 @@ def main():
     manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
     manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
     manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
-    manager.register_screen("Scoreboard", ScoreboardScreen, manager)
-    manager.register_screen("Settings", SettingsScreen, manager)
     manager.register_screen("Controls", ControlsScreen, manager)
     manager.register_screen("About", AboutScreen, manager)
     manager.register_screen("bacteria_tutorial", BacteriaScreen, manager)

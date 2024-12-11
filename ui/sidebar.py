@@ -4,7 +4,7 @@ class Sidebar:
     def __init__(self):
         self.width = 400
         #Removed statistics option
-        self.options = ["Home", "Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Leaderboards", "Settings", "Controls", "About", "Exit Game"]
+        self.options = ["Home", "Introduction", "Level 1", "Level 2", "Level 3", "Quizzes", "Leaderboards", "Controls", "About", "Exit Game"]
         self.visible = True
         self.title_font = pygame.font.SysFont("Arial", 40, bold=True)
         self.menu_font = pygame.font.SysFont("Arial", 25, bold=True)
