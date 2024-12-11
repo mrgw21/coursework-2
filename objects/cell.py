@@ -80,7 +80,7 @@ class Cell:
         screen.blit(self.image, (image_x, image_y))
 
         # Optionally draw the collision rect for debugging
-        # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
+        pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
         # If the modal is active, draw it
         if self.show_modal:
@@ -334,7 +334,10 @@ class Cell:
             }
             self.stop_infection_and_neighbors()  # Stops infection spread.
             self.feedback_timer = current_time  # Start feedback timer.
-            level.add_points(110)
+            if level.points == 0:
+                level.add_points(100)
+            else:
+                level.add_points(110)
             self.show_modal = True
             self.quiz_locked = True
         else:
