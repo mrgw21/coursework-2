@@ -21,18 +21,11 @@ class ControlsScreen(BaseScreen):
         # Make the WASD image smaller
         scaled_width = self.screen.get_width() // 4  # Reduce width
         scaled_height = self.screen.get_height() // 6  # Reduce height
-
         self.image = pygame.transform.scale(self.image, (scaled_width, scaled_height))
 
-        # Calculate sidebar width
-        sidebar_width = self.sidebar.width if self.sidebar.visible else 0
-
-        # Update WASD image position
-        self.image_rect = self.image.get_rect(
-            center=(self.screen.get_width() // 2 + sidebar_width // 2, self.screen.get_height() // 3)
-        )
-
-
+        # Initialize WASD image position
+        self.image_rect = self.image.get_rect()
+        self.update_image_position()
 
         self.control_lines = [
             "Move: W A S D keys",
@@ -44,8 +37,13 @@ class ControlsScreen(BaseScreen):
         self.calculate_text_positions()
         self.running = True
 
+    def update_image_position(self):
+        sidebar_width = self.sidebar.width if self.sidebar.visible else 0
+        self.image_rect = self.image.get_rect(
+            center=(self.screen.get_width() // 2 + sidebar_width // 2, self.screen.get_height() // 3)
+        )
+
     def calculate_text_positions(self):
-        # Adjust positions dynamically
         sidebar_width = self.sidebar.width if self.sidebar.visible else 0
         center_x = self.screen.get_width() // 2 + (sidebar_width // 2)
 
@@ -92,6 +90,10 @@ class ControlsScreen(BaseScreen):
         title_text = self.title_font.render("Controls", True, (0, 0, 139))
         self.screen.blit(title_text, title_text.get_rect(center=(center_x, 100)))
 
+        line_start = (sidebar_width + 20, 150)
+        line_end = (self.screen.get_width() - 20, 150)
+        pygame.draw.line(self.screen, (255, 140, 0), line_start, line_end, 5)
+
         # Draw WASD Image
         self.screen.blit(self.image, self.image_rect)
 
@@ -117,6 +119,12 @@ class ControlsScreen(BaseScreen):
             self.sidebar.draw(self.screen, "Controls")
 
     def handle_sidebar_toggle(self):
+        self.update_image_position()
+        self.calculate_text_positions()
+
+    def reposition_elements(self, width, height):
+        self.screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        self.update_image_position()
         self.calculate_text_positions()
 
     def get_sidebar_option(self, mouse_pos, options):

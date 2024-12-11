@@ -8,7 +8,6 @@ from screens.controls import ControlsScreen
 from screens.about import AboutScreen
 from screens.homescreen import HomeScreen
 from screens.quizzes import QuizzesScreen
-from screens.statistics import StatisticsScreen
 from screens.settings import SettingsScreen
 from screens.scoreboard import ScoreboardScreen
 from screens.leaderboards.leaderboard_level1 import LeaderboardLevel1
@@ -38,7 +37,6 @@ def main():
     manager.register_screen("Level 2", Level2, manager, False, 7)
     manager.register_screen("Level 3", Level3, manager, False, 7)
     manager.register_screen("Quizzes", QuizzesScreen, manager)
-    manager.register_screen("Statistics", StatisticsScreen, manager)
     manager.register_screen("Leaderboards", LeaderboardLevel1, manager)
     manager.register_screen("Leaderboard Level 2", LeaderboardLevel2, manager)
     manager.register_screen("Leaderboard Level 3", LeaderboardLevel3, manager)
@@ -60,7 +58,6 @@ def main():
         "Level 2": "Level 2",
         "Level 3": "Level 3",
         "Quizzes": "Quizzes",
-        "Statistics": "Statistics",
         "Leaderboards": "Leaderboards",
         "Settings": "Settings",
         "Controls": "Controls",

@@ -64,7 +64,7 @@ class LeaderboardLevel1(BaseScreen):
         return None
 
     def draw(self):
-        self.screen.fill((240, 240, 240))  # Fill background
+        self.screen.fill((255, 255, 255))  # Fill background
 
         # Draw buttons
         self.draw_buttons()
