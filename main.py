@@ -55,7 +55,6 @@ def main():
         "Level 3": "Level 3",
         "Quizzes": "Quizzes",
         "Leaderboards": "Leaderboards",
-        "Settings": "Settings",
         "Controls": "Controls",
         "About": "About",
     }
