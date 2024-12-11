@@ -28,39 +28,34 @@ class Cell:
         # Set initial position of the cell
         self.reposition(center_pos)
 
-    def reposition(self, center_pos, spacing=25):
+    def reposition(self, center_pos, spacing=30):
         # Diamond layout configuration
         row_layout = [3, 5, 7, 7, 7, 5, 3]  # Cells per row
         idx = 0
 
-        # Calculate the row and column position of the 19th cell (index 18)
-        target_row, target_col = None, None
-        for row_index, row_count in enumerate(row_layout):
-            if idx <= 18 < idx + row_count:
-                target_row = row_index
-                target_col = 18 - idx
-                break
-            idx += row_count
-
-        if target_row is None or target_col is None:
-            raise ValueError("Invalid cell index for the grid layout")
+        # Calculate the total width and height of the diamond
+        total_rows = len(row_layout)
+        max_row_width = max(row_layout)
+        diamond_width = max_row_width * spacing  # Total width of the diamond
+        diamond_height = total_rows * spacing    # Total height of the diamond
 
         # Calculate the top-left corner of the diamond relative to the center
-        total_rows = len(row_layout)
-        diamond_top = center_pos[1] - (total_rows // 2) * spacing - 45
-        diamond_left = center_pos[0] - (row_layout[target_row] // 2) * spacing + 29
+        diamond_top = center_pos[1] - diamond_height // 2 + 3
+        diamond_left = center_pos[0] - diamond_width // 2 + 2
 
         # Get the specific position for the current cell
-        row_index = 0
         idx = 0
         for row_index, row_count in enumerate(row_layout):
             y_pos = diamond_top + row_index * spacing
-            x_start = diamond_left + (row_count // 2) * -spacing
+            x_start = diamond_left + (max_row_width - row_count) // 2 * spacing
             for col_index in range(row_count):
                 x_pos = x_start + col_index * spacing
                 if idx == self.position:  # Current cell's position
                     self.rect.x = x_pos
                     self.rect.y = y_pos
+                    # Adjust rect size to ensure it aligns with cell dimensions
+                    self.rect.width = spacing
+                    self.rect.height = spacing
                     return
                 idx += 1
 
@@ -76,21 +71,29 @@ class Cell:
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = pygame.time.get_ticks()
     
-    def draw(self, screen, sidebar_width, level):
-        screen.blit(self.image, self.rect)
+    def draw(self, screen, sidebar_width, cells, level):
+        # Recalculate the image's position to center it inside the rect
+        image_x = self.rect.centerx - self.image.get_width() // 2
+        image_y = self.rect.centery - self.image.get_height() // 2
+
+        # Draw the image centered within the rect
+        screen.blit(self.image, (image_x, image_y))
+
+        # Optionally draw the collision rect for debugging
         # pygame.draw.rect(screen, (0, 255, 0), self.get_collision_rect(), 2)
 
+        # If the modal is active, draw it
         if self.show_modal:
-            self.draw_modal(screen, sidebar_width, level)
+            self.draw_modal(screen, sidebar_width, cells, level)
 
-    def draw_modal(self, screen, sidebar_width, level):
+    def draw_modal(self, screen, sidebar_width, cells, level):
         # Define modal dimensions
-        modal_width = 500
+        modal_width = 550
         modal_height = 700
 
         # Position the modal to the left, always to the right of the sidebar
         screen_height = screen.get_height()
-        padding = 20  # Add some padding between the modal and the sidebar
+        padding = 10  # Add some padding between the modal and the sidebar
         modal_x = sidebar_width + padding
         modal_y = (screen_height - modal_height) // 2  # Vertically center the modal
 
@@ -109,7 +112,6 @@ class Cell:
 
         # Draw the button background (same as modal color)
         pygame.draw.rect(screen, (220, 220, 220), (close_button_x, close_button_y, close_button_width, close_button_height))
-        # Draw button border in red
         pygame.draw.rect(screen, (204, 0, 0), (close_button_x, close_button_y, close_button_width, close_button_height), 2)
 
         # Render the button text in red
@@ -143,41 +145,40 @@ class Cell:
 
         # Draw cell image
         cell_image_path = "assets/images/final/dead_cell.png" if self.health == "dead" else "assets/images/final/infected_cell.png"
-        cell_image = pygame.image.load(self.resource_path(cell_image_path))
+        cell_image = pygame.image.load(level.resource_path(cell_image_path))
         cell_image = pygame.transform.scale(cell_image, (300, 300))
         screen.blit(cell_image, (modal_x + (modal_width // 2) - 150, content_start_y))
 
         # Draw quiz if applicable
         if self.quiz:
-            self.draw_quiz(screen, modal_x, modal_y, content_start_y + 250, modal_width)
+            current_y = self.draw_quiz(screen, modal_x, modal_y, content_start_y + 250, modal_width)
 
-        # Draw feedback (including hints)
-        if hasattr(self, "quiz_feedback") and self.quiz_feedback:
-            # Create white box for feedback
-            feedback_box_width = modal_width - 20
-            feedback_box_height = 100
-            feedback_box_x = modal_x + 10
-            feedback_box_y = modal_y + modal_height - 150
+            # Draw feedback (including hints) below the options
+            if hasattr(self, "quiz_feedback") and self.quiz_feedback:
+                # Create white box for feedback
+                feedback_box_width = modal_width - 20
+                feedback_box_x = modal_x + 10
+                feedback_box_y = current_y + 20  # Place below the quiz options
 
-            pygame.draw.rect(screen, (255, 255, 255), (feedback_box_x, feedback_box_y, feedback_box_width, feedback_box_height))
-            pygame.draw.rect(screen, (0, 0, 0), (feedback_box_x, feedback_box_y, feedback_box_width, feedback_box_height), 2)
+                pygame.draw.rect(screen, (255, 255, 255), (feedback_box_x, feedback_box_y, feedback_box_width, 100))
+                pygame.draw.rect(screen, (0, 0, 0), (feedback_box_x, feedback_box_y, feedback_box_width, 100), 2)
 
-            # Add "Dr. Tomato:" at the top of the hint box
-            speaker_text = "Dr. Tomato:"
-            speaker_surface = font.render(speaker_text, True, (0, 0, 0))
-            screen.blit(speaker_surface, (feedback_box_x + 10, feedback_box_y + 10))
+                # Add "Dr. Tomato:" at the top of the hint box
+                speaker_text = "Dr. Tomato:"
+                speaker_surface = font.render(speaker_text, True, (0, 0, 0))
+                screen.blit(speaker_surface, (feedback_box_x + 10, feedback_box_y + 10))
 
-            # Render the hint text inside the box
-            feedback_text = self.quiz_feedback["message"]
-            feedback_color = self.quiz_feedback["color"]
+                # Render the hint text inside the box
+                feedback_text = self.quiz_feedback["message"]
+                feedback_color = self.quiz_feedback["color"]
 
-            # Wrap and draw feedback text
-            feedback_lines = self.wrap_text(feedback_text, font, feedback_box_width - 20)
-            current_y = feedback_box_y + 40  # Start below "Dr. Tomato:"
-            for line in feedback_lines:
-                rendered_line = font.render(line, True, feedback_color)
-                screen.blit(rendered_line, (feedback_box_x + 10, current_y))
-                current_y += 25  # Line spacing
+                # Wrap and draw feedback text
+                feedback_lines = self.wrap_text(feedback_text, font, feedback_box_width - 20)
+                current_y = feedback_box_y + 40  # Start below "Dr. Tomato:"
+                for line in feedback_lines:
+                    rendered_line = font.render(line, True, feedback_color)
+                    screen.blit(rendered_line, (feedback_box_x + 10, current_y))
+                    current_y += 25  # Line spacing
     
     def draw_quiz(self, screen, modal_x, modal_y, start_y, modal_width):
         font = pygame.font.SysFont('Arial', 18)
@@ -234,6 +235,8 @@ class Cell:
 
         # Update `option_coords` to reflect new positions
         self.option_coords = new_option_coords
+
+        return current_y
 
     def wrap_text(self, text, font, max_width):
         words = text.split(' ')
@@ -320,60 +323,41 @@ class Cell:
     def handle_quiz_answer(self, selected_option, level):
         current_time = pygame.time.get_ticks()
 
-        # Initialize failed attempts if not already present
-        if not hasattr(self, "failed_attempts"):
-            self.failed_attempts = 0
-
-        # Prevent further attempts if the quiz is locked
+        # Prevent further interaction if locked
         if hasattr(self, "quiz_locked") and self.quiz_locked:
-            self.quiz_feedback = {
-                "message": "The quiz is locked. No further attempts allowed.",
-                "color": (204, 0, 0),
-            }
-            self.feedback_timer = current_time
             return
 
         if selected_option["is_correct"]:
-            # Correct answer: Stop infection, show success feedback
             self.quiz_feedback = {
                 "message": "Correct! You've saved this cell.",
                 "color": (0, 128, 128),
             }
-            self.stop_infection_and_neighbors()  # Stop infection and neighbors' spread
-            self.feedback_timer = current_time
+            self.stop_infection_and_neighbors()  # Stops infection spread.
+            self.feedback_timer = current_time  # Start feedback timer.
             level.add_points(110)
-            level.paused = False
-            # Lock the quiz after a correct answer
+            self.show_modal = True
             self.quiz_locked = True
         else:
-            # Incorrect answer: Increment failed attempts counter
+            # Wrong answer: Increment attempts
             self.failed_attempts += 1
-
             hints = self.quiz.get("hints", [])
             if self.hint_index < len(hints):
-                # Display the next hint
                 hint_message = hints[self.hint_index]
                 self.quiz_feedback = {"message": f"{hint_message}", "color": (204, 0, 0)}
                 self.hint_index += 1
             else:
-                # No more hints available
+                # No more hints, lock after 3 attempts
                 self.quiz_feedback = {
-                    "message": "Incorrect! No more hints are available.",
+                    "message": "You have used all 3 attempts. No more hints.",
                     "color": (204, 0, 0),
                 }
-                self.feedback_timer = current_time
-
-            level.paused = True
+                self.quiz_locked = True
+                self.show_modal = True
+                self.feedback_timer = current_time  # Start feedback timer
             level.add_points(-10)
 
-        # Lock the quiz after 3 failed attempts
-        if self.failed_attempts >= 3:
-            self.quiz_feedback = {
-                "message": "You have used all 3 attempts. No more hints, and try to save the cell again.",
-                "color": (204, 0, 0),
-            }
-            self.quiz_locked = True
-            self.feedback_timer = current_time
+        # Ensure the modal remains open during feedback
+        level.paused = True
 
     def infect_neighbors(self, level):
         # Use the actual number of neighbors to limit infection spread

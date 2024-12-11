@@ -123,6 +123,7 @@ class Level3(BaseScreen):
                     if event.key == pygame.K_ESCAPE and self.paused:
                         for cell in self.cells:
                             if cell.show_modal:
+                                cell.reset_quiz_state()
                                 cell.show_modal = False
                         self.paused = False
                     if event.key == pygame.K_SPACE and self.game_over:
@@ -163,30 +164,30 @@ class Level3(BaseScreen):
                         # Close all modals if unpausing
                         if not self.paused and modal_active:
                             for cell in self.cells:
-                                if cell.show_modal:
-                                    cell.show_modal = False
-                                    break
-
+                                cell.show_modal = False
                         continue  # Skip further processing for this click
-
-                    # Block all interactions if paused, except Oracle clicks and pause/play button
-                    if self.paused and not modal_active:
-                        self.oracle.handle_click(mouse_pos, self.cells, self)
-                        continue
 
                     # If a quiz modal is open, prioritize modal interactions
                     if modal_active:
                         for cell in self.cells:
                             if cell.show_modal:
                                 cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
+                                break  # Stop further processing for this click
                         continue  # Skip further processing for this click
 
                     # Allow Oracle interaction when not paused
-                    self.oracle.handle_click(mouse_pos, self.cells, self)
+                    if not self.paused:
+                        self.oracle.handle_click(mouse_pos, self.cells, self)
 
                     # Handle cell clicks
                     for cell in self.cells:
-                        cell.handle_click(mouse_pos, self.cells, self)
+                        if cell.rect.collidepoint(mouse_pos):
+                            # Open the modal only for infected cells
+                            if not self.paused:
+                                if cell.health == "infected":
+                                    cell.show_modal = True
+                                    self.paused = True  # Pause the game when a modal is active
+                            break
 
             # Check if the game is over
             if not self.paused and self.game_over:
@@ -504,6 +505,7 @@ class Level3(BaseScreen):
                 if event.key == pygame.K_ESCAPE and self.paused:
                     for cell in self.cells:
                         if cell.show_modal:
+                            cell.reset_quiz_state()
                             cell.show_modal = False
                     self.paused = False
                 if event.key == pygame.K_SPACE and self.game_over:
@@ -838,17 +840,17 @@ class Level3(BaseScreen):
         self.paused = False
 
     def handle_feedback_closure(self):
-        current_time = pygame.time.get_ticks()
+        current_time = pygame.time.get_ticks()  # Get the current time
         for cell in self.cells:
             if cell.show_modal and hasattr(cell, "feedback_timer") and cell.feedback_timer:
-                if current_time - cell.feedback_timer > 1200:  # 1.2 seconds
+                if current_time - cell.feedback_timer > 1200:
                     cell.show_modal = False  # Close modal
-                    cell.feedback_timer = None  # Reset timer
-                    # Update total paused time to exclude the modal duration
+                    cell.feedback_timer = None  # Reset the timer
+                    # Update paused state
                     if self.pause_start is not None:
                         self.total_paused_time += pygame.time.get_ticks() - self.pause_start
                         self.pause_start = None
-                    self.paused = False  # Unpause game
+                    self.paused = False  # Unpause the game
     
     def get_sidebar_option(self, mouse_pos, options_mapping):
         x, y = mouse_pos
@@ -897,7 +899,7 @@ class Level3(BaseScreen):
         # Draw cells
         for cell in self.cells:
             cell.reposition(center_pos=(center_x, center_y))
-            cell.draw(self.screen, sidebar_width, self)
+            cell.draw(self.screen, sidebar_width, self.cells, self)
         
         # Draw pathogens first (behind macrophage)
         for enemy in self.enemies:
@@ -909,7 +911,7 @@ class Level3(BaseScreen):
         # Draw cell modals if active
         for cell in self.cells:
             if cell.show_modal:
-                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self)
+                cell.draw_modal(self.screen, self.sidebar.width if self.sidebar.visible else 25, self.cells, self)
 
         # Draw timer and pause/play button
         if not self.tutorial_phase:
@@ -927,3 +929,11 @@ class Level3(BaseScreen):
 
         self.oracle.draw(self.screen)
         self.oracle.draw_message(self.screen)
+
+        @staticmethod
+        def resource_path(relative_path):
+            try:
+                base_path = sys._MEIPASS
+            except AttributeError:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
