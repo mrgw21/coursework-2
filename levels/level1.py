@@ -177,8 +177,10 @@ class Level1(BaseScreen):
                         continue  # Allow subsequent clicks on infected cells
 
                     # Allow Oracle interaction when not paused
+                    """
                     if not self.paused:
                         self.oracle.handle_click(mouse_pos, self.cells, self)
+                    """
 
                     # Handle cell clicks
                     for cell in self.cells:
@@ -228,8 +230,7 @@ class Level1(BaseScreen):
 
                 # Update cells and pathogens
                 for cell in self.cells:
-                    if not self.tutorial_phase:
-                        cell.update_infection(self)
+                    cell.update_infection(self)
 
                 if not self.tutorial_phase:
                     self.spawn_enemy()
@@ -1008,6 +1009,7 @@ class Level1(BaseScreen):
 
                     self.tutorial_phase = False
                     self.tutorial_completed = True
+                    self.tutorial_step += 1
 
                     # Clean up tutorial-specific variables
                     del self.tutorial_7_congrats_start

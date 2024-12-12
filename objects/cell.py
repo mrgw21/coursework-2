@@ -360,7 +360,7 @@ class Cell:
 
     def infect_neighbors(self, level):
         # Use the actual number of neighbors to limit infection spread
-        if level.tutorial_phase or level.tutorial_step < 8:
+        if level.tutorial_phase:
             return
 
         if not self.neighbors:
@@ -376,17 +376,14 @@ class Cell:
                 level.add_points(-10)
 
     def update_infection(self, level):
-        if self.health != "infected" or self.infection_timer is None or self.is_tutorial:
+        if self.health != "infected" or self.infection_timer is None or level.tutorial_phase:
             return
-
         # Ensure tutorial pathogens cannot spread infection
         current_time = pygame.time.get_ticks()
         infection_delay = 4000  # Set delay to 4 seconds (adjust as needed)
 
         if current_time - self.infection_timer > infection_delay:
             # Prevent infection spread from tutorial pathogens
-            if any(p.is_tutorial for p in level.tutorial_pathogens):
-                return
             self.infect_neighbors(level)
             self.infection_timer = current_time  # Reset timer
 
@@ -396,11 +393,6 @@ class Cell:
         self.image = pygame.image.load(self.resource_path("assets/images/final/dead_cell.png"))
         self.image = pygame.transform.scale(self.image, (self.image.get_width() // 20, self.image.get_height() // 20))
         self.infection_timer = None  # Disable infection spread
-    
-    def stop_tutorial_infection(self):
-        self.state = False
-        self.health = "infected"
-        self.infection_timer = None
 
     def stop_infection_and_neighbors(self):
         self.stop_infection()  # Stop the infection of this cell

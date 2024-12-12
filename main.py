@@ -1,6 +1,5 @@
 import pygame
 from screens.screen_manager import ScreenManager
-from introductions.intro1 import Intro1
 from levels.level1 import Level1
 from levels.level2 import Level2
 from levels.level3 import Level3

@@ -178,8 +178,10 @@ class Level3(BaseScreen):
                         continue  # Skip further processing for this click
 
                     # Allow Oracle interaction when not paused
+                    """
                     if not self.paused:
                         self.oracle.handle_click(mouse_pos, self.cells, self)
+                    """
 
                     # Handle cell clicks
                     for cell in self.cells:

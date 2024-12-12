@@ -1,4 +1,5 @@
 import pygame
+import math
 import random
 import platform
 import os
@@ -178,8 +179,10 @@ class Level2(BaseScreen):
                         continue  # Skip further processing for this click
 
                     # Allow Oracle interaction when not paused
+                    """
                     if not self.paused:
                         self.oracle.handle_click(mouse_pos, self.cells, self)
+                    """
 
                     # Handle cell clicks
                     for cell in self.cells:
@@ -230,6 +233,8 @@ class Level2(BaseScreen):
 
                 if not self.tutorial_phase:
                     self.spawn_enemy()
+                    self.replicate_pathogens()
+                    self.update_replica_positions()
 
                 self.macrophage.update(self.screen.get_width(), self.screen.get_height(), self.sidebar.width if self.sidebar.visible else 25)
                 self.check_collisions()
@@ -401,12 +406,53 @@ class Level2(BaseScreen):
             if random.choice([True, False]):
                 # Bacteria
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "bacteria"))
-                self.enemies[-1].speed = 1
+                self.enemies[-1].speed = 0.6
             else:
                 # Virus
                 self.enemies.append(Pathogen(spawn_location[0], spawn_location[1], "virus"))
-                self.enemies[-1].speed = 1
+                self.enemies[-1].speed = 0.6
             self.spawn_timer = pygame.time.get_ticks()
+    
+    def replicate_pathogens(self):
+        current_time = pygame.time.get_ticks()
+        for enemy in list(self.enemies):  # Use a copy to avoid modifying the list during iteration
+            if enemy.can_replicate and enemy.replicas < 2 and current_time - enemy.spawn_time >= 4000:  # 4 seconds after spawn
+                target_cell = enemy.find_closest_uninfected_cell(self.cells)  # Assuming cells are available
+                if target_cell:
+                    target_x, target_y = target_cell.rect.center
+                    direction_x = target_x - enemy.x
+                    direction_y = target_y - enemy.y
+                    distance = math.hypot(direction_x, direction_y)
+
+                    if distance != 0:
+                        direction_x /= distance
+                        direction_y /= distance
+
+                    launch_direction_x = -direction_x
+                    launch_direction_y = -direction_y
+
+                    for i in range(2 - enemy.replicas):  # Create up to 2 replicas
+                        # Randomized offsets for distinct launch positions
+                        offset_x = random.choice([-20, 20]) * (i + 1)
+                        offset_y = random.choice([-20, 20]) * (i + 1)
+
+                        replica = Pathogen(
+                            enemy.x + offset_x,
+                            enemy.y + offset_y,
+                            enemy.type,
+                            can_replicate=False  # Replicas cannot replicate
+                        )
+                        replica.speed = 0.6
+                        replica.launching = True
+                        replica.launch_start_time = pygame.time.get_ticks()  # Set launch start time
+                        replica.launch_velocity = (launch_direction_x * 1.5, launch_direction_y * 1.5)  # Adjust scale
+                        self.enemies.append(replica)
+
+                    enemy.replicas = 2  # Mark as fully replicated
+    
+    def update_replica_positions(self):
+        for enemy in self.enemies:
+            enemy.update_position(self.cells)
 
     def spawn_tutorial_pathogens(self):
         current_time = pygame.time.get_ticks()

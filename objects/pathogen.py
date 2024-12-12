@@ -1,19 +1,28 @@
-import pygame
 import math
+import pygame
 import os
 import sys
 
 class Pathogen:
-    def __init__(self, x, y, type, screen_width=None, screen_height=None):
+    def __init__(self, x, y, type, screen_width=None, screen_height=None, can_replicate=True):
         self.x = x
         self.y = y
-        self.speed = 0.5
+        self.speed = 0.4
         self.alive = False
         self.type = type
+
+        # Launch-related attributes
+        self.launch_velocity = (0, 0)
+        self.launching = False  # Indicates whether the pathogen is in the launching phase
+        self.launch_start_time = None  # Time when the launch started
 
         # Set target cell and attack timer
         self.target_cell = None
         self.attack_timer = 0  # For delayed attacks
+
+        self.replicas = 0
+        self.spawn_time = pygame.time.get_ticks()
+        self.can_replicate = can_replicate  # Determines if the pathogen can replicate
 
         if self.type == "bacteria":
             self.original_image = pygame.image.load(self.resource_path("assets/images/final/bacteria.png"))
@@ -36,6 +45,26 @@ class Pathogen:
         # Centerize position dynamically based on current screen size
         self.rect.x = screen_width // 2 + (self.rect.x - screen_width // 2)
         self.rect.y = screen_height // 2 + (self.rect.y - screen_height // 2)
+    
+
+    def update_position(self, cells):
+        current_time = pygame.time.get_ticks()
+
+        if self.launching and self.launch_start_time:
+            # Check if 1 second has passed since launching
+            if current_time - self.launch_start_time > 1000:  # 1 second
+                self.launching = False  # End the launching phase
+                self.find_closest_uninfected_cell(cells)  # Find a new target
+                self.launch_velocity = (0, 0)  # Stop the launch velocity
+
+        # Apply launch velocity if still launching
+        if self.launching:
+            self.x += self.launch_velocity[0]
+            self.y += self.launch_velocity[1]
+            self.rect.center = (self.x, self.y)
+        elif self.target_cell:
+            # Move towards the target after the launch phase
+            self.move_towards_target(cells)
 
     def move_towards_target(self, cells):
         # Find the closest uninfected cell
