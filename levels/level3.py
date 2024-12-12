@@ -573,34 +573,39 @@ class Level3(BaseScreen):
     def check_collisions(self):
         current_time = pygame.time.get_ticks()
 
-        for enemy in self.enemies[:]:  # Iterate over a copy of the enemies list
-            # Check collision with macrophage
-            if self.macrophage.get_collision_rect().colliderect(enemy.get_collision_rect()):
+        # Check collisions with the macrophage
+        for enemy in list(self.enemies):  # Work on a copy of the enemies list
+            if self.macrophage.get_collision_rect().collidepoint(enemy.get_collision_rect().center):
                 if enemy not in self.colliding_pathogens:
-                    # Start tracking the collision time
+                    # Start tracking collision time and trigger animation
                     self.colliding_pathogens[enemy] = current_time
+                    self.macrophage.handle_collision([enemy])  # Trigger animation
                 else:
                     # Check if the collision duration has exceeded the kill delay
                     collision_duration = current_time - self.colliding_pathogens[enemy]
                     if collision_duration >= 1000:  # 1 second delay
                         if enemy in self.enemies:
-                            self.enemies.remove(enemy)  # Remove pathogen after 1 second of collision
-                            self.add_points(100)
-                        del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+                            self.enemies.remove(enemy)  # Safely remove the enemy
+                        if enemy in self.colliding_pathogens:
+                            del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
+                        # Handle tutorial-specific logic
                         if self.tutorial_phase:
                             self.tutorial_step += 1
-                            self.tutorial_pathogens.remove(enemy)
+                            if enemy in self.tutorial_pathogens:
+                                self.tutorial_pathogens.remove(enemy)
             else:
-                # Remove pathogen from tracking if it is no longer colliding
+                # Remove pathogen from tracking if no longer colliding with the macrophage
                 if enemy in self.colliding_pathogens:
                     del self.colliding_pathogens[enemy]
 
-            # Check collision with specific cells
+        # Check collisions with cells
+        for enemy in list(self.enemies):  # Work on a copy of the enemies list
             for cell in self.cells:
                 if cell.state and enemy.get_collision_rect().colliderect(cell.get_collision_rect()):
                     cell.die()  # Infect the cell
-                    self.enemies.remove(enemy)  # Remove the pathogen
-                    self.add_points(-10) 
+                    if enemy in self.enemies:
+                        self.enemies.remove(enemy)  # Safely remove the pathogen
+                    self.add_points(-10)
                     if enemy in self.colliding_pathogens:
                         del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                     break  # Stop checking other cells for this pathogen
