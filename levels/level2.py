@@ -584,9 +584,10 @@ class Level2(BaseScreen):
                 else:
                     # Check if the collision duration has exceeded the kill delay
                     collision_duration = current_time - self.colliding_pathogens[enemy]
-                    if collision_duration >= 1000:  # 1 second delay
+                    if collision_duration >= 600:  # 0.6 second delay
                         if enemy in self.enemies:
                             self.enemies.remove(enemy)  # Safely remove the enemy
+                            self.add_points(100)
                         if enemy in self.colliding_pathogens:
                             del self.colliding_pathogens[enemy]  # Stop tracking this pathogen
                         # Handle tutorial-specific logic
