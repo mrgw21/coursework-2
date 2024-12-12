@@ -580,19 +580,13 @@ class Level1(BaseScreen):
                     for cell in self.cells:
                         # Allow interaction only if the cell is infected
                         if cell.rect.collidepoint(mouse_pos) and cell.health == "infected":
-                            if not self.paused:
-                                cell.show_modal = True
-                                self.paused = True  # Pause the game while modal is open
-                                break  # Exit after opening the modal
-
+                            self.paused = True
+                            cell.show_modal = True
+                                
                     # Handle quiz interactions for open modals
                     for cell in self.cells:
                         if cell.show_modal:
                             cell.handle_radio_button_click(self.screen, mouse_pos, self.cells, self)
-
-            # Ensure the game resumes if all modals are closed
-            if not any(cell.show_modal for cell in self.cells):
-                self.paused = False
 
     def handle_tutorial_clicks(self):
         for event in pygame.event.get():

@@ -6,37 +6,67 @@ echo "Detected OS: $OS"
 
 # Clean previous builds
 echo "Cleaning previous builds..."
-rm -rf build dist InsideImmune.zip
+rm -rf build dist InsideImmune.zip InsideImmune.app InsideImmune-MacOS.zip InsideImmune-Linux.zip
 
 # Build the project
 echo "Building the project..."
 if [[ "$OS" == "Darwin" ]]; then
     # macOS build
-    pyinstaller --onefile --name InsideImmune --distpath . --add-data "assets:assets" --add-data "data:data" main.py
-    echo "Setting executable permissions for macOS..."
-    chmod +x InsideImmune
+    pyinstaller --noconsole --name InsideImmune --distpath . \
+        --add-data "assets:assets" --add-data "data:data" --windowed main.py
+
+    echo "Creating macOS .app bundle..."
+    APP_NAME="InsideImmune.app"
+    mkdir -p "$APP_NAME/Contents/MacOS"
+    mkdir -p "$APP_NAME/Contents/Resources"
+
+    # Copy the binary to the .app bundle
+    mv InsideImmune "$APP_NAME/Contents/MacOS/InsideImmune"
+
+    # Create Info.plist
+    cat > "$APP_NAME/Contents/Info.plist" <<EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>InsideImmune</string>
+    <key>CFBundleDisplayName</key>
+    <string>InsideImmune</string>
+    <key>CFBundleExecutable</key>
+    <string>InsideImmune</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.example.insideimmune</string>
+    <key>CFBundleVersion</key>
+    <string>1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+</dict>
+</plist>
+EOL
+
+    echo "Setting executable permissions for macOS .app..."
+    chmod +x "$APP_NAME/Contents/MacOS/InsideImmune"
+
+    # Package the .app into a zip
+    echo "Packaging InsideImmune for macOS into InsideImmune-MacOS.zip..."
+    zip -r InsideImmune-MacOS.zip "$APP_NAME" assets/ data/ README.md
+
 elif [[ "$OS" == "Linux" ]]; then
     # Linux build
-    pyinstaller --onefile --name InsideImmune --distpath . --add-data "assets:assets" --add-data "data:data" main.py
+    pyinstaller --onefile --name InsideImmune --distpath . \
+        --add-data "assets:assets" --add-data "data:data" main.py
+
     echo "Setting executable permissions for Linux..."
     chmod +x InsideImmune
-else
-    # Assume Windows (Git Bash or WSL environment)
-    pyinstaller --onefile --name InsideImmune --distpath . --add-data "assets;assets" --add-data "data;data" main.py
-fi
 
-# Check if the build succeeded
-if [[ ! -f "InsideImmune" && ! -f "InsideImmune.exe" ]]; then
-    echo "Build failed. Exiting..."
+    # Package the binary into a zip
+    echo "Packaging InsideImmune for Linux into InsideImmune-Linux.zip..."
+    zip -r InsideImmune-Linux.zip InsideImmune assets/ data/ README.md
+
+else
+    echo "Unsupported OS: $OS. This script supports macOS and Linux only."
     exit 1
 fi
 
-# Zip the executable and required files
-echo "Packaging the game into InsideImmune-MacOS-Linux.zip..."
-if [[ "$OS" == "Darwin" || "$OS" == "Linux" ]]; then
-    zip -r InsideImmune-MacOS-Linux.zip InsideImmune assets/ data/ README.md
-else
-    zip -r InsideImmune-MacOS-Linux.zip InsideImmune.exe assets/ data/ README.md
-fi
-
-echo "Packaging complete. InsideImmune-MacOS-Linux.zip is ready for distribution!"
+echo "Build and packaging complete!"

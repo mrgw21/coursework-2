@@ -255,7 +255,6 @@ class Cell:
     def reset_quiz(self):
         self.hint_index = 0
         self.selected_option = None
-        self.quiz_feedback = None
 
     def handle_radio_button_click(self, screen, mouse_pos, cells, level):
         # If the modal is not open or options are missing, return early
@@ -263,7 +262,7 @@ class Cell:
             return
 
         # Prevent further interaction if locked (3 failed attempts or correct answer)
-        if hasattr(self, "quiz_locked") and self.quiz_locked:
+        if hasattr(self, "quiz_locked") and self.quiz_locked and not level.tutorial_phase:
             return
 
         for option_data in self.option_coords:
@@ -279,11 +278,6 @@ class Cell:
                 self.selected_option = option_data["option"]
                 self.handle_quiz_answer(option_data["option"], level)
                 break
-
-    def reset_quiz_state(self):
-        self.quiz_feedback = None  # Clear feedback
-        self.hint_index = 0  # Reset hint index
-        self.selected_option = None  # Reset selected option
 
     def draw_wrapped_text(self, screen, text, font, x, y, max_width):
         words = text.split(' ')
@@ -427,6 +421,7 @@ class Cell:
         self.show_modal = False
         self.failed_attempts = 0
         self.quiz_locked = False
+        self.feedback_timer = None  # Reset the feedback timer
     
     @staticmethod
     def resource_path(relative_path):
