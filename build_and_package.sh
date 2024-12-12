@@ -23,6 +23,10 @@ if [[ "$OS" == "Darwin" ]]; then
     # Copy the binary to the .app bundle
     mv InsideImmune "$APP_NAME/Contents/MacOS/InsideImmune"
 
+    # Ensure executable permissions
+    echo "Ensuring executable permissions for macOS binary..."
+    chmod +x "$APP_NAME/Contents/MacOS/InsideImmune"
+
     # Create Info.plist
     cat > "$APP_NAME/Contents/Info.plist" <<EOL
 <?xml version="1.0" encoding="UTF-8"?>
@@ -45,9 +49,6 @@ if [[ "$OS" == "Darwin" ]]; then
 </plist>
 EOL
 
-    echo "Setting executable permissions for macOS .app..."
-    chmod +x "$APP_NAME/Contents/MacOS/InsideImmune"
-
     # Package the .app into a zip
     echo "Packaging InsideImmune for macOS into InsideImmune-MacOS.zip..."
     zip -r InsideImmune-MacOS.zip "$APP_NAME" assets/ data/ README.md
@@ -57,7 +58,8 @@ elif [[ "$OS" == "Linux" ]]; then
     pyinstaller --onefile --name InsideImmune --distpath . \
         --add-data "assets:assets" --add-data "data:data" main.py
 
-    echo "Setting executable permissions for Linux..."
+    # Ensure executable permissions
+    echo "Ensuring executable permissions for Linux binary..."
     chmod +x InsideImmune
 
     # Package the binary into a zip
